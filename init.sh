@@ -14,9 +14,11 @@ export LANG C
 apt-get update
 
 # Install and configure apt proxy 
-apt-get install apt-cacher-ng 
-echo Acquire::http::Proxy "http://localhost:3142"; >> \
- /etc/apt/apt.conf.d/01proxy
+if [ ! -f /etc/apt/apt.conf.d/01proxy ] ; then
+  apt-get install apt-cacher-ng 
+  echo Acquire::http::Proxy "http://localhost:3142"; >> \
+   /etc/apt/apt.conf.d/01proxy
+fi
 
 # Install packages for kernel and u-boot compilation
 apt-get install --force-yes -y gcc-4.7 ncurses-dev uboot-mkimage \
