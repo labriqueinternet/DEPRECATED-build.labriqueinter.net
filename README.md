@@ -21,19 +21,19 @@ On your fresh olimex installation (build with
 
 ```shell
 apt-get install git
-git clone git@github.com:bleuchtang/build.labriqueinter.net.git /opt/build.labriqueinter.net.git
+git clone https://github.com/bleuchtang/build.labriqueinter.net.git /opt/build.labriqueinter.net
 ```
 
 ### Prepare Debian for compilation and debootstrap
 
 ```shell
-cd /opt/build.labriqueinter.net.git && bash init.sh
+cd /opt/build.labriqueinter.net && bash init.sh
 ```
 
 ### Build labriqueinter.net rootfs and u-boot
 
 ```shell
-cd /opt/build.labriqueinter.net.git && bash build_labriqueinternet_lime.sh
+cd /opt/build.labriqueinter.net && bash build_labriqueinternet_lime.sh
 ``` 
 
 ### Create image file
