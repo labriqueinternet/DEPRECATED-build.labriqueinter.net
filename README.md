@@ -45,9 +45,9 @@ On your computer:
 
 ```shell
 git clone https://github.com/bleuchtang/sunxi-debian.git && cd sunxi-debian
-scp root@myolimex:/srv/olinux/yunohost_lime.tar .
+scp root@myolimex:/srv/olinux/labriqueinternet_$(date "+%d-%m-%Y") .
 scp root@myolimex:/srv/olinux/sunxi/u-boot/u-boot-sunxi-with-spl.bin .
-sudo bash olinux/create_device.sh -d img -s 1400 -t yunohost_lime.img -b ./yunohost_lime.tar -u ./u-boot-sunxi-with-spl.bin
+sudo bash olinux/create_device.sh -d img -s 1400 -t labriqueinternet_$(date "+%d-%m-%Y").img -b ./yunohost_lime.tar -u ./u-boot-sunxi-with-spl.bin
 ```
  
 ## Build with cross compilation and cross debootstrap
