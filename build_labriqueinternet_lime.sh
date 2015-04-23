@@ -20,4 +20,5 @@ cd /opt/sunxi-debian && git pull
 #/opt/sunxi-debian/olinux/create_device.sh -d img -s 1200 \
 # -t /srv/olinux/yunohost_lime.img -b /srv/olinux/debootstrap
 
-tar cvf /srv/olinux/yunohost_lime.tar -C /srv/olinux/debootstrap .
+tar --same-owner --preserve-permissions -cvf /srv/olinux/yunohost_lime.tar \
+ -C /srv/olinux/debootstrap .
