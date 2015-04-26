@@ -1,4 +1,4 @@
-#!/bin/bash 
+#!/bin/bash
 
 set -e
 set -x
@@ -13,16 +13,18 @@ export DEBCONF_NONINTERACTIVE_SEEN true
 export LANG C
 apt-get update
 
-# Install and configure apt proxy 
+apt='apt-get -o Dpkg::Options::=--force-confnew --force-yes -uy'
+
+# Install and configure apt proxy
 if [ ! -f /etc/apt/apt.conf.d/01proxy ] ; then
-  apt-get install apt-cacher-ng 
+  $apt install apt-cacher-ng
   echo Acquire::http::Proxy "http://localhost:3142"; >> \
    /etc/apt/apt.conf.d/01proxy
 fi
 
 # Install packages for kernel and u-boot compilation
-apt-get install --force-yes -y gcc-4.7 ncurses-dev uboot-mkimage \
+$apt install gcc-4.7 ncurses-dev uboot-mkimage \
  build-essential vim libusb-1.0-0-dev pkg-config bc netpbm debootstrap dpkg-dev
 
-# Clone repository for image creation 
+# Clone repository for image creation
 git clone https://github.com/bleuchtang/sunxi-debian /opt/sunxi-debian

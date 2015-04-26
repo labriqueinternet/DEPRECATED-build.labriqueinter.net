@@ -6,11 +6,11 @@
 
 To build Labriqueinter.net directly with [yunohost](https://yunohost.org/) we
 cannot use debootstrap with qemu-arm because mysql-server-5.5 is buggy and the
-installation failed. 
+installation failed.
 
 The best solution compiling the kernel and perform a debootstrap on an olimex
 board. This process take much time but it the best solution to build
-labriqueinter.net entirely with scripts. 
+labriqueinter.net entirely with scripts.
 
 ## How ?
 
@@ -35,12 +35,12 @@ cd /opt/build.labriqueinter.net && bash init.sh
 
 ```shell
 cd /opt/build.labriqueinter.net && bash build_labriqueinternet_lime.sh
-``` 
+```
 
 ### Create image file
 
 Partitioning on loop device seems not work on my board. So we should retrieve
-the tarball on your local machine and create device. 
+the tarball on your local machine and create device.
 
 On your computer:
 
@@ -50,7 +50,7 @@ scp root@myolimex:/srv/olinux/labriqueinternet_$(date "+%d-%m-%Y") .
 scp root@myolimex:/srv/olinux/sunxi/u-boot/u-boot-sunxi-with-spl.bin .
 sudo bash olinux/create_device.sh -d img -s 1400 -t labriqueinternet_$(date "+%d-%m-%Y").img -b ./yunohost_lime.tar -u ./u-boot-sunxi-with-spl.bin
 ```
- 
+
 ## Build with cross compilation and cross debootstrap
 
 /!\ Warning: with this method you cannot perform a debootstrap with yunohost
