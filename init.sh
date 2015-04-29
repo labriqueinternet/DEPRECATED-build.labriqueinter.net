@@ -24,7 +24,8 @@ fi
 
 # Install packages for kernel and u-boot compilation
 $apt install gcc-4.7 ncurses-dev uboot-mkimage \
- build-essential vim libusb-1.0-0-dev pkg-config bc netpbm debootstrap dpkg-dev
+ build-essential vim libusb-1.0-0-dev pkg-config \
+ bc netpbm debootstrap dpkg-dev tar wget
 
 # Clone repository for image creation
 git clone https://github.com/bleuchtang/sunxi-debian /opt/sunxi-debian
