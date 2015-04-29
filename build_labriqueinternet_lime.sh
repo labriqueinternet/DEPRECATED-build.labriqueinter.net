@@ -10,8 +10,9 @@ fi
 
 cd /opt/sunxi-debian && git pull
 
+# Remove '-s' option if you want to compile using GIT (for kernel and u-boot)
 /opt/sunxi-debian/olinux/create_sunxi_boot_files.sh -l Labriqueinter.net \
- -t /srv/olinux/sunxi
+ -t /srv/olinux/sunxi -s
 
 /opt/sunxi-debian/olinux/create_arm_debootstrap.sh -i /srv/olinux/sunxi/ \
  -t /srv/olinux/debootstrap -p -y
