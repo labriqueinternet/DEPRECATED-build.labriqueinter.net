@@ -59,10 +59,15 @@ Find the IP of your box and connect with your browser on https://mybox.
 
 #### With ssh
 
-Find the IP of your box and ssh on it! (password: olinux)
+Find the IP of your box and ssh on it! (password: olinux):
 
 ```shell
 ssh root@mybox
+```
+
+Change the root password and do the postinstall:
+
+```shell
 yunohost tools postinstall
 ```
  
