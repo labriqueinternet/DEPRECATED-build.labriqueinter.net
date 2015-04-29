@@ -51,6 +51,21 @@ scp root@myolimex:/srv/olinux/sunxi/u-boot/u-boot-sunxi-with-spl.bin .
 sudo bash olinux/create_device.sh -d img -s 1400 -t labriqueinternet_$(date "+%d-%m-%Y").img -b ./yunohost_lime.tar -u ./u-boot-sunxi-with-spl.bin
 ```
 
+### Connect to your board and the yunohost postinstall
+
+#### With http
+
+Find the IP of your box and connect with your browser on https://mybox.
+
+#### With ssh
+
+Find the IP of your box and ssh on it! (password: olinux)
+
+```shell
+ssh root@mybox
+yunohost tools postinstall
+```
+ 
 ## Build with cross compilation and cross debootstrap
 
 /!\ Warning: with this method you cannot perform a debootstrap with yunohost
