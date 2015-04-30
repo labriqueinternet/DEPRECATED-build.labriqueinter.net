@@ -51,6 +51,17 @@ scp root@myolimex:/srv/olinux/sunxi/u-boot/u-boot-sunxi-with-spl.bin .
 sudo bash olinux/create_device.sh -d img -s 1400 -t labriqueinternet_$(date "+%d-%m-%Y").img -b ./yunohost_lime.tar -u ./u-boot-sunxi-with-spl.bin
 ```
 
+### Compress the image
+
+```shell
+img=labriqueinternet_$(date "+%d-%m-%Y").img
+loop=$(sudo losetup -f)
+sudo losetup -o 1048576 $loop $img 
+sudo mount $loop /mnt
+sudo sfill -z -l -l -f /mnt
+7zr a -t7z -m0=lzma -mx=9 -mfb=64 -md=32m -ms=on $img.7z $.img  
+```
+
 ### Connect to your board and the yunohost postinstall
 
 #### With http
