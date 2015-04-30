@@ -59,7 +59,7 @@ loop=$(sudo losetup -f)
 sudo losetup -o 1048576 $loop $img 
 sudo mount $loop /mnt
 sudo sfill -z -l -l -f /mnt
-7zr a -t7z -m0=lzma -mx=9 -mfb=64 -md=32m -ms=on $img.7z $.img  
+tar xvzf $img.tar.gz $img
 ```
 
 ### Connect to your board and the yunohost postinstall
