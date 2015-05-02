@@ -22,5 +22,5 @@ cd /opt/sunxi-debian && git pull
 # -t /srv/olinux/yunohost_lime.img -b /srv/olinux/debootstrap
 
 tar --same-owner --preserve-permissions -cvf \
- /srv/olinux/labriqueinternet_$(date "+%d-%m-%Y").tar \
+ /srv/olinux/labriqueinternet_"$(date '+%d-%m-%Y')".tar \
  -C /srv/olinux/debootstrap .
