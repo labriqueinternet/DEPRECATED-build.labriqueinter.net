@@ -46,21 +46,34 @@ On your computer:
 
 ```shell
 git clone https://github.com/bleuchtang/sunxi-debian.git && cd sunxi-debian
-scp root@myolimex:/srv/olinux/labriqueinternet_$(date "+%d-%m-%Y") .
+scp root@myolimex:/srv/olinux/labriqueinternet_"$(date '+%d-%m-%Y')".tar .
 scp root@myolimex:/srv/olinux/sunxi/u-boot/u-boot-sunxi-with-spl.bin .
-sudo bash olinux/create_device.sh -d img -s 1400 -t labriqueinternet_$(date "+%d-%m-%Y").img -b ./yunohost_lime.tar -u ./u-boot-sunxi-with-spl.bin
+sudo bash olinux/create_device.sh -d img -s 1400 -t labriqueinternet_"$(date '+%d-%m-%Y')".img -b ./labriqueinternet_"$(date '+%d-%m-%Y')".tar -u ./u-boot-sunxi-with-spl.bin
 ```
 
 ### Compress the image
 
 ```shell
-img=labriqueinternet_$(date "+%d-%m-%Y").img
+img=labriqueinternet_"$(date '+%d-%m-%Y')".img
 loop=$(sudo losetup -f)
-sudo losetup -o 1048576 $loop $img 
+sudo losetup -o 1048576 $loop $img
 sudo mount $loop /mnt
 sudo sfill -z -l -l -f /mnt
-tar xvzf $img.tar.gz $img
+sudo umount /mnt
+tar cvzf $img.tar.gz $img
 ```
+
+### Copy the image on your SD card
+
+A cool howto is available on the [Yunohost web site](https://yunohost.org/#/copy_image_en)
+
+But on our case, and if you are on a Linux machine, it's quite easy:
+
+```shell
+sudo dd if=labriqueinternet_"$(date '+%d-%m-%Y')".img of=/dev/mmcblk0
+```
+
+**Note**: Do not forget to change `/dev/mmcblk0` with the appropriate value.
 
 ### Connect to your board and the yunohost postinstall
 
@@ -81,7 +94,7 @@ Change the root password and do the postinstall:
 ```shell
 yunohost tools postinstall
 ```
- 
+
 ## Build with cross compilation and cross debootstrap
 
 /!\ Warning: with this method you cannot perform a debootstrap with yunohost
