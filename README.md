@@ -46,15 +46,15 @@ On your computer:
 
 ```shell
 git clone https://github.com/bleuchtang/sunxi-debian.git && cd sunxi-debian
-scp root@myolimex:/srv/olinux/labriqueinternet_$(date "+%d-%m-%Y") .
+scp root@myolimex:/srv/olinux/labriqueinternet_"$(date '+%d-%m-%Y')".tar .
 scp root@myolimex:/srv/olinux/sunxi/u-boot/u-boot-sunxi-with-spl.bin .
-sudo bash olinux/create_device.sh -d img -s 1400 -t labriqueinternet_$(date "+%d-%m-%Y").img -b ./yunohost_lime.tar -u ./u-boot-sunxi-with-spl.bin
+sudo bash olinux/create_device.sh -d img -s 1400 -t labriqueinternet_"$(date '+%d-%m-%Y')".img -b ./labriqueinternet_"$(date '+%d-%m-%Y')".tar -u ./u-boot-sunxi-with-spl.bin
 ```
 
 ### Compress the image
 
 ```shell
-img=labriqueinternet_$(date "+%d-%m-%Y").img
+img=labriqueinternet_"$(date '+%d-%m-%Y')".img
 loop=$(sudo losetup -f)
 sudo losetup -o 1048576 $loop $img 
 sudo mount $loop /mnt
