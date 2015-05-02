@@ -63,6 +63,18 @@ sudo umount /mnt
 tar cvzf $img.tar.gz $img
 ```
 
+### Copy the image on your SD card
+
+A cool howto is available on the [Yunohost web site](https://yunohost.org/#/copy_image_en)
+
+But on our case, and if you are on a Linux machine, it's quite easy:
+
+```shell
+sudo dd if=labriqueinternet_"$(date '+%d-%m-%Y')".img of=/dev/mmcblk0
+```
+
+**Note**: Do not forget to change `/dev/mmcblk0` with the appropriate value.
+
 ### Connect to your board and the yunohost postinstall
 
 #### With http
