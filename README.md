@@ -56,7 +56,7 @@ sudo bash olinux/create_device.sh -d img -s 1400 -t labriqueinternet_"$(date '+%
 ```shell
 img=labriqueinternet_"$(date '+%d-%m-%Y')".img
 loop=$(sudo losetup -f)
-sudo losetup -o 1048576 $loop $img 
+sudo losetup -o 1048576 $loop $img
 sudo mount $loop /mnt
 sudo sfill -z -l -l -f /mnt
 sudo umount /mnt
@@ -82,7 +82,7 @@ Change the root password and do the postinstall:
 ```shell
 yunohost tools postinstall
 ```
- 
+
 ## Build with cross compilation and cross debootstrap
 
 /!\ Warning: with this method you cannot perform a debootstrap with yunohost
