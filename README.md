@@ -60,7 +60,7 @@ sudo losetup -o 1048576 $loop $img
 sudo mount $loop /mnt
 sudo sfill -z -l -l -f /mnt
 sudo umount /mnt
-tar cvzf $img.tar.gz $img
+tar xvzf $img.tar.xz $img
 ```
 
 ### Copy the image on your SD card
