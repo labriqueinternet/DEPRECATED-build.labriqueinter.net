@@ -22,7 +22,7 @@ can perform the following steps:
 
 ```shell
 apt-get install git
-git clone https://github.com/bleuchtang/build.labriqueinter.net.git /opt/build.labriqueinter.net
+git clone https://github.com/labriqueinternet/build.labriqueinter.net.git /opt/build.labriqueinter.net
 ```
 
 ### Prepare Debian for compilation and debootstrap
