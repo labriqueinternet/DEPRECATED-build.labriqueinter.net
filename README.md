@@ -60,6 +60,7 @@ sudo losetup -o 1048576 $loop $img
 sudo mount $loop /mnt
 sudo sfill -z -l -l -f /mnt
 sudo umount /mnt
+sudo losetup -d $loop
 tar cfJ $img.tar.xz $img
 ```
 

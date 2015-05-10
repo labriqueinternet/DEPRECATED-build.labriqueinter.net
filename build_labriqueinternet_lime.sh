@@ -12,11 +12,12 @@ cd /opt/sunxi-debian && git pull
 
 # Remove '-s' option if you want to compile using GIT (for kernel and u-boot)
 /opt/sunxi-debian/olinux/create_sunxi_boot_files.sh -l Labriqueinter.net \
- -t /srv/olinux/sunxi -s
+ -t /srv/olinux/sunxi -s | tee /srv/olimex/sunxi.log
 
 /opt/sunxi-debian/olinux/create_arm_debootstrap.sh -i /srv/olinux/sunxi/ \
- -t /srv/olinux/debootstrap -p -y
+ -t /srv/olinux/debootstrap -p -y | tee /srv/olimex/debootstrap.log
 
+cp /srv/olimex/sunxi.log /srv/olimex/debootstrap.log /srv/olimex/debootstrap/root/
 # partitioning doesn't work with losetup on my board...
 #/opt/sunxi-debian/olinux/create_device.sh -d img -s 1200 \
 # -t /srv/olinux/yunohost_lime.img -b /srv/olinux/debootstrap
