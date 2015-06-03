@@ -23,7 +23,7 @@ if [ ! -f /etc/apt/apt.conf.d/01proxy ] ; then
 fi
 
 # Install packages for kernel and u-boot compilation
-$apt install gcc-4.7 ncurses-dev uboot-mkimage \
+$apt install gcc-4.7 ncurses-dev u-boot-tools \
  build-essential vim libusb-1.0-0-dev pkg-config \
  bc netpbm debootstrap dpkg-dev tar wget bzip2
 
