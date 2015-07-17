@@ -80,7 +80,7 @@ sudo dd if=labriqueinternet_"$(date '+%d-%m-%Y')".img of=/dev/mmcblk0
 
 #### With http
 
-Find the IP of your box and connect with your browser on https://mybox.
+Find the IP of your box and connect with your browser on https://IP.OF.MY.BOX.
 
 #### With ssh
 
