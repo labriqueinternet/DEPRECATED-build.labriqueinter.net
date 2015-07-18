@@ -22,6 +22,17 @@ cp /srv/olinux/sunxi.log /srv/olinux/debootstrap.log /srv/olinux/debootstrap/roo
 #/opt/sunxi-debian/olinux/create_device.sh -d img -s 1200 \
 # -t /srv/olinux/yunohost_lime.img -b /srv/olinux/debootstrap
 
+# Lime1 archive
 tar --same-owner --preserve-permissions -cvf \
- /srv/olinux/labriqueinternet_"$(date '+%d-%m-%Y')".tar \
+ /srv/olinux/labriqueinternet_lime1_"$(date '+%d-%m-%Y')".tar \
  -C /srv/olinux/debootstrap .
+
+# Lime2 archive (change symlink) 
+cd /srv/olinux/debootstrap && rm boot/board.dtb &&
+	ln -s boot/dtb/sun7i-a20-olinuxino-lime2.dtb boot/board.dtb
+# Lime2 archive
+tar --same-owner --preserve-permissions -cvf \
+ /srv/olinux/labriqueinternet_lime2_"$(date '+%d-%m-%Y')".tar \
+ -C /srv/olinux/debootstrap .
+
+
