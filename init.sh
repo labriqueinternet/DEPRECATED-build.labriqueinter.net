@@ -26,7 +26,7 @@ fi
 $apt install gcc-4.7 ncurses-dev u-boot-tools \
  build-essential vim libusb-1.0-0-dev pkg-config \
  bc netpbm debootstrap dpkg-dev tar wget bzip2 \
- device-tree-compiler
+ device-tree-compiler secure-delete
 
 # Clone repository for image creation
 git clone https://github.com/bleuchtang/sunxi-debian /opt/sunxi-debian
