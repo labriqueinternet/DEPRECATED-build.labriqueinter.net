@@ -55,7 +55,7 @@ else
 fi
 
 /opt/sunxi-debian/olinux/create_device.sh -d img -s 1400 \
- -t /srv/olinux/labriqueinternet_lime1_"$(date '+%d-%m-%Y')" -b /srv/olinux/debootstrap
+ -t /srv/olinux/labriqueinternet_lime1_"$(date '+%d-%m-%Y')".img -b /srv/olinux/debootstrap
 
 cd /srv/olinux/debootstrap
 if [ $KERNEL_MODE = "compil" ] ; then
@@ -71,5 +71,5 @@ else
 fi
 
 /opt/sunxi-debian/olinux/create_device.sh -d img -s 1400 \
- -t /srv/olinux/labriqueinternet_lime2_"$(date '+%d-%m-%Y')" -b /srv/olinux/debootstrap
+ -t /srv/olinux/labriqueinternet_lime2_"$(date '+%d-%m-%Y')".img -b /srv/olinux/debootstrap
 
