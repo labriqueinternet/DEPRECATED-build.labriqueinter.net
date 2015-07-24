@@ -8,24 +8,55 @@ if [ "$(id -u)" != "0" ]; then
   exit 1
 fi
 
+show_usage() {
+cat <<EOF
+# NAME
+
+  $(basename $0) -- Script to build LaBriqueInter.net
+
+# OPTIONS
+
+  -k		kernel mode (testing or compil, defautl: compil)
+
+EOF
+exit 1
+}
+
+KERNEL_MODE="compil"
+
+while getopts ":k:" opt; do
+  case $opt in
+    k)
+      KERNEL_MODE=$OPTARG
+      ;;
+    \?)
+      show_usage
+      ;;
+  esac
+done
+
 cd /opt/sunxi-debian && git pull
 
-# Remove '-s' option if you want to compile using GIT (for kernel and u-boot)
-/opt/sunxi-debian/olinux/create_sunxi_boot_files.sh -l Labriqueinter.net \
- -t /srv/olinux/sunxi -s | tee /srv/olinux/sunxi.log
+if [ $KERNEL_MODE = "compil" ] ; then
+  # Remove '-s' option if you want to compile using GIT (for kernel and u-boot)
+  /opt/sunxi-debian/olinux/create_sunxi_boot_files.sh -l Labriqueinter.net \
+   -t /srv/olinux/sunxi -s | tee /srv/olinux/sunxi.log
+fi
 
 /opt/sunxi-debian/olinux/create_arm_debootstrap.sh -i /srv/olinux/sunxi/ \
  -t /srv/olinux/debootstrap -p -y | tee /srv/olinux/debootstrap.log
 
-cp /srv/olinux/sunxi.log /srv/olinux/debootstrap.log /srv/olinux/debootstrap/root/
+if [ $KERNEL_MODE = "compil" ] ; then
+  cp /srv/olinux/sunxi.log /srv/olinux/debootstrap.log /srv/olinux/debootstrap/root/
+else
+  cp /srv/olinux/debootstrap.log /srv/olinux/debootstrap/root/
+fi
 
 /opt/sunxi-debian/olinux/create_device.sh -d img -s 1400 \
  -t /srv/olinux/labriqueinternet_lime1_"$(date '+%d-%m-%Y')" -b /srv/olinux/debootstrap
 
 cd /srv/olinux/debootstrap
-#search if kernel was build or was installed with debian testing repo
-if [ -f boot/board.dtb ] ; then
-  # Lime2 archive (change symlink) 
+if [ $KERNEL_MODE = "compil" ] ; then
   rm boot/board.dtb
   ln -s boot/dtb/sun7i-a20-olinuxino-lime2.dtb boot/board.dtb
 else
