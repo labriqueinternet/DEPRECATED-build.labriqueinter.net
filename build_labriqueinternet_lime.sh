@@ -41,10 +41,12 @@ if [ $KERNEL_MODE = "compil" ] ; then
   # Remove '-s' option if you want to compile using GIT (for kernel and u-boot)
   /opt/sunxi-debian/olinux/create_sunxi_boot_files.sh -l Labriqueinter.net \
    -t /srv/olinux/sunxi -s | tee /srv/olinux/sunxi.log
+  /opt/sunxi-debian/olinux/create_arm_debootstrap.sh -i /srv/olinux/sunxi/ \
+   -t /srv/olinux/debootstrap -p -y | tee /srv/olinux/debootstrap.log
+else
+   /opt/sunxi-debian/olinux/create_arm_debootstrap.sh -i testing \
+   -t /srv/olinux/debootstrap -p -y | tee /srv/olinux/debootstrap.log
 fi
-
-/opt/sunxi-debian/olinux/create_arm_debootstrap.sh -i /srv/olinux/sunxi/ \
- -t /srv/olinux/debootstrap -p -y | tee /srv/olinux/debootstrap.log
 
 if [ $KERNEL_MODE = "compil" ] ; then
   cp /srv/olinux/sunxi.log /srv/olinux/debootstrap.log /srv/olinux/debootstrap/root/
