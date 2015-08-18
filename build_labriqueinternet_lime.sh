@@ -16,13 +16,12 @@ cat <<EOF
 
 # OPTIONS
 
-  -k		kernel mode (testing or compil, defautl: compil)
+  -k		kernel mode (testing or compil, defautl: testing)
 
 EOF
 exit 1
 }
 
-KERNEL_MODE="compil"
 
 while getopts ":k:" opt; do
   case $opt in
@@ -40,7 +39,7 @@ cd /opt/sunxi-debian && git pull
 chroot_deb (){
 	  LC_ALL=C LANGUAGE=C LANG=C chroot $1 /bin/bash -c "$2"
   }
-if [ $KERNEL_MODE = "compil" ] ; then
+if [ ${KERNEL_MODE} ] ; then
   # Remove '-s' option if you want to compile using GIT (for kernel and u-boot)
   /opt/sunxi-debian/olinux/create_sunxi_boot_files.sh -l Labriqueinter.net \
    -t /srv/olinux/sunxi -s | tee /srv/olinux/sunxi.log
