@@ -91,7 +91,7 @@ else
   echo Olimex A20-OLinuXino-LIME > /srv/olinux/debootstrap/etc/flash-kernel/machine
   chroot_deb /srv/olinux/debootstrap 'update-initramfs -u -k all'
   /opt/sunxi-debian/olinux/create_device.sh -d img -s 1400 \
-   -t /srv/olinux/labriqueinternet_lime1_cryptedroot_"$(date '+%d-%m-%Y')".img \
+   -t /srv/olinux/labriqueinternet_lime1_"$(date '+%d-%m-%Y')".img \
    -b /srv/olinux/debootstrap \
    -u /srv/olinux/debootstrap/usr/lib/u-boot/A20-OLinuXino-Lime/u-boot-sunxi-with-spl.bin 
 fi
