@@ -37,6 +37,9 @@ done
 
 cd /opt/sunxi-debian && git pull
 
+chroot_deb (){
+	  LC_ALL=C LANGUAGE=C LANG=C chroot $1 /bin/bash -c "$2"
+  }
 if [ $KERNEL_MODE = "compil" ] ; then
   # Remove '-s' option if you want to compile using GIT (for kernel and u-boot)
   /opt/sunxi-debian/olinux/create_sunxi_boot_files.sh -l Labriqueinter.net \
@@ -67,7 +70,7 @@ else
 
   # Create .img for Lime2
   echo Olimex A20-OLinuXino-LIME2 > /srv/olinux/debootstrap/etc/flash-kernel/machine
-  chroot /srv/olinux/debootstrap 'update-initramfs -u -k all'
+  chroot_deb /srv/olinux/debootstrap 'update-initramfs -u -k all'
   /opt/sunxi-debian/olinux/create_device.sh -d img -s 1400 \
    -t /srv/olinux/labriqueinternet_lime2_cryptedroot_"$(date '+%d-%m-%Y')".img \
    -b /srv/olinux/debootstrap \
@@ -79,7 +82,7 @@ else
   echo '/dev/mmcblk0p1      /	ext4    defaults        0       1' > /srv/olinux/debootstrap/etc/fstab
 
   # Create .img for Lime2 without crypted root
-  chroot /srv/olinux/debootstrap 'update-initramfs -u -k all'
+  chroot_deb /srv/olinux/debootstrap 'update-initramfs -u -k all'
   /opt/sunxi-debian/olinux/create_device.sh -d img -s 1400 \
    -t /srv/olinux/labriqueinternet_lime2_"$(date '+%d-%m-%Y')".img \
    -b /srv/olinux/debootstrap \
@@ -87,7 +90,7 @@ else
 
   # Create .img for Lime without crypted root
   echo Olimex A20-OLinuXino-LIME > /srv/olinux/debootstrap/etc/flash-kernel/machine
-  chroot /srv/olinux/debootstrap 'update-initramfs -u -k all'
+  chroot_deb /srv/olinux/debootstrap 'update-initramfs -u -k all'
   /opt/sunxi-debian/olinux/create_device.sh -d img -s 1400 \
    -t /srv/olinux/labriqueinternet_lime1_cryptedroot_"$(date '+%d-%m-%Y')".img \
    -b /srv/olinux/debootstrap \
