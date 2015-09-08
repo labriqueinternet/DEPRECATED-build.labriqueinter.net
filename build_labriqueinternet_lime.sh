@@ -22,7 +22,7 @@ cp /srv/olinux/debootstrap.log /srv/olinux/debootstrap/root/
 board=( 'Olimex A20-OLinuXino-LIME' 'Olimex A20-OLinuXino-LIME2' 'LeMaker Banana Pi' )
 uboot=( 'A20-OLinuXino-Lime' 'A20-OLinuXino-Lime2' 'Bananapi' )
 
-for i in `seq 0 $((${#board[@]}))`; do 
+for i in `seq 0 $((${#board[@]}-1))`; do 
 
   echo ${board[$i]} > /srv/olinux/debootstrap/etc/flash-kernel/machine
   chroot_deb /srv/olinux/debootstrap 'update-initramfs -u -k all'
@@ -38,7 +38,7 @@ echo 'LINUX_KERNEL_CMDLINE="console=tty0 hdmi.audio=EDID:0 disp.screen0_output_m
 rm /srv/olinux/debootstrap/etc/crypttab
 echo '/dev/mmcblk0p1      /	ext4    defaults        0       1' > /srv/olinux/debootstrap/etc/fstab
   
-for i in `seq 0 $((${#board[@]}))`; do 
+for i in `seq 0 $((${#board[@]}-1))`; do 
 
   echo ${board[$i]} > /srv/olinux/debootstrap/etc/flash-kernel/machine
   chroot_deb /srv/olinux/debootstrap 'update-initramfs -u -k all'
