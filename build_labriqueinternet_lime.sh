@@ -27,7 +27,7 @@ for i in `seq 0 $((${#board[@]}-1))`; do
   echo ${board[$i]} > /srv/olinux/debootstrap/etc/flash-kernel/machine
   chroot_deb /srv/olinux/debootstrap 'update-initramfs -u -k all'
   /opt/sunxi-debian/olinux/create_device.sh -d img -s 1400 \
-   -t /srv/olinux/labriqueinternet_${uboot[$i]}_"$(date '+%d-%m-%Y')".img \
+   -t /srv/olinux/labriqueinternet_${uboot[$i]}_cryptedroot_"$(date '+%d-%m-%Y')".img \
    -b /srv/olinux/debootstrap \
    -u /srv/olinux/debootstrap/usr/lib/u-boot/${uboot[$i]}/u-boot-sunxi-with-spl.bin 
   
@@ -43,7 +43,7 @@ for i in `seq 0 $((${#board[@]}-1))`; do
   echo ${board[$i]} > /srv/olinux/debootstrap/etc/flash-kernel/machine
   chroot_deb /srv/olinux/debootstrap 'update-initramfs -u -k all'
   /opt/sunxi-debian/olinux/create_device.sh -d img -s 1400 \
-   -t /srv/olinux/labriqueinternet_${uboot[$i]}_cryptedroot_"$(date '+%d-%m-%Y')".img \
+   -t /srv/olinux/labriqueinternet_${uboot[$i]}_"$(date '+%d-%m-%Y')".img \
    -b /srv/olinux/debootstrap \
    -u /srv/olinux/debootstrap/usr/lib/u-boot/${uboot[$i]}/u-boot-sunxi-with-spl.bin 
   
