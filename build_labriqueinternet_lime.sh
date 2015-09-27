@@ -19,8 +19,8 @@ cd /opt/sunxi-debian && git pull
  -t /srv/olinux/debootstrap -p -y -e | tee /srv/olinux/debootstrap.log
 cp /srv/olinux/debootstrap.log /srv/olinux/debootstrap/root/
 
-board=( 'Olimex A20-OLinuXino-LIME' 'Olimex A20-OLinuXino-LIME2' 'LeMaker Banana Pi' )
-uboot=( 'A20-OLinuXino-Lime' 'A20-OLinuXino-Lime2' 'Bananapi' )
+board=( 'Olimex A20-OLinuXino-LIME' 'Olimex A20-OLinuXino-LIME2' )
+uboot=( 'A20-OLinuXino-Lime' 'A20-OLinuXino-Lime2' )
 
 for i in `seq 0 $((${#board[@]}-1))`; do 
 
