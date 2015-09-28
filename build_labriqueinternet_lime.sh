@@ -21,7 +21,7 @@ cp /srv/olinux/debootstrap.log /srv/olinux/debootstrap/root/
 
 boardlist=( 'a20lime2' 'a20lime' )
 
-for BOARD in ${#boardlist[@]}; do 
+for BOARD in ${boardlist[@]}; do 
 
   . /opt/sunxi-debian/olinux/config_board.sh
   echo $FLASH_KERNEL > /srv/olinux/debootstrap/etc/flash-kernel/machine
@@ -38,7 +38,7 @@ echo 'LINUX_KERNEL_CMDLINE="console=tty0 hdmi.audio=EDID:0 disp.screen0_output_m
 rm /srv/olinux/debootstrap/etc/crypttab
 echo '/dev/mmcblk0p1      /	ext4    defaults        0       1' > /srv/olinux/debootstrap/etc/fstab
   
-for BOARD in ${#boardlist[@]}; do 
+for BOARD in ${boardlist[@]}; do 
 
   . /opt/sunxi-debian/olinux/config_board.sh
   echo $FLASH_KERNEL > /srv/olinux/debootstrap/etc/flash-kernel/machine
