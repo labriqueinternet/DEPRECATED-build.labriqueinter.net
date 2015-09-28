@@ -19,17 +19,17 @@ cd /opt/sunxi-debian && git pull
  -t /srv/olinux/debootstrap -p -y -e | tee /srv/olinux/debootstrap.log
 cp /srv/olinux/debootstrap.log /srv/olinux/debootstrap/root/
 
-board=( 'Olimex A20-OLinuXino-LIME' 'Olimex A20-OLinuXino-LIME2' )
-uboot=( 'A20-OLinuXino-Lime' 'A20-OLinuXino-Lime2' )
+board=( 'a20lime2' 'a20lime' )
 
-for i in `seq 0 $((${#board[@]}-1))`; do 
+for BOARD in ${#board[@]}; do 
 
-  echo ${board[$i]} > /srv/olinux/debootstrap/etc/flash-kernel/machine
+  . /opt/sunxi-debian/olinux/config_board.sh
+  echo $FLASH_KERNEL > /srv/olinux/debootstrap/etc/flash-kernel/machine
   chroot_deb /srv/olinux/debootstrap 'update-initramfs -u -k all'
   /opt/sunxi-debian/olinux/create_device.sh -d img -s 1400 \
-   -t /srv/olinux/labriqueinternet_${uboot[$i]}_cryptedroot_"$(date '+%d-%m-%Y')".img \
+   -t /srv/olinux/labriqueinternet_${U_BOOT}_cryptedroot_"$(date '+%d-%m-%Y')".img \
    -b /srv/olinux/debootstrap \
-   -u /srv/olinux/debootstrap/usr/lib/u-boot/${uboot[$i]}/u-boot-sunxi-with-spl.bin 
+   -u $BOARD
   
 done
 
@@ -38,14 +38,15 @@ echo 'LINUX_KERNEL_CMDLINE="console=tty0 hdmi.audio=EDID:0 disp.screen0_output_m
 rm /srv/olinux/debootstrap/etc/crypttab
 echo '/dev/mmcblk0p1      /	ext4    defaults        0       1' > /srv/olinux/debootstrap/etc/fstab
   
-for i in `seq 0 $((${#board[@]}-1))`; do 
+for BOARD in ${#board[@]}; do 
 
-  echo ${board[$i]} > /srv/olinux/debootstrap/etc/flash-kernel/machine
+  . /opt/sunxi-debian/olinux/config_board.sh
+  echo $FLASH_KERNEL > /srv/olinux/debootstrap/etc/flash-kernel/machine
   chroot_deb /srv/olinux/debootstrap 'update-initramfs -u -k all'
   /opt/sunxi-debian/olinux/create_device.sh -d img -s 1400 \
    -t /srv/olinux/labriqueinternet_${uboot[$i]}_"$(date '+%d-%m-%Y')".img \
    -b /srv/olinux/debootstrap \
-   -u /srv/olinux/debootstrap/usr/lib/u-boot/${uboot[$i]}/u-boot-sunxi-with-spl.bin 
+   -u $BOARD
   
 done
 
