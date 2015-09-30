@@ -27,7 +27,7 @@ for BOARD in ${boardlist[@]}; do
   echo $FLASH_KERNEL > /srv/olinux/debootstrap/etc/flash-kernel/machine
   chroot_deb /srv/olinux/debootstrap 'update-initramfs -u -k all'
   /opt/sunxi-debian/olinux/create_device.sh -d img -s 1400 \
-   -t /srv/olinux/labriqueinternet_${U_BOOT}_cryptedroot_"$(date '+%d-%m-%Y')".img \
+   -t /srv/olinux/labriqueinternet_${U_BOOT}_uncrypted_"$(date '+%d-%m-%Y')".img \
    -b /srv/olinux/debootstrap \
    -u $BOARD
   
