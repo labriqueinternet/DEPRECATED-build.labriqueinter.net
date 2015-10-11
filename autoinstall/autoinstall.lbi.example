@@ -1,0 +1,38 @@
+{
+  "vpnclient": {
+    "server_name": "vpn.example.com",
+    "server_port": "1194",
+    "server_proto": "udp",
+    "ip6_net": "2001:db8::",
+    "crt_server_ca": "-----BEGIN CERTIFICATE-----|MIIFAwBAgI...MpMHRte6K|-----END CERTIFICATE-----",
+    "crt_client": "-----BEGIN CERTIFICATE-----|MIIFbj...T4F|6As=|-----END CERTIFICATE-----",
+    "crt_client_key": "-----BEGIN PRIVATE KEY-----|MIIE...SEi8kAMj|-----END PRIVATE KEY-----",
+    "crt_client_ta": "",
+    "login_user": "",
+    "login_passphrase": "",
+    "dns0": "89.234.141.66",
+    "dns1": "2001:913::8",
+    "openvpn_rm": [ ],
+    "openvpn_add": [ ]
+  },
+  "hotspot": {
+    "wifi_ssid": "myNeutralNetwork",
+    "wifi_passphrase": "jlJ9ortLKj4A",
+    "ip6_net": "2001:db8::",
+    "ip6_dns0": "2001:913::8",
+    "ip6_dns1": "2001:910:800::12",
+    "ip4_dns0": "80.67.188.188",
+    "ip4_dns1": "80.67.169.12",
+    "ip4_nat_prefix": "10.0.242",
+    "firmware_nonfree": "yes"
+  },
+  "yunohost": {
+    "domain": "example.net",
+    "add_domain": "example.org",
+    "password": "jlJ9ortLKj4A",
+    "user": "jdoe",
+    "user_firstname": "John",
+    "user_lastname": "Doe",
+    "user_password": "jlJ9ortLKj4A"
+  }
+}
