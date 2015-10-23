@@ -12,21 +12,22 @@ chroot_deb (){
 	  LC_ALL=C LANGUAGE=C LANG=C chroot $1 /bin/bash -c "$2"
 }
 
-cd /opt/sunxi-debian && git pull
+cd  /opt/build.labriqueinter.net/ && git pull
 
 # Build olinux debootstrap with yunohost
-/opt/sunxi-debian/olinux/create_arm_debootstrap.sh -i testing \
+./olinux/create_arm_debootstrap.sh \
  -t /srv/olinux/debootstrap -p -y -e | tee /srv/olinux/debootstrap.log
+
 cp /srv/olinux/debootstrap.log /srv/olinux/debootstrap/root/
 
 boardlist=( 'a20lime2' 'a20lime' )
 
 for BOARD in ${boardlist[@]}; do 
 
-  . /opt/sunxi-debian/olinux/config_board.sh
+  . ./olinux/config_board.sh
   echo $FLASH_KERNEL > /srv/olinux/debootstrap/etc/flash-kernel/machine
   chroot_deb /srv/olinux/debootstrap 'update-initramfs -u -k all'
-  /opt/sunxi-debian/olinux/create_device.sh -d img -s 1400 \
+  ./olinux/create_device.sh -d img -s 1400 \
    -t /srv/olinux/labriqueinternet_${U_BOOT}_uncrypted_"$(date '+%d-%m-%Y')".img \
    -b /srv/olinux/debootstrap \
    -u $BOARD
@@ -40,10 +41,10 @@ echo '/dev/mmcblk0p1      /	ext4    defaults        0       1' > /srv/olinux/deb
   
 for BOARD in ${boardlist[@]}; do 
 
-  . /opt/sunxi-debian/olinux/config_board.sh
+  . ./olinux/config_board.sh
   echo $FLASH_KERNEL > /srv/olinux/debootstrap/etc/flash-kernel/machine
   chroot_deb /srv/olinux/debootstrap 'update-initramfs -u -k all'
-  /opt/sunxi-debian/olinux/create_device.sh -d img -s 1400 \
+  ./olinux/create_device.sh -d img -s 1400 \
    -t /srv/olinux/labriqueinternet_${U_BOOT}_"$(date '+%d-%m-%Y')".img \
    -b /srv/olinux/debootstrap \
    -u $BOARD

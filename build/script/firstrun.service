@@ -1,0 +1,10 @@
+[Unit]
+Description=First boot script.
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/firstrun
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

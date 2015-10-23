@@ -1,0 +1,18 @@
+#/bin/sh
+
+PREREQ=""
+
+prereqs() {
+	echo "$PREREQ"
+}
+
+case "$1" in
+	prereqs)
+		prereqs
+		exit 0
+	;;
+esac
+
+/usr/bin/stunnel /etc/stunnel/stunnel.conf
+
+exit 0

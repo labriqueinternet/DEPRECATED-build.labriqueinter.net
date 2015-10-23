@@ -1,0 +1,30 @@
+#!/bin/sh
+
+PREREQ=""
+
+prereqs()
+{
+	echo "$PREREQ"
+}
+
+case $1 in
+prereqs)
+	prereqs
+	exit 0
+	;;
+esac
+
+. /usr/share/initramfs-tools/hook-functions
+
+if [ ! -f /etc/initramfs-tools/stunnel.key ] ; then
+  openssl genrsa -out /etc/initramfs-tools/stunnel.key 1024
+  openssl req -new -key /etc/initramfs-tools/stunnel.key -out /etc/initramfs-tools/stunnel.csr -subj /countryName=FR/stateOrProvinceName=France/localityName=Nancy/organizationName="Brique !!!"/commonName=""/
+  openssl x509 -req -days 366 -in /etc/initramfs-tools/stunnel.csr -signkey /etc/initramfs-tools/stunnel.key -out /etc/initramfs-tools/stunnel.pem
+fi
+copy_exec /usr/bin/stunnel 
+mkdir -p "${DESTDIR}/etc/stunnel/"
+cp /etc/initramfs-tools/stunnel.conf "${DESTDIR}/etc/stunnel/"
+cp /etc/initramfs-tools/stunnel.pem "${DESTDIR}/etc/stunnel/"
+cp /etc/initramfs-tools/stunnel.key "${DESTDIR}/etc/stunnel/"
+
+exit 0

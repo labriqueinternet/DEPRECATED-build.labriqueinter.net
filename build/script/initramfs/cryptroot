@@ -1,0 +1,82 @@
+#!/bin/sh
+
+PREREQ=""
+
+prereqs()
+{
+	echo "$PREREQ"
+}
+
+case $1 in
+prereqs)
+	prereqs
+	exit 0
+	;;
+esac
+
+. /usr/share/initramfs-tools/hook-functions
+
+add_crypto_modules() {
+	local mod file altmod found genericfound
+	mod="$1"
+	found=""
+	genericfound=""
+
+	if [ -z "$mod" ]; then
+		return 1
+	fi
+
+	# We have several potential sources of modules (in order of preference):
+	#
+	#   a) /lib/modules/$VERSION/kernel/arch/$ARCH/crypto/$mod-$specific.ko
+	#   b) /lib/modules/$VERSION/kernel/crypto/$mod_generic.ko
+	#   c) /lib/modules/$VERSION/kernel/crypto/$mod.ko
+	#
+	# and (currently ignored):
+	#
+	#   d) /lib/modules/$VERSION/kernel/drivers/crypto/$specific-$mod.ko
+
+	for file in $(find "$MODULESDIR/kernel/arch/" -name "$mod-*.ko" 2>/dev/null); do
+		altmod="${file##*/}"
+		altmod="${altmod%.ko}"
+		manual_add_modules "$altmod"
+		found="yes"
+	done
+
+	for file in $(find "$MODULESDIR/kernel/crypto/" -name "${mod}_generic.ko" 2>/dev/null); do
+		altmod="${file##*/}"
+		altmod="${altmod%.ko}"
+		manual_add_modules "$altmod"
+		found="yes"
+		genericfound="yes"
+	done
+
+	if [ -z "$genericfound" ]; then
+		for file in $(find "$MODULESDIR/kernel/crypto/" -name "${mod}.ko" 2>/dev/null); do
+			altmod="${file##*/}"
+			altmod="${altmod%.ko}"
+			manual_add_modules "$altmod"
+			found="yes"
+		done
+	fi
+
+	if [ -z "$found" ]; then
+		return 1
+	fi
+
+	return 0
+}
+
+for mod in aes cbc chainiv cryptomgr krng sha256 xts; do
+	add_crypto_modules $mod
+done
+
+for mod in dm_mod dm_crypt; do
+	manual_add_modules $mod
+done
+
+copy_exec /sbin/cryptsetup
+copy_exec /sbin/dmsetup
+copy_exec /lib/cryptsetup/askpass
+copy_exec /bin/sed
+exit 0

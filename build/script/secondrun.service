@@ -1,0 +1,10 @@
+[Unit]
+Description=Second boot script.
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/secondrun
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
