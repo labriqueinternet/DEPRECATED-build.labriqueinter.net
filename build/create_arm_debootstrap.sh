@@ -74,19 +74,34 @@ chroot_deb (){
   LC_ALL=C LANGUAGE=C LANG=C chroot $1 /bin/bash -c "$2"
 }
 
-umount_dir (){
-    # Umount proc, sys, and dev
-    umount -l "$1"/dev/pts
-    umount -l "$1"/dev
-    umount -l "$1"/proc
-    umount -l "$1"/sys
+
+mount_dir (){
+  mount -t proc chproc $1/proc
+  mount -t sysfs chsys $1/sys
+  mount -t devtmpfs chdev $1/dev || mount --bind /dev $1/dev
+  mount -t devpts chpts $1/dev/pts || mount --bind /dev/pts $1/dev/pts
 }
 
+umount_dir (){
+  # Umount proc, sys, and dev
+  umount -l "$1"/proc
+  umount -l "$1"/sys
+  umount -l "$1"/dev/pts
+  umount -l "$1"/dev
+}
+
+finish(){
+  umount_dir $TARGET_DIR 
+}
+trap finish EXIT
+
+# Debootstrap
 if [ ${CROSS} ] ; then
-  # Debootstrap
-  mount binfmt_misc -t binfmt_misc /proc/sys/fs/binfmt_misc
-  bash ${REP}/script/binfmt-misc-arm.sh unregister
-  bash ${REP}/script/binfmt-misc-arm.sh
+  if ! mount | grep -q binfmt_misc ; then
+    mount binfmt_misc -t binfmt_misc /proc/sys/fs/binfmt_misc
+    bash ${REP}/script/binfmt-misc-arm.sh unregister
+    bash ${REP}/script/binfmt-misc-arm.sh
+  fi
   debootstrap --arch=armhf --foreign $DEBIAN_RELEASE $TARGET_DIR
   cp /usr/bin/qemu-arm-static $TARGET_DIR/usr/bin/
   cp /etc/resolv.conf $TARGET_DIR/etc
@@ -98,10 +113,7 @@ else
 fi
 
 # mount proc, sys and dev
-mount -t proc chproc $TARGET_DIR/proc
-mount -t sysfs chsys $TARGET_DIR/sys
-mount -t devtmpfs chdev $TARGET_DIR/dev || mount --bind /dev $TARGET_DIR/dev
-mount -t devpts chpts $TARGET_DIR/dev/pts || mount --bind /dev/pts $TARGET_DIR/dev/pts
+mount_dir $TARGET_DIR
 
 # Configure debian apt repository
 cat <<EOT > $TARGET_DIR/etc/apt/sources.list
