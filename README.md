@@ -26,7 +26,8 @@ Now copy build/olimex.img on the sd and boot on it.
 
 ### Build all labriqueinter.net images
 
-Log into the olimex board and build, configure it, and run build script.
+Log into the olimex board and build, configure it, and run build script (you
+probably want to execute the last command on an screen).
 
 ```shell
 apt-get install git -y --force-yes
