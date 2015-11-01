@@ -15,7 +15,7 @@ chroot_deb (){
 cd  /opt/build.labriqueinter.net/ && git pull
 
 # Build olinux debootstrap with yunohost
-./olinux/create_arm_debootstrap.sh \
+./build/create_arm_debootstrap.sh \
  -t /srv/olinux/debootstrap -p -y -e | tee /srv/olinux/debootstrap.log
 
 cp /srv/olinux/debootstrap.log /srv/olinux/debootstrap/root/
@@ -24,10 +24,10 @@ boardlist=( 'a20lime2' 'a20lime' )
 
 for BOARD in ${boardlist[@]}; do 
 
-  . ./olinux/config_board.sh
+  . ./build/config_board.sh
   echo $FLASH_KERNEL > /srv/olinux/debootstrap/etc/flash-kernel/machine
   chroot_deb /srv/olinux/debootstrap 'update-initramfs -u -k all'
-  ./olinux/create_device.sh -d img -s 1400 \
+  ./build/create_device.sh -d img -s 1400 \
    -t /srv/olinux/labriqueinternet_${U_BOOT}_uncrypted_"$(date '+%d-%m-%Y')".img \
    -b /srv/olinux/debootstrap \
    -u $BOARD
@@ -41,10 +41,10 @@ echo '/dev/mmcblk0p1      /	ext4    defaults        0       1' > /srv/olinux/deb
   
 for BOARD in ${boardlist[@]}; do 
 
-  . ./olinux/config_board.sh
+  . ./build/config_board.sh
   echo $FLASH_KERNEL > /srv/olinux/debootstrap/etc/flash-kernel/machine
   chroot_deb /srv/olinux/debootstrap 'update-initramfs -u -k all'
-  ./olinux/create_device.sh -d img -s 1400 \
+  ./build/create_device.sh -d img -s 1400 \
    -t /srv/olinux/labriqueinternet_${U_BOOT}_"$(date '+%d-%m-%Y')".img \
    -b /srv/olinux/debootstrap \
    -u $BOARD
