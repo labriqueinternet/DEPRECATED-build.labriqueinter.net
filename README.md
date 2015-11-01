@@ -29,7 +29,7 @@ Now copy build/olimex.img on the sd and boot on it.
 Log into the olimex board and build, configure it, and run build script.
 
 ```shell
-apt-get install git
+apt-get install git -y --force-yes
 git clone https://github.com/labriqueinternet/build.labriqueinter.net.git /opt/build.labriqueinter.net
 cd /opt/build.labriqueinter.net && bash init.sh
 cd /opt/build.labriqueinter.net && bash build_labriqueinternet_lime.sh
