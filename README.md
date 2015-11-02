@@ -2,7 +2,7 @@
 
 ## Build on olimex board
 
-### Why ?
+### Why?
 
 To build Labriqueinter.net directly with [yunohost](https://yunohost.org/) we
 cannot use debootstrap with qemu-arm because mysql-server-5.5 is buggy and the
@@ -12,7 +12,7 @@ The best solution compiling the kernel and perform a debootstrap on an olimex
 board. This process take much time but it the best solution to build
 labriqueinter.net entirely with scripts.
 
-## How ?
+## How?
 
 On your fresh olimex installation (build with
 [sunxi-debian](https://github.com/bleuchtang/sunxi-debian) for instance) you
