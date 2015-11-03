@@ -1,8 +1,7 @@
-# build.labriqueinter.net
 
-## Build on olimex board
+# Build on olimex board
 
-### Why ?
+## Why ?
 
 To build Labriqueinter.net directly with [yunohost](https://yunohost.org/) we
 cannot use debootstrap with qemu-arm because mysql-server-5.5 is buggy and the
@@ -37,3 +36,16 @@ cd /opt/build.labriqueinter.net && bash build_labriqueinternet_lime.sh
 ```
 
 Now, if everything gone thind you should have images on /srv/olinux/
+
+### Compress images
+
+If you whant to share your images you probably want to compress them:
+
+```shell
+for i in *.img; do tar cfJ $i.tar.xz $i; done
+```
+
+# Install 
+
+Now you can follow tutorials to install your [cube](https://repo.labriqueinter.net/).
+
