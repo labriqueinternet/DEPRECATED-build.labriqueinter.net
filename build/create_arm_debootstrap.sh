@@ -236,11 +236,19 @@ EOT
 umount_dir $TARGET_DIR
 chroot_deb $TARGET_DIR 'apt-get update'
 chroot_deb $TARGET_DIR 'apt-get upgrade -y --force-yes'
-mkdir $TARGET_DIR/etc/flash-kernel
-echo $FLASH_KERNEL > $TARGET_DIR/etc/flash-kernel/machine
+
 if [ $ENCRYPT ] ; then
   PACKAGES="stunnel dropbear busybox cryptsetup"
   echo 'LINUX_KERNEL_CMDLINE="console=ttyS1 hdmi.audio=EDID:0 disp.screen0_output_mode=EDID:1280x720p60 root=/dev/mapper/root cryptopts=target=root,source=/dev/mmcblk0p2,cipher=aes-xts-plain64,size=256,hash=sha1 rootwait sunxi_ve_mem_reserve=0 sunxi_g2d_mem_reserve=0 sunxi_no_mali_mem_reserve sunxi_fb_mem_reserve=0 panic=10 loglevel=6 consoleblank=0"' > $TARGET_DIR/etc/default/flash-kernel
+else
+  echo 'LINUX_KERNEL_CMDLINE="console=ttyS1 hdmi.audio=EDID:0 disp.screen0_output_mode=EDID:1280x720p60 root=/dev/mmcblk0p1 rootwait sunxi_ve_mem_reserve=0 sunxi_g2d_mem_reserve=0 sunxi_no_mali_mem_reserve sunxi_fb_mem_reserve=0 panic=10 loglevel=6 consoleblank=0"' > $TARGET_DIR/etc/default/flash-kernel
+fi
+
+mkdir $TARGET_DIR/etc/flash-kernel
+echo $FLASH_KERNEL > $TARGET_DIR/etc/flash-kernel/machine
+chroot_deb $TARGET_DIR "DEBIAN_FRONTEND=noninteractive $APT linux-image-armmp flash-kernel u-boot-sunxi u-boot-tools $PACKAGES"
+
+if [ $ENCRYPT ] ; then
   echo 'aes' >> $TARGET_DIR/etc/initramfs-tools/modules
   echo 'aes_x86_64' >> $TARGET_DIR/etc/initramfs-tools/modules
   echo 'aes_generic' >> $TARGET_DIR/etc/initramfs-tools/modules
@@ -252,11 +260,6 @@ if [ $ENCRYPT ] ; then
   echo 'xts' >> $TARGET_DIR/etc/initramfs-tools/modules
   echo 'crypto_blkcipher' >> $TARGET_DIR/etc/initramfs-tools/modules
   echo 'gf128mul' >> $TARGET_DIR/etc/initramfs-tools/modules
-else
-  echo 'LINUX_KERNEL_CMDLINE="console=ttyS1 hdmi.audio=EDID:0 disp.screen0_output_mode=EDID:1280x720p60 root=/dev/mmcblk0p1 rootwait sunxi_ve_mem_reserve=0 sunxi_g2d_mem_reserve=0 sunxi_no_mali_mem_reserve sunxi_fb_mem_reserve=0 panic=10 loglevel=6 consoleblank=0"' > $TARGET_DIR/etc/default/flash-kernel
-fi
-chroot_deb $TARGET_DIR "DEBIAN_FRONTEND=noninteractive $APT linux-image-armmp flash-kernel u-boot-sunxi u-boot-tools $PACKAGES"
-if [ $ENCRYPT ] ; then
   echo 'root	/dev/mmcblk0p2	none	luks' >> $TARGET_DIR/etc/crypttab
   echo '/dev/mapper/root	/	ext4	defaults	0	1' > $TARGET_DIR/etc/fstab
   echo '/dev/mmcblk0p1	/boot	ext4	defaults	0	2' >> $TARGET_DIR/etc/fstab
