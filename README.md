@@ -4,8 +4,8 @@
 ## Why ?
 
 To build Labriqueinter.net directly with [yunohost](https://yunohost.org/) we
-cannot use debootstrap with qemu-arm because mysql-server-5.5 is buggy and the
-installation failed.
+cannot use debootstrap with qemu-arm-static because it is buggy and
+mysql-server-5.5 installation failed.
 
 The best solution is to build a lightweight image without yunohost, and
 perform a full debootstrap with yunohost directly on the olimex board with the
@@ -14,10 +14,14 @@ build labriqueinter.net entirely with scripts.
 
 ## How ?
 
-### Build the first lightweight image
+### With docker and apt-cacher-ng
 
 ```shell
-docker run --privileged -i -t -v $(pwd)/build/:/olinux/ debian:olinux bash /olinux/create_arm_debootstrap.sh -c -b lime2 
+docker build -t debian:olinux -f build/Dockerfile .
+mkdir build/apt-cache
+docker run -d --name apt -v $(pwd)/build/:/olinux/ debian:olinux /usr/sbin/apt-cacher-ng ForeGround=1 CacheDir=/olinux/apt-cache
+docker run --privileged -i -t --name build --link apt:apt -v $(pwd)/build/:/olinux/ debian:olinux bash /olinux/create_arm_debootstrap.sh -c -p apt
+docker stop apt
 sudo bash build/create_device.sh -d img -s 800
 ```
 
@@ -25,8 +29,9 @@ Now copy build/olimex.img on the sd and boot on it.
 
 ### Build all labriqueinter.net images
 
-Log into the olimex board and build, configure it, and run build script (you
-probably want to execute the last command on an screen).
+On your board you should retrieve this git repository and configure the system
+for debootstrap. After that you can build labriqueinter.net images. You
+probably want to execute the last command on an screen.
 
 ```shell
 apt-get install git -y --force-yes
@@ -35,11 +40,11 @@ cd /opt/build.labriqueinter.net && bash init.sh
 cd /opt/build.labriqueinter.net && bash build_labriqueinternet_lime.sh
 ```
 
-Now, if everything gone thind you should have images on /srv/olinux/
+Now, if everything gone well you should have images on /srv/olinux/ !
 
 ### Compress images
 
-If you whant to share your images you probably want to compress them:
+If you want to share your images you probably want to compress them:
 
 ```shell
 for i in *.img; do tar cfJ $i.tar.xz $i; done

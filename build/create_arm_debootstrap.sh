@@ -21,7 +21,7 @@ cat <<EOF
   -t		target directory for debootstrap	(default: /olinux/debootstrap)
   -y		install yunohost (doesn't work with cross debootstrap)
   -c		cross debootstrap
-  -p		use aptcacher proxy
+  -p		use and set aptcacher proxy
   -e		configure for encrypted partition	(default: false)
 
 EOF
@@ -34,7 +34,7 @@ DEB_HOSTNAME=olinux
 REP=$(dirname $0)
 APT='apt-get install -y --force-yes'
 
-while getopts ":a:b:n:t:ycpe" opt; do
+while getopts ":a:b:n:t:ycp:e" opt; do
   case $opt in
     b)
       BOARD=$OPTARG
@@ -55,7 +55,7 @@ while getopts ":a:b:n:t:ycpe" opt; do
       CROSS=yes
       ;;
     p)
-      APTCACHER=yes
+      APTCACHER=$OPTARG
       ;;
     e)
       ENCRYPT=yes
@@ -102,12 +102,16 @@ if [ ${CROSS} ] ; then
     bash ${REP}/script/binfmt-misc-arm.sh unregister
     bash ${REP}/script/binfmt-misc-arm.sh
   fi
-  debootstrap --arch=armhf --foreign $DEBIAN_RELEASE $TARGET_DIR
+  if [ ${APTCACHER} ] ; then
+    debootstrap --arch=armhf --foreign $DEBIAN_RELEASE $TARGET_DIR http://${APTCACHER}:3142/ftp.fr.debian.org/debian/
+  else
+    debootstrap --arch=armhf --foreign $DEBIAN_RELEASE $TARGET_DIR
+  fi
   cp /usr/bin/qemu-arm-static $TARGET_DIR/usr/bin/
   cp /etc/resolv.conf $TARGET_DIR/etc
   chroot_deb $TARGET_DIR '/debootstrap/debootstrap --second-stage'
 elif [ ${APTCACHER} ] ; then
- debootstrap $DEBIAN_RELEASE $TARGET_DIR http://localhost:3142/ftp.fr.debian.org/debian/
+ debootstrap $DEBIAN_RELEASE $TARGET_DIR http://${APTCACHER}:3142/ftp.fr.debian.org/debian/
 else
  debootstrap $DEBIAN_RELEASE $TARGET_DIR
 fi
@@ -126,8 +130,11 @@ EOT
 
 if [ ${APTCACHER} ] ; then
  cat <<EOT > $TARGET_DIR/etc/apt/apt.conf.d/01proxy
-Acquire::http::Proxy "http://localhost:3142";
+Acquire::http::Proxy "http://${APTCACHER}:3142";
 EOT
+ # if we are in docker and chroot and we want to have proxy resolvedi
+ cp $TARGET_DIR/etc/hosts $TARGET_DIR/tmp
+ cp /etc/hosts $TARGET_DIR/etc/
 fi
 
 chroot_deb $TARGET_DIR 'apt-get update'
@@ -292,6 +299,7 @@ fi
 
 if [ ${APTCACHER} ] ; then
   rm $TARGET_DIR/etc/apt/apt.conf.d/01proxy
+  cp $TARGET_DIR/tmp/hosts $TARGET_DIR/etc/
 fi
 
 
