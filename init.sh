@@ -22,8 +22,5 @@ if [ ! -f /etc/apt/apt.conf.d/01proxy ] ; then
    /etc/apt/apt.conf.d/01proxy
 fi
 
-# Install packages for kernel and u-boot compilation
-$apt install gcc-4.7 ncurses-dev u-boot-tools \
- build-essential vim libusb-1.0-0-dev pkg-config \
- bc netpbm debootstrap dpkg-dev tar wget bzip2 \
- device-tree-compiler secure-delete screen
+# Install packages for debootstrap 
+$apt install vim debootstrap tar wget bzip2 screen
