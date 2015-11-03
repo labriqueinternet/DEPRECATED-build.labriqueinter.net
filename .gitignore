@@ -1,3 +1,4 @@
 build/debootstrap
+build/apt-cache
 *.img
 *.swp
