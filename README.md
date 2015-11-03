@@ -1,7 +1,5 @@
 
-# Build on olimex board
-
-## Why ?
+# Step to Build labriqueinter.net images 
 
 To build Labriqueinter.net directly with [yunohost](https://yunohost.org/) we
 cannot use debootstrap with qemu-arm-static because it is buggy and
@@ -12,7 +10,9 @@ perform a full debootstrap with yunohost directly on the olimex board with the
 first debootstrap. This process take much time but it the best solution to
 build labriqueinter.net entirely with scripts.
 
-## How ?
+# Build the lightweight image
+
+## Debootstrap
 
 ### With docker and apt-cacher-ng
 
@@ -22,12 +22,22 @@ mkdir build/apt-cache
 docker run -d --name apt -v $(pwd)/build/:/olinux/ debian:olinux /usr/sbin/apt-cacher-ng ForeGround=1 CacheDir=/olinux/apt-cache
 docker run --privileged -i -t --name build --link apt:apt -v $(pwd)/build/:/olinux/ debian:olinux bash /olinux/create_arm_debootstrap.sh -c -p apt
 docker stop apt
-sudo bash build/create_device.sh -d img -s 800
 ```
 
-Now copy build/olimex.img on the sd and boot on it.
+### Without docker and without apt-cacher-ng
 
-### Build all labriqueinter.net images
+```shell
+sudo bash /olinux/create_arm_debootstrap.sh -c
+```
+
+## Install on sd
+
+```shell
+sudo bash build/create_device.sh -d img -s 800
+sudo dd if=build/olinux.img of=/dev/MYSD
+```
+
+## Build all labriqueinter.net images
 
 On your board you should retrieve this git repository and configure the system
 for debootstrap. After that you can build labriqueinter.net images. You
@@ -42,7 +52,7 @@ cd /opt/build.labriqueinter.net && bash build_labriqueinternet_lime.sh
 
 Now, if everything gone well you should have images on /srv/olinux/ !
 
-### Compress images
+# Compress images
 
 If you want to share your images you probably want to compress them:
 
@@ -53,4 +63,3 @@ for i in *.img; do tar cfJ $i.tar.xz $i; done
 # Install 
 
 Now you can follow tutorials to install your [cube](https://repo.labriqueinter.net/).
-
