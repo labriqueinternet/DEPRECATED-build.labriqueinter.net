@@ -27,8 +27,8 @@ for BOARD in ${boardlist[@]}; do
   . ./build/config_board.sh
   echo $FLASH_KERNEL > /srv/olinux/debootstrap/etc/flash-kernel/machine
   chroot_deb /srv/olinux/debootstrap 'update-initramfs -u -k all'
-  ./build/create_device.sh -d img -s 1400 \
-   -t /srv/olinux/labriqueinternet_${U_BOOT}_uncrypted_"$(date '+%d-%m-%Y')".img \
+  ./build/create_device.sh -d img -s 1500 \
+   -t /srv/olinux/labriqueinternet_${FILE}_encrypted_"$(date '+%Y-%m-%d')".img \
    -b /srv/olinux/debootstrap \
    -u $BOARD
   
@@ -44,8 +44,8 @@ for BOARD in ${boardlist[@]}; do
   . ./build/config_board.sh
   echo $FLASH_KERNEL > /srv/olinux/debootstrap/etc/flash-kernel/machine
   chroot_deb /srv/olinux/debootstrap 'update-initramfs -u -k all'
-  ./build/create_device.sh -d img -s 1400 \
-   -t /srv/olinux/labriqueinternet_${U_BOOT}_"$(date '+%d-%m-%Y')".img \
+  ./build/create_device.sh -d img -s 1500 \
+   -t /srv/olinux/labriqueinternet_${FILE}_"$(date '+%Y-%m-%d')".img \
    -b /srv/olinux/debootstrap \
    -u $BOARD
   
