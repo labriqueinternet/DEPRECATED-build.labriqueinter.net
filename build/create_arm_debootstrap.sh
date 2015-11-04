@@ -302,4 +302,7 @@ if [ ${APTCACHER} ] ; then
   cp $TARGET_DIR/tmp/hosts $TARGET_DIR/etc/
 fi
 
+finish(){
+}
 
+exit 0
