@@ -76,10 +76,10 @@ chroot_deb (){
 
 
 mount_dir (){
-  mount -t proc chproc $1/proc
-  mount -t sysfs chsys $1/sys
-  mount -t devtmpfs chdev $1/dev || mount --bind /dev $1/dev
-  mount -t devpts chpts $1/dev/pts || mount --bind /dev/pts $1/dev/pts
+  mount --bind /proc $1/proc
+  mount --bind /sys $1/sys
+  mount --bind /dev $1/dev
+  mount --bind /dev/pts $1/dev/pts
 }
 
 umount_dir (){
@@ -303,6 +303,7 @@ if [ ${APTCACHER} ] ; then
 fi
 
 finish(){
+  exit 0
 }
 
 exit 0
