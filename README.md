@@ -22,6 +22,8 @@ mkdir build/apt-cache
 docker run -d --name apt -v $(pwd)/build/:/olinux/ debian:olinux /usr/sbin/apt-cacher-ng ForeGround=1 CacheDir=/olinux/apt-cache
 docker run --privileged -i -t --name build --link apt:apt -v $(pwd)/build/:/olinux/ debian:olinux bash /olinux/create_arm_debootstrap.sh -c -p apt
 docker stop apt
+docker rm build
+docker rm apt
 ```
 
 ### Without docker and without apt-cacher-ng
