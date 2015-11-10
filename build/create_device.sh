@@ -22,10 +22,10 @@ EOF
 exit 1
 }
 
-TARGET=./build/olinux.img
-MNT1=/mnt/dest
-MNT2=/mnt/source
-DEB_DIR=./build/debootstrap
+TARGET=./tmp/olinux.img
+MNT1=./tmp/dest
+MNT2=./tmp/source
+DEB_DIR=./tmp/debootstrap
 UBOOT_FILE="a20lime"
 REP=$(dirname $0)
 
@@ -55,6 +55,10 @@ while getopts ":s:d:t:b:u:e" opt; do
   esac
 done
 
+#####################
+### CHECKING ARGS ###
+#####################
+
 if [ ! -r "${DEB_DIR}" ]; then
   echo "[ERR] Cannot read ${DEB_DIR}" >&2
   exit 1
@@ -67,6 +71,22 @@ fi
 if [ "$DEVICE" = "img" ] && [ -z $IMGSIZE ] ; then
   show_usage
 fi
+
+#####################
+### CHECKING BINS ###
+#####################
+
+local bins=(dd parted mkfs.ext4 sfill losetup tune2fs)
+
+for i in "${bins[@]}"; do
+  if ! sudo which "${i}" &> /dev/null; then
+    exit_error "${i} command is required"
+  fi
+done
+
+######################
+### CORE FUNCTIONS ###
+######################
 
 mkdir -p $MNT1
 mkdir -p $MNT2

@@ -18,9 +18,9 @@ build labriqueinter.net entirely with scripts.
 
 ```shell
 docker build -t debian:olinux -f build/Dockerfile .
-mkdir build/apt-cache
-docker run -d --name apt -v $(pwd)/build/:/olinux/ debian:olinux /usr/sbin/apt-cacher-ng ForeGround=1 CacheDir=/olinux/apt-cache
-docker run --privileged -i -t --name build --link apt:apt -v $(pwd)/build/:/olinux/ debian:olinux bash /olinux/create_arm_debootstrap.sh -c -p apt
+mkdir -p tmp/apt-cache
+docker run -d --name apt -v $(pwd)/tmp/:/tmp/ debian:olinux /usr/sbin/apt-cacher-ng ForeGround=1 CacheDir=/tmp/apt-cache
+docker run --privileged -i -t --name build --link apt:apt -v $(pwd)/build/:/olinux/ -v $(pwd)/tmp/:/tmp/ debian:olinux bash /olinux/create_arm_debootstrap.sh -c -p apt
 docker stop apt
 docker rm build
 docker rm apt
@@ -36,7 +36,7 @@ sudo bash /olinux/create_arm_debootstrap.sh -c
 
 ```shell
 sudo bash build/create_device.sh -d img -s 800
-sudo dd if=build/olinux.img of=/dev/MYSD
+sudo dd if=tmp/olinux.img of=/dev/MYSD
 ```
 
 ## Build all labriqueinter.net images
