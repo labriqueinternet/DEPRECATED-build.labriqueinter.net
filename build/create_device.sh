@@ -76,7 +76,7 @@ fi
 ### CHECKING BINS ###
 #####################
 
-local bins=(dd parted mkfs.ext4 sfill losetup tune2fs)
+bins=(dd parted mkfs.ext4 sfill losetup tune2fs)
 
 for i in "${bins[@]}"; do
   if ! sudo which "${i}" &> /dev/null; then
