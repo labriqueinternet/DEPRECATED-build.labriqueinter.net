@@ -18,7 +18,7 @@ cat <<EOF
   -b		olinux board (see config_board.sh) 	(default: a20lime)
   -a		add packages to deboostrap
   -n		hostname				(default: olinux)
-  -t		target directory for debootstrap	(default: /olinux/debootstrap)
+  -t		target directory for debootstrap	(default: /tmp/debootstrap)
   -y		install yunohost (doesn't work with cross debootstrap)
   -c		cross debootstrap
   -p		use and set aptcacher proxy
@@ -29,7 +29,7 @@ exit 1
 }
 
 DEBIAN_RELEASE=jessie
-TARGET_DIR=/olinux/debootstrap
+TARGET_DIR=/tmp/debootstrap
 DEB_HOSTNAME=olinux
 REP=$(dirname $0)
 APT='apt-get install -y --force-yes'
