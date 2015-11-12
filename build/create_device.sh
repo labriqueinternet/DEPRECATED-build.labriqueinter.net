@@ -13,8 +13,8 @@ cat <<EOF
 
   -d		device name (img, /dev/sdc, /dev/mmc)	(mandatory)
   -s		size of img in MB		 	(mandatory only for img device option)
-  -t		final image name			(default: /olinux/olinux.img)
-  -b		debootstrap directory, .img or tarball	(default: /olinux/debootstrap)
+  -t		final image name			(default: /tmp/olinux.img)
+  -b		debootstrap directory, .img or tarball	(default: /tmp/debootstrap)
   -u		uboot file or board name		(default: a20lime)
   -e		encrypt partition			(default: false)
 
@@ -76,7 +76,7 @@ fi
 ### CHECKING BINS ###
 #####################
 
-local bins=(dd parted mkfs.ext4 sfill losetup tune2fs)
+bins=(dd parted mkfs.ext4 sfill losetup tune2fs)
 
 for i in "${bins[@]}"; do
   if ! sudo which "${i}" &> /dev/null; then
