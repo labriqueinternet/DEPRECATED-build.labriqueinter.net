@@ -11,11 +11,11 @@ cat <<EOF
 
 # OPTIONS
 
-  -d		device name (img, /dev/sdc, /dev/mmc)	(mandatory)
+  -b		olinux board (see config_board.sh) 	(default: a20lime)
+  -d		debootstrap directory, .img or tarball	(default: /tmp/debootstrap)
+  -D		device name (img, /dev/sdc, /dev/mmc)	(mandatory)
   -s		size of img in MB		 	(mandatory only for img device option)
   -t		final image name			(default: /tmp/olinux.img)
-  -b		debootstrap directory, .img or tarball	(default: /tmp/debootstrap)
-  -u		uboot file or board name		(default: a20lime)
   -e		encrypt partition			(default: false)
 
 EOF
@@ -26,12 +26,12 @@ TARGET=./tmp/olinux.img
 MNT1=./tmp/dest
 MNT2=./tmp/source
 DEB_DIR=./tmp/debootstrap
-UBOOT_FILE="a20lime"
+BOARD="a20lime"
 REP=$(dirname $0)
 
-while getopts ":s:d:t:b:u:e" opt; do
+while getopts ":s:d:t:b:D:e" opt; do
   case $opt in
-    d)
+    D)
       DEVICE=$OPTARG
       ;;
     s)
@@ -40,11 +40,11 @@ while getopts ":s:d:t:b:u:e" opt; do
     t)
       TARGET=$OPTARG
       ;;
-    b)
+    d)
       DEB_DIR=$OPTARG
       ;;
-    u)
-      UBOOT_FILE=$OPTARG
+    b)
+      BOARD=$OPTARG
       ;;
     e)
       ENCRYPT=yes
@@ -65,10 +65,12 @@ if [ ! -r "${DEB_DIR}" ]; then
 fi
 
 if [ -z $DEVICE ] ; then
+  echo "[ERR] you should provide a device name or img"  >&2
   show_usage
 fi
 
 if [ "$DEVICE" = "img" ] && [ -z $IMGSIZE ] ; then
+  echo "[ERR] img parameter should come with size parameter"
   show_usage
 fi
 
@@ -76,7 +78,7 @@ fi
 ### CHECKING BINS ###
 #####################
 
-bins=(dd parted mkfs.ext4 sfill losetup tune2fs)
+bins=(dd parted mkfs.ext4 zerofree losetup tune2fs)
 
 for i in "${bins[@]}"; do
   if ! sudo which "${i}" &> /dev/null; then
@@ -92,7 +94,7 @@ mkdir -p $MNT1
 mkdir -p $MNT2
 
 if [ "${DEVICE}" = "img" ] ; then
-  echo "- Create image."
+  echo "[INFO] Create image."
   rm -f ${TARGET}
   # create image file
   dd if=/dev/zero of=${TARGET} bs=1MB count=$IMGSIZE status=noxfer >/dev/null 2>&1
@@ -107,15 +109,14 @@ if [ "${DEVICE}" = "img" ] ; then
 
   sync
 
-elif [ ! -z $IMGSIZE ] ; then
-  IMGSIZE=${IMGSIZE}"MiB"
 else
   IMGSIZE="100%"
+  TYPE="block"
 fi
 
 if [ -z $ENCRYPT ] ; then
   # create one partition starting at 2048 which is default
-  echo "- Partitioning"
+  echo "[INFO] Partitioning"
   parted --script $DEVICE mklabel msdos
   parted --script $DEVICE mkpart primary ext4 2048s ${IMGSIZE}
   parted --script $DEVICE align-check optimal 1
@@ -128,11 +129,13 @@ fi
 
 if [[ "${TYPE}" == "loop" || "${DEVICE}" =~ mmcblk[0-9] ]] ; then
   DEVICEP1=${DEVICE}p1
+  DEVICEP2=${DEVICE}p2
 else
   DEVICEP1=${DEVICE}1
+  DEVICEP2=${DEVICE}2
 fi
 
-echo "- Formating"
+echo "[INFO] Formating"
 # create filesystem
 mkfs.ext4 $DEVICEP1 >/dev/null 2>&1
 
@@ -140,81 +143,67 @@ mkfs.ext4 $DEVICEP1 >/dev/null 2>&1
 tune2fs -o journal_data_writeback $DEVICEP1 >/dev/null 2>&1
 
 finish() {
-  echo "- Umount"
-  if [ "${TYPE}" = "loop" ] ; then
-    if mountpoint -q $MNT1 ; then 
+  echo "[INFO] Umount"
+  if [ -z $ENCRYPT ] ; then
+    if mountpoint -q $MNT1 ; then
       umount $MNT1
-      losetup -d $DEVICE
     fi
   else
-    if [ -z $ENCRYPT ] ; then
-      if mountpoint -q $MNT1 ; then
-        umount $MNT1
-      fi
-    else
-      if mountpoint -q $MNT1 ; then
-        umount $MNT1/boot
-        umount $MNT1
-        cryptsetup luksClose olinux 
-      fi
-      if [[ "${DEB_DIR}" =~ \.img$ ]] ; then
-        if mountpoint -q $MNT2 ; then 
-          umount $MNT2
-          losetup -d $DEVICE1
-        fi
-      fi	  
+    if mountpoint -q $MNT1 ; then
+      umount $MNT1/boot
+      umount $MNT1
+      cryptsetup luksClose olinux 
     fi
+  fi
+  if [ "${TYPE}" = "loop" ] ; then
+      losetup -d $DEVICE
   fi
 }
 trap finish EXIT
 
 if [ -z $ENCRYPT ] ; then
-  echo "- Mount filesystem"
-  # mount image to already prepared mount point
+  echo "[INFO] Mount filesystem"
   mount -t ext4 $DEVICEP1 $MNT1
 else
-  if [[ "${DEVICE}" =~ mmcblk[0-9] ]] ; then
-    DEVICEP2=${DEVICE}p2
-  else
-    DEVICEP2=${DEVICE}2
-  fi
+  echo "[INFO] Format with encryption"
   cryptsetup -y -v luksFormat $DEVICEP2
   cryptsetup luksOpen $DEVICEP2 olinux
   mkfs.ext4 /dev/mapper/olinux >/dev/null 2>&1
-  echo "- Mount filesystem"
+  echo "[INFO] Mount filesystem"
   # mount image to already prepared mount point
   mount -t ext4 /dev/mapper/olinux $MNT1
   mkdir	$MNT1/boot
   mount -t ext4 $DEVICEP1 $MNT1/boot
 fi  
 
-echo "- Copy bootstrap files"
-if [ -d ${DEB_DIR} ] ; then
-  # Assume that directly the debootstrap directory
-  cp -ar ${DEB_DIR}/* $MNT1/
-elif [[ "${DEB_DIR}" =~ \.img$ ]] ; then
-  # Assume that is a .img file
-  # find first avaliable free device
-  DEVICE1=$(losetup -f)
-
-  # mount image as block device
-  losetup -o 1048576 $DEVICE1 ${DEB_DIR}
-  mount ${DEVICE1} $MNT2/
-  cp -ar $MNT2/* $MNT1/
-fi
+echo "[INFO] Copy bootstrap files"
+cp -ar ${DEB_DIR}/* $MNT1/
 sync
 
-echo "- Write sunxi-with-spl"
-if [[ "${UBOOT_FILE}" == *.bin ]] ; then
-  dd if=${UBOOT_FILE} of=${DEVICE} bs=1024 seek=8 >/dev/null 2>&1
+echo "[INFO] Write sunxi-with-spl"
+. ${REP}/config_board.sh
+dd if=$MNT1/usr/lib/u-boot/${U_BOOT}/u-boot-sunxi-with-spl.bin of=${DEVICE} bs=1024 seek=8 >/dev/null 2>&1
+sync
+
+if [ -z $ENCRYPT ] ; then
+    umount $MNT1
 else
-  BOARD=${UBOOT_FILE}
-  . ${REP}/config_board.sh
-  dd if=$MNT1/usr/lib/u-boot/${U_BOOT}/u-boot-sunxi-with-spl.bin of=${DEVICE} bs=1024 seek=8 >/dev/null 2>&1
+    umount $MNT1/boot
+    umount $MNT1
+    cryptsetup luksClose olinux 
 fi
-sync
 
-if [[ "${DEVICE}" == "img" || "${TYPE}" = "loop" ]] ; then
-  echo "- Sfill"
-  sfill -z -l -l -f $MNT1
+if [ "${TYPE}" = "loop" ] ; then
+  echo "[INFO] zerofree"
+  zerofree $DEVICEP1  
+  if [ $ENCRYPT ] ; then
+    zerofree $DEVICEP2 
+  fi 
+  losetup -d $DEVICE
 fi
+
+finish() {
+  exit 0
+}
+
+exit 0

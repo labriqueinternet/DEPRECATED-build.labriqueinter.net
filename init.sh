@@ -16,7 +16,7 @@ apt-get update
 apt='apt-get -o Dpkg::Options::=--force-confnew --force-yes -uy'
 
 # Install package for debootstrap
-$apt install vim debootstrap tar wget bzip2 screen secure-delete apt-cacher-ng
+$apt install vim debootstrap tar wget bzip2 screen zerofree apt-cacher-ng
 
 # Configure apt proxy
 if [ ! -f /etc/apt/apt.conf.d/01proxy ] ; then

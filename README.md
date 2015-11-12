@@ -35,7 +35,7 @@ sudo bash /olinux/create_arm_debootstrap.sh -c
 ## Install on sd
 
 ```shell
-sudo bash build/create_device.sh -d img -s 800
+sudo bash build/create_device.sh -D img -s 800
 sudo dd if=tmp/olinux.img of=/dev/MYSD
 ```
 
