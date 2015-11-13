@@ -81,7 +81,7 @@ fi
 bins=(dd parted mkfs.ext4 zerofree losetup tune2fs)
 
 for i in "${bins[@]}"; do
-  if ! sudo which "${i}" &> /dev/null; then
+  if ! which "${i}" &> /dev/null; then
     exit_error "${i} command is required"
   fi
 done
@@ -109,6 +109,12 @@ if [ "${DEVICE}" = "img" ] ; then
 
   sync
 
+elif [ "${DEVICE}" = "qcow" ] ; then
+  rm -f ${TARGET}
+  DEVICE=/dev/nbd0
+  qemu-img create -f qcow2 ${TARGET} $IMGSIZE
+  qemu-nbd --connect=$DEVICE ${TARGET}
+  kpartx -a $DEVICE
 else
   IMGSIZE="100%"
   TYPE="block"
@@ -130,6 +136,9 @@ fi
 if [[ "${TYPE}" == "loop" || "${DEVICE}" =~ mmcblk[0-9] ]] ; then
   DEVICEP1=${DEVICE}p1
   DEVICEP2=${DEVICE}p2
+elif  [ "${TYPE}" == "qcow" ] ; then
+  DEVICEP1=/dev/mapper/nbd0p1
+  DEVICEP2=/dev/mapper/nbd0p2
 else
   DEVICEP1=${DEVICE}1
   DEVICEP2=${DEVICE}2
@@ -200,6 +209,9 @@ if [ "${TYPE}" = "loop" ] ; then
     zerofree $DEVICEP2 
   fi 
   losetup -d $DEVICE
+elif [ "${TYPE}" = "qcow" ] ; then
+  kpartx -d $DEVICE
+  qemu-nbd -d $DEVICE 
 fi
 
 finish() {

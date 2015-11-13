@@ -1,21 +1,21 @@
 # Step to Build labriqueinter.net images 
 
-## With qemu-user 
+## With your board 
 To build Labriqueinter.net directly with [yunohost](https://yunohost.org/) we
 cannot use debootstrap with qemu-arm-static because it is buggy and
 mysql-server-5.5 installation failed.
 
-The best solution is to build a lightweight image without yunohost, and
+the first solution is to build a lightweight image without yunohost, and
 perform a full debootstrap with yunohost directly on the olimex board with the
-first debootstrap. This process take much time but it the best solution to
-build labriqueinter.net entirely with scripts.
+first debootstrap.
 
-## With qemu-system 
-With qemu-arm-system we can directly create images with yunohost. The build
-process is compose with tow step; first we create a small VM with the debian
-installer and after that we can build all images for labriqueinter.net.
+## With qemu-system-arm 
+With qemu-arm-system we can directly create images without a board. The build
+process is compose with tow step; first, like above, we create a lightweight
+debian image with debootstrap and then we can build full image inside a qemu
+instane.
 
-# Build the lightweight image with qemu-user
+# Build the lightweight image 
 
 ## Debootstrap
 
@@ -37,37 +37,24 @@ docker rm apt
 sudo bash /olinux/create_arm_debootstrap.sh -c
 ```
 
-## Install on sd
+## Install on sd for the board
 
 ```shell
 sudo bash build/create_device.sh -D img -s 800
 sudo dd if=tmp/olinux.img of=/dev/MYSD
 ```
 
-# Build the lightweight image with qemu-arm-system
-
-## Install Debian with netinstall
+## Create a Qcow image for qemu
 
 ```shell
-wget ftp://ftp.debian.org/debian/dists/wheezy/main/installer-armhf/current/images/vexpress/netboot/vmlinuz-3.2.0-4-vexpress
-wget ftp://ftp.debian.org/debian/dists/wheezy/main/installer-armhf/current/images/vexpress/netboot/initrd.gz
-qemu-img create -f qcow2 hda.img.qcow2 30G
-sudo qemu-system-arm -M vexpress-a9 -m 512M -kernel vmlinuz-3.2.0-4-vexpress -initrd initrd.gz -sd  hda.img.qcow2 -append "root=/dev/ram" -no-reboot
+sudo bash build/create_device.sh -D qcow
 ```
+ 
+#  Start the lightweight image with qemu-arm-system
 
-## Retrieve kernel and start qemu instance
-
-```
-sudo modprobe nbd
-sudo qemu-nbd -c /dev/nbd0 hda.img.qcow2
-sudo kpartx -a /dev/nbd0
-sudo mount /dev/mapper/nbd0p2 /mnt
-cp /mnt/initrd.img-3.2.0-4-vexpress .
-cp /mnt/vmlinuz-3.2.0-4-vexpress .
-sudo umount /mnt
-sudo kpartx -d /dev/nbd0 
-qemu-nbd -d /dev/nbd0
-sudo qemu-system-arm -M vexpress-a9 -m 512M -kernel vmlinuz-3.2.0-4-vexpress -initrd initrd.img-3.2.0-4-vexpress -sd hda.img.qcow2 -append "root=/dev/mmcblk0p2" 
+```shell
+wget http://ftp.nl.debian.org/debian/dists/jessie/main/installer-armhf/current/images/device-tree/vexpress-v2p-ca9.dtb -O tmp/vexpress-v2p-ca9.dtb
+sudo qemu-system-arm -m 1024M -sd olinux.img -M vexpress-a9 -dtb tmp/vexpress-v2p-ca9.dtb -kernel tmp/debootstrap/boot/vmlinuz-4.2.0-0.bpo.1-armmp -initrd tmp/debootstrap/boot/initrd.img-4.2.0-0.bpo.1-armmp -append "root=/dev/mmcblk0p1 console=ttyAMA0 earlycon" -no-reboot -nographic
 ```
 
 # Build all labriqueinter.net images
