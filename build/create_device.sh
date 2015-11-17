@@ -110,11 +110,11 @@ if [ "${DEVICE}" = "img" ] ; then
   sync
 
 elif [ "${DEVICE}" = "qcow" ] ; then
+  TYPE="nbd"
   rm -f ${TARGET}
   DEVICE=/dev/nbd0
   qemu-img create -f qcow2 ${TARGET} $IMGSIZE
   qemu-nbd --connect=$DEVICE ${TARGET}
-  kpartx -a $DEVICE
 else
   IMGSIZE="100%"
   TYPE="block"
@@ -136,7 +136,8 @@ fi
 if [[ "${TYPE}" == "loop" || "${DEVICE}" =~ mmcblk[0-9] ]] ; then
   DEVICEP1=${DEVICE}p1
   DEVICEP2=${DEVICE}p2
-elif  [ "${TYPE}" == "qcow" ] ; then
+elif  [ "${TYPE}" == "nbd" ] ; then
+  kpartx -as $DEVICE
   DEVICEP1=/dev/mapper/nbd0p1
   DEVICEP2=/dev/mapper/nbd0p2
 else
@@ -166,6 +167,9 @@ finish() {
   fi
   if [ "${TYPE}" = "loop" ] ; then
       losetup -d $DEVICE
+  elif  [ "${TYPE}" == "nbd" ] ; then
+    kpartx -d $DEVICE
+    qemu-nbd -d $DEVICE
   fi
 }
 trap finish EXIT
@@ -209,7 +213,7 @@ if [ "${TYPE}" = "loop" ] ; then
     zerofree $DEVICEP2 
   fi 
   losetup -d $DEVICE
-elif [ "${TYPE}" = "qcow" ] ; then
+elif [ "${TYPE}" = "nbd" ] ; then
   kpartx -d $DEVICE
   qemu-nbd -d $DEVICE 
 fi
