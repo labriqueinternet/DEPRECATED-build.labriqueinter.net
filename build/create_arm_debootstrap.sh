@@ -32,7 +32,7 @@ DEBIAN_RELEASE=jessie
 TARGET_DIR=/tmp/debootstrap
 DEB_HOSTNAME=olinux
 REP=$(dirname $0)
-APT='apt-get install -y --force-yes'
+APT='DEBIAN_FRONTEND=noninteractive apt-get install -y --force-yes'
 
 while getopts ":a:b:n:t:ycp:e" opt; do
   case $opt in
