@@ -1,3 +1,5 @@
+**[BUG REPORTS SHOULD BE OPEN HERE](https://dev.yunohost.org)**
+
 # Step to Build labriqueinter.net images 
 
 ## With your board 
@@ -20,6 +22,8 @@ instane.
 ## Debootstrap
 
 ### With docker and apt-cacher-ng
+
+### Retrieve scripts
 
 ```shell
 docker build -t debian:olinux -f build/Dockerfile .
