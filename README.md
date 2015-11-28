@@ -18,6 +18,8 @@ On your fresh olimex installation (build with
 [sunxi-debian](https://github.com/bleuchtang/sunxi-debian) for instance) you
 can perform the following steps:
 
+**[BUG REPORTS SHOULD BE OPEN HERE](https://dev.yunohost.org)**
+
 ### Retrieve scripts
 
 ```shell
