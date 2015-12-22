@@ -44,18 +44,25 @@ sudo bash build/create_device.sh -D img -s 800
 sudo dd if=tmp/olinux.img of=/dev/MYSD
 ```
 
-## Create a Qcow image for qemu
+## Create a Qcow image for qemu/libvirt
 
 ```shell
-sudo bash build/create_device.sh -D qcow
+sudo bash build/create_device.sh -D qcow -s 10G
 ```
  
 #  Start the lightweight image with qemu-arm-system
 
 ```shell
-wget http://ftp.nl.debian.org/debian/dists/jessie/main/installer-armhf/current/images/device-tree/vexpress-v2p-ca9.dtb -O tmp/vexpress-v2p-ca9.dtb
-sudo qemu-system-arm -m 1024M -sd olinux.img -M vexpress-a9 -dtb tmp/vexpress-v2p-ca9.dtb -kernel tmp/debootstrap/boot/vmlinuz-4.2.0-0.bpo.1-armmp -initrd tmp/debootstrap/boot/initrd.img-4.2.0-0.bpo.1-armmp -append "root=/dev/mmcblk0p1 console=ttyAMA0 earlycon" -no-reboot -nographic
+wget http://ftp.nl.debian.org/debian/dists/jessie/main/installer-armhf/current/images/device-tree/vexpress-v2p-ca15-tc1.dtb -O tmp/vexpress-v2p-ca15-tc1.dtb 
+sudo qemu-system-arm -m 1024M -drive if=none,file=olinux.img,cache=writeback,id=foo -device virtio-blk-device,drive=foo -M vexpress-a15 -dtb tmp/vexpress-v2p-ca15-tc1.dtb -kernel tmp/debootstrap/boot/vmlinuz-4.2.0-0.bpo.1-armmp -initrd tmp/debootstrap/boot/initrd.img-4.2.0-0.bpo.1-armmp -append "root=/dev/vda1 console=ttyAMA0 earlycon" -no-reboot -nographic
 ```
+#  Start the lightweight image with libvirt
+
+```shell
+wget http://ftp.nl.debian.org/debian/dists/jessie/main/installer-armhf/current/images/device-tree/vexpress-v2p-ca15-tc1.dtb -O tmp/vexpress-v2p-ca15-tc1.dtb 
+sudo virt-install --name olinux --memory 1024 --disk path=$(pwd)/tmp/olinux.img,bus=virtio --arch armv7l --machine vexpress-a15 --boot kernel=$(pwd)/tmp/debootstrap/boot/vmlinuz-4.2.0-0.bpo.1-armmp,initrd=$(pwd)/tmp/debootstrap/boot/initrd.img-4.2.0-0.bpo.1-armmp,dtb=$(pwd)/tmp/vexpress-v2p-ca15-tc1.dtb,kernel_args="root=/dev/vda1 console=ttyAMA0 earlycon" --nographics --network=bridge=br0
+```
+
 
 # Build all labriqueinter.net images
 
