@@ -11,8 +11,21 @@ echo "# update ssh key #"
 echo "##################"
 echo ""
 rm -f /etc/ssh/ssh_host*
-/usr/sbin/dpkg-reconfigure openssh-server 
+/usr/sbin/dpkg-reconfigure openssh-server
 /bin/systemctl disable firstrun
+echo ""
+echo "#########################"
+echo "# update mysql password #"
+echo "#########################"
+echo ""
+[[ $(/bin/ps aux | /bin/grep '[m]ysqld') == "0" ]] && /bin/systemctl start mysql
+# Clean old rules from https://github.com/YunoHost/install_script/blob/master/install_yunohostv2#L210-L211
+echo "delete from user where password=PASSWORD('yunohost');" | /usr/bin/mysql -u root -p"$(cat /etc/yunohost/mysql)" mysql
+# Regenerate a unique https://github.com/YunoHost/yunohost/blob/unstable/data/hooks/conf_regen/34-mysql#L32
+mysql_password=$(date +%s | sha256sum | base64 | head -c 32 ; echo)
+/usr/bin/mysqladmin -u root -pyunohost password "$mysql_password"
+/bin/echo "$mysql_password" | /usr/bin/tee /etc/yunohost/mysql
+/bin/chmod 400 /etc/yunohost/mysql
 if [ ! -e /etc/crypttab ]; then
   echo ""
   echo "############################"
