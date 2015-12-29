@@ -23,7 +23,7 @@ echo ""
 echo "delete from user where password=PASSWORD('yunohost');" | /usr/bin/mysql -u root -p"$(cat /etc/yunohost/mysql)" mysql
 # Regenerate a unique https://github.com/YunoHost/yunohost/blob/unstable/data/hooks/conf_regen/34-mysql#L32
 mysql_password=$(date +%s | sha256sum | base64 | head -c 32 ; echo)
-/usr/bin/mysqladmin -u root -pyunohost password "$mysql_password"
+/usr/bin/mysqladmin -u root -p"$(cat /etc/yunohost/mysql)" password "$mysql_password"
 /bin/echo "$mysql_password" | /usr/bin/tee /etc/yunohost/mysql
 /bin/chmod 400 /etc/yunohost/mysql
 if [ ! -e /etc/crypttab ]; then
