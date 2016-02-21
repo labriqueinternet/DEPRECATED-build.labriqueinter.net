@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# LaBriqueInternet LBI Installer
+# LaBriqueInternet HyperCube Installer
 # Copyright (C) 2015 Julien Vaubourg <julien@vaubourg.com>
 # Contribute at https://github.com/labriqueinternet/build.labriqueinter.net
 # 
@@ -18,13 +18,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 ##
-## WORK IN PROGRESS
-## PLEASE, DON'T USE THIS SCRIPT
-##
-## apt-get install jq udisks-glue
-## udisks-glue should be installed by yunohost
-##
-## Webpage for generating lbi/cube files is coming
+## Write logs in separate files? One file a function?
+## Check: bind9, dnsmasq/nslcd/spamassassin in syslog, post_user_create
 ##
 
 set -e
@@ -71,20 +66,24 @@ function set_logpermissions() {
   chmod 0700 "${log_file}"
 }
 
-function find_lbifile() {
-  lbi_file=$(find /media/ -mindepth 2 -maxdepth 2 -regex '.*/autoinstall\.lbi\(\.txt\)?$' | head -n1)
+function install_packages() {
+  apt-get install jq udisks-glue php5-fpm -y --force-yes &>> $log_file
+}
 
-  if [ -z "${lbi_file}" ]; then
-    lbi_file=$(find /root/ -mindepth 1 -maxdepth 1 -regex '.*/autoinstall\.lbi\(\.txt\)?$' | head -n1)
+function find_hypercubefile() {
+  hypercube_file=$(find /media/ -mindepth 2 -maxdepth 2 -regex '.*/install\.hypercube\(\.txt\)?$' | head -n1)
+
+  if [ -z "${hypercube_file}" ]; then
+    hypercube_file=$(find /root/ -mindepth 1 -maxdepth 1 -regex '.*/install\.hypercube\(\.txt\)?$' | head -n1)
   fi
 
-  if [ ! -z "${lbi_file}" ]; then
-    info "Found LBI file: ${lbi_file}"
+  if [ ! -z "${hypercube_file}" ]; then
+    info "Found HyperCube file: ${hypercube_file}"
   fi
 }
 
 function load_json() {
-  json=$(jq -r 'to_entries|map("\(.key)=\(.value|tostring)")|.[]' "${lbi_file}")
+  json=$(jq -r 'to_entries|map("\(.key)=\(.value|tostring)")|.[]' "${hypercube_file}")
 }
 
 function extract_settings() {
@@ -118,7 +117,7 @@ function detect_wifidevice() {
   local ynh_wifi_device=$(yunohost app setting hotspot wifi_device 2> /dev/null)
 
   if [ "${ynh_wifi_device}" == none ]; then
-    info "LBI installed but without working Wifi Hotspot"
+    info "HyperCube installed but without working Wifi Hotspot"
 
     ynh_wifi_device=$(iw_devices | awk -F\| '{ print $1 }')
 
@@ -144,7 +143,8 @@ function deb_changepassword() {
 
 function deb_upgrade() {
   apt-get update -qq &>> $log_file
-  apt-get dist-upgrade -y &>> $log_file
+  apt-get dist-upgrade -y --force-yes &>> $log_file
+  apt-get autoremove -y --force-yes &>> $log_file
 }
 
 function deb_updatehosts() {
@@ -160,7 +160,7 @@ function ynh_installdkim() {
   git clone https://github.com/polytan02/yunohost_auto_config_basic "${tmp_dir}/dkim/"
 
   pushd "${tmp_dir}/dkim/"
-  source ./5_opendkim.sh &>> $log_file
+  source ./5_opendkim.sh en "${settings[yunohost,domain]}" &>> $log_file
   popd
 }
 
@@ -171,13 +171,6 @@ function ynh_removedyndns() {
 function ynh_createuser() {
   # TODO: Don't ask password (and &>> $log_file)
   yunohost user create "${settings[yunohost,user]}" -f "${settings[yunohost,user_firstname]}" -l "${settings[yunohost,user_lastname]}" -m "${settings[yunohost,user]}@${settings[yunohost,domain]}" -q 0 -p "${settings[yunohost,user_password]}"
-}
-
-function ynh_adddomain() {
-  if [ ! -z "${settings[yunohost,add_domain]}" ]; then
-    # TODO: Don't ask password (and &>> $log_file)
-    yunohost domain add "${settings[yunohost,add_domain]}"
-  fi
 }
 
 function install_vpnclient() {
@@ -223,9 +216,9 @@ function reboot_ifnecessary() {
 ########################
 
 declare -A settings
-tmp_dir=$(mktemp -dp /tmp/ labriqueinternet-autoinstalllbi-XXXXX)
-log_file=/var/log/lbi-autoinstall.log
-lbi_file=
+tmp_dir=$(mktemp -dp /tmp/ labriqueinternet-installhypercube-XXXXX)
+log_file=/var/log/hypercube-install.log
+hypercube_file=
 json=
 
 
@@ -238,17 +231,20 @@ trap cleaning ERR
 
 set_logpermissions
 
-# LBI installed
+# HyperCube installed
 if [ -f /etc/yunohost/installed ]; then
   detect_wifidevice
 
-# LBI not installed
+# HyperCube not installed
 else
-  info "Looking for LBI file"
-  find_lbifile
+  info "Installing some additional required packages"
+  install_packages
+
+  info "Looking for HyperCube file"
+  find_hypercubefile
   
-  if [ -z "${lbi_file}" ]; then
-    exit_error "No autoinstall.lbi file found"
+  if [ -z "${hypercube_file}" ]; then
+    exit_error "No install.hypercube(.txt) file found"
   fi
   
   info "Loading JSON"
@@ -265,27 +261,25 @@ else
 
   info "Updating Debian root password"
   deb_changepassword
+
+  info "Updating hosts file"
+  deb_updatehosts
   
   info "Upgrading Debian/YunoHost"
   deb_upgrade
   
-  info "Updating hosts file"
-  deb_updatehosts
-  
   info "Doing YunoHost post-installation"
   ynh_postinstall
-  
-#  info "Installing DKIM"
-#  ynh_installdkim
 
+  info "Installing DKIM"
+  ynh_installdkim
+
+  # TODO: Only if domain are not .noho.st or .nohost.me?
   info "Removing DynDNS cron"
   ynh_removedyndns
-  
+
   info "Creating first user"
   ynh_createuser
-  
-  info "Adding additional domain"
-  ynh_adddomain
   
   info "Installing VPN Client"
   install_vpnclient
@@ -293,12 +287,6 @@ else
   info "Installing Wifi Hotspot"
   install_hotspot
   
-  info "Configuring VPN Client"
-  configure_vpnclient
-  
-  info "Configuring Wifi Hotspot"
-  configure_hotspot
-
   info "Done"
 
   reboot_ifnecessary
