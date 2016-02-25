@@ -222,7 +222,7 @@ fi
 
 echo 'deb http://ftp.fr.debian.org/debian jessie-backports main' > $TARGET_DIR/etc/apt/sources.list.d/backports.list
 # Install linux-image, u-boot and flash-kernel from backports
-cat <<EOT > ${TARGET_DIR}/etc/apt/preferences.d/kernel-testing
+cat <<EOT > ${TARGET_DIR}/etc/apt/preferences.d/kernel-backports
 Package: linux-image*
 Pin: release a=jessie-backports
 Pin-Priority: 990
