@@ -39,5 +39,8 @@ if grep -q testing /etc/apt/sources.list ; then
   echo "line:"
   grep testing /etc/apt/sources.list
 fi
-echo 'Please run :'
-echo 'apt-get update;apt-get dist-upgrade;apt-get install linux-image-armmp flash-kernel u-boot-sunxi u-boot-tools;apt-get clean'
+echo 'Now you can run (answer no, and type enter twice):'
+echo 'apt-get update'
+echo 'apt-get dist-upgrade'
+echo 'apt-get install linux-image-armmp flash-kernel u-boot-sunxi u-boot-tools'
+echo 'apt-get clean'
