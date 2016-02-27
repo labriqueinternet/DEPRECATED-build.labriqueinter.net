@@ -22,7 +22,7 @@
   },
   "hotspot": {
     "wifi_ssid": "dansMonCube",
-    "wifi_passphrase": "dmc1337",
+    "wifi_passphrase": "dmc_1337",
     "ip6_net": "2001:913:42::",
     "ip6_dns0": "2001:913::8",
     "ip6_dns1": "2001:910:800::40",
@@ -32,14 +32,14 @@
     "firmware_nonfree": "yes"
   },
   "yunohost": {
-    "domain": "ilovecube.noho.st",
-    "password": "azerty42",
+    "domain": "example.com",
+    "password": "qwerty42",
     "user": "tswayer",
     "user_firstname": "Tom",
     "user_lastname": "Sawyer",
-    "user_password": "azerty42"
+    "user_password": "qwerty42"
   },
   "unix": {
-    "root_password": "azerty42"
+    "root_password": "qwerty42"
   }
 }
