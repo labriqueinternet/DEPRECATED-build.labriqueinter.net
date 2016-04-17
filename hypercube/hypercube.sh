@@ -422,7 +422,7 @@ if [ -f /etc/yunohost/installed ]; then
 
   info "End of installation"
   info "30 minutes before removing HyperCube scripts"
-  sleep 9000
+  sleep 1800
 
   info "Removing HyperCube scripts (this page will be disconnected)"
   sleep 5
