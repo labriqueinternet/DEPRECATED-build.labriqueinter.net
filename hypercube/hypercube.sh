@@ -18,11 +18,11 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 ##
-## ntfs-3g?
+## TODO: send dkim dns txt record by mail
 ##
 
 set -e
-set -x
+#set -x
 
 
 ###############
@@ -39,7 +39,7 @@ function info() {
 
 function logfile() {
   (( log_fileindex++ )) || true
-  log_file="${log_filepath}/${log_fileindex}-${1}.log"
+  log_file="${log_filepath}/$(printf %02d "${log_fileindex}")-${1}.log"
 }
 
 function exit_error() {
@@ -68,15 +68,26 @@ function set_logpermissions() {
   chmod 0700 "${log_filepath}"
 }
 
+function start_logwebserver() {
+  pushd "${log_filepath}" &> /dev/null
+  python -m SimpleHTTPServer 2468 &> /dev/null &
+  popd &> /dev/null
+
+  ( while true; do
+      if ! iptables -nL INPUT | grep -q 2468; then
+        iptables -I INPUT 1 -p tcp -s 10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,169.254.0.0/16 --dport 2468 -j ACCEPT
+      fi
+      sleep 1
+    done &> /dev/null ) || true &
+}
+
 function install_packages() {
   logfile ${FUNCNAME[0]}
 
-  apt-get install --no-install-recommends jq udisks-glue php5-fpm -y --force-yes &>> $log_file
+  apt-get install --no-install-recommends jq udisks-glue php5-fpm ntfs-3g -y --force-yes &>> $log_file
 }
 
 function find_hypercubefile() {
-  logfile ${FUNCNAME[0]}
-
   hypercube_file=$(find /media/ -mindepth 2 -maxdepth 2 -regex '.*/install\.hypercube\(\.txt\)?$' | head -n1)
 
   if [ -z "${hypercube_file}" ]; then
@@ -95,11 +106,13 @@ function load_json() {
 
   if [ -z "$json" ]; then
     exit_error "Empty HyperCube (or JSON syntax error)"
+  else
+    echo SUCCESS >> $log_file
   fi
 }
 
 function extract_settings() {
-  logfile ${FUNCNAME[0]}
+  logfile "${FUNCNAME[0]}-${1}"
 
   local subjson=$(echo -e "${json}" | grep "^${1}=" | cut -d= -f2-)
   local vars=$(echo "${subjson}" | jq -r 'to_entries|map("\(.key)=\(.value|tostring)")|.[]' 2>> $log_file)
@@ -123,8 +136,6 @@ function extract_settings() {
 }
 
 function extract_dotcube() {
-  logfile ${FUNCNAME[0]}
-
   local subjson=$(echo -e "${json}" | grep "^vpnclient=" | cut -d= -f2-)
 
   if [ -z "$subjson" ]; then
@@ -147,6 +158,8 @@ function detect_wifidevice() {
     info "Wifi device missing"
 
     ynh_wifi_device=$(iw_devices | awk -F\| '{ print $1 }')
+    echo -n 'WIFI DEVICES: ' >> $log_file
+    iw_devices &>> $log_file
 
     if [ ! -z "${ynh_wifi_device}" ]; then
       info "Wifi device detected: ${ynh_wifi_device}"
@@ -158,15 +171,14 @@ function detect_wifidevice() {
     else
       info "No wifi device detected :("
     fi
+  else
+    echo Nothing to do >> $log_file
   fi
 }
 
 function deb_changepassword() {
-  logfile ${FUNCNAME[0]}
-
   # TODO: Remove service asking to change Debian password at first login
   echo "root:${settings[yunohost,password]}" | /usr/sbin/chpasswd
-  echo "root:${settings[yunohost,password]}" &>> $log_file
 }
 
 function deb_upgrade() {
@@ -206,8 +218,7 @@ function ynh_removedyndns() {
 function ynh_createuser() {
   logfile ${FUNCNAME[0]}
 
-  # TODO: https://dev.yunohost.org/issues/228
-  yunohost user create "${settings[yunohost,user]}" -f "${settings[yunohost,user_firstname]}" -l "${settings[yunohost,user_lastname]}" -m "${settings[yunohost,user]}@${settings[yunohost,domain]}" -q 0 -p "${settings[yunohost,user_password]}" --admin-password "${settings[yunohost,password]}" # &>> $log_file
+  yunohost user create "${settings[yunohost,user]}" -f "${settings[yunohost,user_firstname]}" -l "${settings[yunohost,user_lastname]}" -m "${settings[yunohost,user]}@${settings[yunohost,domain]}" -q 0 -p "${settings[yunohost,user_password]}" --admin-password "${settings[yunohost,password]}" &>> $log_file
 }
 
 function install_vpnclient() {
@@ -252,6 +263,125 @@ function configure_vpnclient() {
   ynh-vpnclient-loadcubefile.sh -u "${settings[yunohost,user]}" -p "${settings[yunohost,user_password]}" -c "${tmp_dir}/config.cube" &>> $log_file || true
 }
 
+function monitoring_ip() {
+  logfile ${FUNCNAME[0]}
+
+  (for i in {1-6}; do
+      tmplog=$(mktemp /tmp/hypercube-monitoring_ip-XXXX)
+
+      date >> $tmplog
+      echo -e "\n" >> $tmplog
+      echo IP ADDRESS >> $tmplog
+      echo ================= >> $tmplog
+      ip addr &>> $tmplog
+      echo -e "\n\n" >> $tmplog
+      echo IP6 ROUTE >> $tmplog
+      echo ================= >> $tmplog
+      ip -6 route &>> $tmplog
+      echo -e "\n\n" >> $tmplog
+      echo IP4 ROUTE >> $tmplog
+      echo ================= >> $tmplog
+      ip route &>> $tmplog
+      echo -e "\n\n" >> $tmplog
+      echo RESOLV.CONF >> $tmplog
+      echo ================= >> $tmplog
+      cat /etc/resolv.conf &>> $tmplog
+      echo -e "\n\n" >> $tmplog
+      echo PING6 WIKIPEDIA.ORG >> $tmplog
+      echo ================= >> $tmplog
+      ping6 -c 3 wikipedia.org &>> $tmplog
+      echo -e "\n\n" >> $tmplog
+      echo PING4 WIKIPEDIA.ORG >> $tmplog
+      echo ================= >> $tmplog
+      ping -c 3 wikipedia.org &>> $tmplog
+      echo -e "\n\n" >> $tmplog
+      echo PING 2620:0:862:ed1a::1 >> $tmplog
+      echo ================= >> $tmplog
+      ping6 -c 3 2620:0:862:ed1a::1 &>> $tmplog
+      echo -e "\n\n" >> $tmplog
+      echo PING 91.198.174.192 >> $tmplog
+      echo ================= >> $tmplog
+      ping -c 3 91.198.174.192 &>> $tmplog
+      echo -e "\n\n" >> $tmplog
+      echo TRACEROUTE 2620:0:862:ed1a::1 >> $tmplog
+      echo ================= >> $tmplog
+      traceroute6 -n 2620:0:862:ed1a::1 &>> $tmplog
+      echo -e "\n\n" >> $tmplog
+      echo TRACEROUTE 91.198.174.192 >> $tmplog
+      echo ================= >> $tmplog
+      traceroute -n 91.198.174.192 &>> $tmplog
+      echo -e "\n\n" >> $tmplog
+      echo IW DEV >> $tmplog
+      echo ================= >> $tmplog
+      iw dev &>> $tmplog
+
+      mv $tmplog $log_file
+      sleep 300
+    done) || true &
+}
+
+function monitoring_firewalls() {
+  logfile ${FUNCNAME[0]}
+
+  (for i in {1-6}; do
+      tmplog=$(mktemp /tmp/hypercube-monitoring_firewalls-XXXX)
+
+      date >> $tmplog
+      echo -e "\n" >> $tmplog
+      echo IP6TABLES -nvL >> $tmplog
+      echo ================= >> $tmplog
+      ip6tables -nvL &>> $tmplog
+      echo -e "\n\n" >> $tmplog
+      echo IPTABLES -nvL >> $tmplog
+      echo ================= >> $tmplog
+      iptables -nvL &>> $tmplog
+      echo -e "\n\n" >> $tmplog
+      echo 'IPTABLES -t nat -nvL' >> $tmplog
+      echo ================= >> $tmplog
+      iptables -t nat -nvL &>> $tmplog
+
+      mv $tmplog $log_file
+      sleep 300
+    done) || true &
+}
+
+function monitoring_processes() {
+  logfile ${FUNCNAME[0]}
+
+  (for i in {1-6}; do
+      tmplog=$(mktemp /tmp/hypercube-monitoring_processes-XXXX)
+
+      date >> $tmplog
+      echo -e "\n" >> $tmplog
+      echo YNH-VPNCLIENT STATUS >> $tmplog
+      echo ================= >> $tmplog
+      ynh-vpnclient status &>> $tmplog
+      echo -e "\n\n" >> $tmplog
+      echo YNH-HOTSPOT STATUS >> $tmplog
+      echo ================= >> $tmplog
+      ynh-hotspot status &>> $tmplog
+      echo -e "\n\n" >> $tmplog
+      echo 'PS AUX | GREP OPENVPN' >> $tmplog
+      echo ================= >> $tmplog
+      ps aux | grep openvpn &>> $tmplog
+      echo -e "\n\n" >> $tmplog
+      echo 'PS AUX | GREP DNSMASQ' >> $tmplog
+      echo ================= >> $tmplog
+      ps aux | grep dnsmasq &>> $tmplog
+      echo -e "\n\n" >> $tmplog
+      echo 'PS AUX | GREP HOSTAPD' >> $tmplog
+      echo ================= >> $tmplog
+      ps aux | grep hostapd &>> $tmplog
+      echo -e "\n\n" >> $tmplog
+      echo 'NETSTAT -pnat' >> $tmplog
+      echo ================= >> $tmplog
+      netstat -pnat &>> $tmplog
+
+      mv $tmplog $log_file
+      sleep 300
+    done) || true &
+}
+
 
 ########################
 ### GLOBAL VARIABLES ###
@@ -275,20 +405,36 @@ trap cleaning EXIT
 trap cleaning ERR
 
 set_logpermissions
+start_logwebserver
 
 # HyperCube installed
 if [ -f /etc/yunohost/installed ]; then
-  info "Detecting wifi device (if necessary)"
+  log_fileindex=90
+
   detect_wifidevice
 
-  info "Removing HyperCube scripts"
+  monitoring_firewalls
+  monitoring_processes
+  monitoring_ip
+
+  ln -s /var/log/daemon.log /var/log/hypercube/var_log_daemon.log
+  ln -s /var/log/syslog /var/log/hypercube/var_log_syslog.log
+
+  info "End of installation"
+  info "30 minutes before removing HyperCube scripts"
+  sleep 9000
+
+  info "Removing HyperCube scripts (this page will be disconnected)"
+  sleep 5
+
   systemctl disable hypercube
   rm -f /etc/systemd/system/hypercube.service
   rm -f /usr/local/bin/hypercube{,_dkim}.sh
+  rm -f /var/log/hypercube/install.html
 
 # HyperCube not installed
 else
-  info "Installing some additional required packages"
+  info "Installing some additional required packages..."
   install_packages
 
   info "Looking for HyperCube file"
@@ -319,14 +465,15 @@ else
   info "Updating hosts file"
   deb_updatehosts
   
-  info "Upgrading Debian/YunoHost"
+  info "Upgrading Debian/YunoHost..."
   deb_upgrade
   
-  info "Doing YunoHost post-installation"
+  info "Doing YunoHost post-installation..."
   ynh_postinstall
 
-  info "Installing DKIM"
-  ynh_installdkim
+  # Included in YunoHost
+  # info "Installing DKIM"
+  # ynh_installdkim
 
   if ! [[ "${settings[yunohost,domain]}" =~ \.nohost\.me$ || "${settings[yunohost,domain]}" =~ \.noho\.st$ ]]; then
     info "Removing DynDNS cron"
@@ -336,19 +483,20 @@ else
   info "Creating first user"
   ynh_createuser
   
-  info "Installing VPN Client"
+  info "Installing VPN Client..."
   install_vpnclient
   
-  info "Installing Wifi Hotspot"
+  info "Installing Wifi Hotspot..."
   install_hotspot
 
-  info "Configuring VPN Client"
+  info "Configuring VPN Client..."
   configure_vpnclient
   
-  info "Configuring Wifi Hotspot"
+  info "Configuring Wifi Hotspot..."
   configure_hotspot
   
-  info "Rebooting"
+  info "Rebooting..."
+  sleep 5
   systemctl reboot
 fi
 

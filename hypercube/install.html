@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Installation - La Brique Internet / Internet Cube</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<style>
+body {
+  font-family: sans;
+}
+
+h1, #infos {
+  text-align: center;
+}
+
+h2 {
+  font-size: 1em;
+  background-color: #eee;
+  padding: 6px;
+  border-radius: 3px;
+}
+
+h2:hover {
+  background-color: #ccc;
+}
+
+#indicator {
+  padding: 0;
+  margin: 0 0 40px;
+}
+
+.noerror {
+  color: green;
+  font-weight: bold;
+}
+
+.error {
+  color: red;
+  font-weight: bold;
+}
+
+textarea {
+  display: none;
+  width: 80%;
+  height: 50pt;
+  border: 1px solid #999;
+  padding: 3px;
+  margin: 10px;
+  border-radius: 5px;
+  font-style: italic;
+}
+
+@keyframes signal {
+  from { border-width: 1px }
+  to { border-width: 1px 20px }
+}
+
+@keyframes lookup {
+  from { border-color: #999 }
+  to { border-color: red #999 }
+}
+
+#fileinstalllog.processing {
+  animation: signal 1s linear 1s infinite alternate;
+  border-left-color: green;
+  border-right-color: green;
+}
+
+#fileinstalllog.notprocessing {
+  animation: lookup 1s linear 0s infinite alternate;
+}
+
+#fileinstalllog, .changes {
+  display: inline;
+  font-style: normal;
+  font-weight: bold;
+}
+
+.visible {
+  display: inline;
+}
+
+.visible:hover {
+  height: 250px;
+  width: 90%;
+}
+</style>
+<script>
+
+function update() {
+  var xhttp = new XMLHttpRequest();
+  xhttp.timeout = 3000;
+
+  xhttp.onreadystatechange = function() {
+    if(xhttp.readyState == 4) {
+      switch(xhttp.status) {
+        case 200:
+          var lines = xhttp.responseText.split("\n");
+
+          for(var i = 0; i < lines.length; i++) {
+            if(lines[i].match(/\.log">/)) {
+              var file = lines[i].replace(/.*"(.*)".*/, '$1');
+              var id = create_file(file);
+
+              update_file(id, file);
+            }
+          }
+
+          document.getElementById('fileinstalllog').setAttribute('class', 'processing');
+          document.getElementById('indicator').setAttribute('class', 'noerror');
+          document.getElementById('indicator').innerHTML = 'Connection established';
+        break;
+
+        default:
+          document.getElementById('fileinstalllog').setAttribute('class', 'notprocessing');
+          document.getElementById('indicator').setAttribute('class', 'error');
+          document.getElementById('indicator').innerHTML = "Connection lost (don't panic and please wait)";
+      }
+
+      window.setTimeout(update, 1000);
+    }
+  };
+
+  xhttp.open('GET', '/', true);
+  xhttp.send();
+}
+
+function create_file(file) {
+  var id = 'file' + file.replace(/[^a-zA-Z0-9_-]/g, '');
+
+  if(!document.getElementById(id)) {
+    var title = document.createElement('h2');
+    var titleContent = document.createTextNode(file);
+    var textarea = document.createElement('textarea');
+
+    title.onclick = function() {
+      var nextClass = this.nextSibling.getAttribute('class');
+      nextClass = nextClass ? nextClass : '';
+
+      if(nextClass.match('visible')) {
+        this.nextSibling.setAttribute('class', nextClass.replace('visible', ''));
+      } else {
+        this.nextSibling.setAttribute('class', nextClass + 'visible');
+      }
+    };
+
+    title.appendChild(titleContent);
+    textarea.setAttribute('id', id);
+
+    document.getElementById('files').insertBefore(textarea, document.getElementById('files').firstChild);
+    document.getElementById('files').insertBefore(title, document.getElementById('files').firstChild);
+  }
+
+  return id;
+}
+
+function update_file(id, file) {
+  var xhttp = new XMLHttpRequest();
+
+  xhttp.onreadystatechange = function() {
+    if(xhttp.readyState == 4 && xhttp.status == 200) {
+      var oldValue = document.getElementById(id).value;
+
+      document.getElementById(id).value = xhttp.responseText;
+
+      if(xhttp.responseText.replace(/[\s\n]/gm, '') != oldValue.replace(/[\s\n]/gm, '')) {
+        var currentClass = document.getElementById(id).getAttribute('class');
+
+        document.getElementById(id).setAttribute('class', (currentClass ? currentClass : '') + ' changes');
+        document.getElementById(id).scrollTop = document.getElementById(id).scrollHeight;
+
+      } else if(document.getElementById(id).getAttribute('class')) {
+        document.getElementById(id).setAttribute('class', document.getElementById(id).getAttribute('class').replace('changes', ''));
+      }
+    }
+  };
+
+  xhttp.open('GET', file + '?_=' + new Date().getTime(), true);
+  xhttp.send();
+}
+</script>
+</head>
+
+<body onload="update()">
+  <h1>Installation</h1>
+  <ul id="comments">
+    <li>Never reload this page by yourself during the process!</li>
+    <li><strong>Use <em>Ctrl+S</em> to save this page</strong> on your computer when you think that the process is complete.</li>
+    <li>You can share a copy of this page for debbuging purposes (no password and no certificate in logs).</li>
+    <li>From the time when the installation is complete, this page will be available and updated for 30 minutes, then disconnected.</li>
+  </ul>
+
+  <div id="infos">
+    <textarea id="fileinstalllog"></textarea>
+    <p id="indicator"></p>
+  </div>
+
+  <h1>Log files</h1>
+  <div id="files"></div>
+</body>
