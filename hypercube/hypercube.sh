@@ -404,6 +404,11 @@ json=
 trap cleaning EXIT
 trap cleaning ERR
 
+# Cube image installed not finished
+if [ ! -f /etc/yunohost/cube_installed ]; then
+  exit 0
+fi
+
 set_logpermissions
 start_logwebserver
 
