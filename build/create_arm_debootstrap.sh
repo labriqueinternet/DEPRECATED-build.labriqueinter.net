@@ -224,7 +224,7 @@ chroot_deb $TARGET_DIR "/bin/systemctl enable hypercube >> /dev/null"
 
 # Add hypercube scripts
 mkdir $TARGET_DIR/var/log/hypercube
-install -m 444 -o root -g root ${REP}/script/hypercybe/install.html $TARGET_DIR/var/log/hypercube/
+install -m 444 -o root -g root ${REP}/script/hypercube/install.html $TARGET_DIR/var/log/hypercube/
 
 if [ $INSTALL_YUNOHOST ] ; then
   chroot_deb $TARGET_DIR "$APT git"
