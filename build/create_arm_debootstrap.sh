@@ -37,7 +37,11 @@ REP=$(dirname $0)
 APT='DEBIAN_FRONTEND=noninteractive apt-get install -y --force-yes'
 INSTALL_YUNOHOST_DIST='stable'
 
+<<<<<<< 35b24b2f2d1831e706541bdadc15444746a4a61f
 while getopts ":a:b:n:t:d:r:ycp:e" opt; do
+=======
+while getopts ":a:b:n:t:d:ycp:e" opt; do
+>>>>>>> add distrib for yunohost installation
   case $opt in
     b)
       BOARD=$OPTARG
@@ -57,9 +61,12 @@ while getopts ":a:b:n:t:d:r:ycp:e" opt; do
     d)
       INSTALL_YUNOHOST_DIST=$OPTARG
       ;;
+<<<<<<< 35b24b2f2d1831e706541bdadc15444746a4a61f
     r)
       DEBIAN_RELEASE=$OPTARG
       ;;
+=======
+>>>>>>> add distrib for yunohost installation
     c)
       CROSS=yes
       ;;
