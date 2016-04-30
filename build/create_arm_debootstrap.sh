@@ -209,10 +209,17 @@ sed -i "1i127.0.1.1\t${DEB_HOSTNAME}" $TARGET_DIR/etc/hosts
 # Add firstrun and secondrun init script
 install -m 755 -o root -g root ${REP}/script/firstrun $TARGET_DIR/usr/local/bin/
 install -m 755 -o root -g root ${REP}/script/secondrun $TARGET_DIR/usr/local/bin/
+install -m 755 -o root -g root ${REP}/script/hypercube/hypercube.sh $TARGET_DIR/usr/local/bin/
 install -m 444 -o root -g root ${REP}/script/firstrun.service $TARGET_DIR/etc/systemd/system/
 install -m 444 -o root -g root ${REP}/script/secondrun.service $TARGET_DIR/etc/systemd/system/
+install -m 444 -o root -g root ${REP}/script/hypercube/hypercube.service $TARGET_DIR/etc/systemd/system/
 chroot_deb $TARGET_DIR "/bin/systemctl daemon-reload >> /dev/null"
 chroot_deb $TARGET_DIR "/bin/systemctl enable firstrun >> /dev/null"
+chroot_deb $TARGET_DIR "/bin/systemctl enable hypercube >> /dev/null"
+
+# Add hypercube scripts
+mkdir $TARGET_DIR/var/log/hypercube
+install -m 444 -o root -g root ${REP}/script/hypercybe/install.html $TARGET_DIR/var/log/hypercube/
 
 if [ $INSTALL_YUNOHOST ] ; then
   chroot_deb $TARGET_DIR "$APT git"
