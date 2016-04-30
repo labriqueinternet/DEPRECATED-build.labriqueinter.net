@@ -20,6 +20,7 @@ cat <<EOF
   -n		hostname				(default: olinux)
   -t		target directory for debootstrap	(default: ./tmp/debootstrap)
   -y		install yunohost (doesn't work with cross debootstrap)
+  -d		yunohost distribution (default: stable	
   -c		cross debootstrap
   -p		use and set aptcacher proxy
   -e		configure for encrypted partition	(default: false)
@@ -33,8 +34,9 @@ TARGET_DIR=./tmp/debootstrap
 DEB_HOSTNAME=olinux
 REP=$(dirname $0)
 APT='DEBIAN_FRONTEND=noninteractive apt-get install -y --force-yes'
+INSTALL_YUNOHOST_DIST='stable'
 
-while getopts ":a:b:n:t:ycp:e" opt; do
+while getopts ":a:b:n:t:d:ycp:e" opt; do
   case $opt in
     b)
       BOARD=$OPTARG
@@ -50,6 +52,9 @@ while getopts ":a:b:n:t:ycp:e" opt; do
       ;;
     y)
       INSTALL_YUNOHOST=yes
+      ;;
+    d)
+      INSTALL_YUNOHOST_DIST=$OPTARG
       ;;
     c)
       CROSS=yes
@@ -224,7 +229,7 @@ install -m 444 -o root -g root ${REP}/script/hypercybe/install.html $TARGET_DIR/
 if [ $INSTALL_YUNOHOST ] ; then
   chroot_deb $TARGET_DIR "$APT git"
   chroot_deb $TARGET_DIR "git clone https://github.com/YunoHost/install_script /tmp/install_script"
-  chroot_deb $TARGET_DIR "cd /tmp/install_script && ./install_yunohost -a"
+  chroot_deb $TARGET_DIR "cd /tmp/install_script && ./install_yunohost -a -d ${INSTALL_YUNOHOST_DIST}"
 fi
 
 echo 'deb http://ftp.fr.debian.org/debian jessie-backports main' > $TARGET_DIR/etc/apt/sources.list.d/backports.list
