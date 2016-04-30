@@ -1,6 +1,8 @@
 **[BUG REPORTS SHOULD BE OPEN HERE](https://dev.yunohost.org)**
 
-# Step to Build labriqueinter.net images 
+## Build on olimex board
+
+### Why?
 
 ## With your board 
 To build Labriqueinter.net directly with [yunohost](https://yunohost.org/) we
@@ -22,6 +24,8 @@ instane.
 ## Debootstrap
 
 ### With docker and apt-cacher-ng
+
+**[BUG REPORTS SHOULD BE OPEN HERE](https://dev.yunohost.org)**
 
 ### Retrieve scripts
 
