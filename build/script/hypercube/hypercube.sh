@@ -17,12 +17,10 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-##
-## TODO: send dkim dns txt record by mail
-##
+# Packages: jq udisks-glue php5-fpm ntfs-3g
+# TODO: Send dkim dns txt record by mail?
 
 set -e
-#set -x
 
 
 ###############
@@ -30,7 +28,7 @@ set -e
 ###############
 
 function log() {
-  echo "$(date +'%F %R'): ${1}" >> "$log_filepath/$log_mainfile"
+  echo "$(date +'%F %R'): ${1}" | tee -a "$log_filepath/$log_mainfile"
 }
 
 function info() {
@@ -44,6 +42,8 @@ function logfile() {
 
 function exit_error() {
   log "[ERR] ${1}"
+
+  sleep 1800
   exit 1
 }
 
@@ -57,7 +57,11 @@ function urlencode() {
 #################
 
 function cleaning() {
-  if [ ! -z "${tmp_dir}" ]; then
+  if iptables -nL INPUT | grep -q 2468; then
+    iptables -D INPUT -p tcp -s 10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,169.254.0.0/16 --dport 2468 -j ACCEPT
+  fi
+
+  if [ -d "${tmp_dir}" ]; then
     rm -r "${tmp_dir}"
   fi
 }
@@ -79,12 +83,6 @@ function start_logwebserver() {
       fi
       sleep 1
     done &> /dev/null ) || true &
-}
-
-function install_packages() {
-  logfile ${FUNCNAME[0]}
-
-  apt-get install --no-install-recommends jq udisks-glue php5-fpm ntfs-3g -y --force-yes &>> $log_file
 }
 
 function find_hypercubefile() {
@@ -382,6 +380,27 @@ function monitoring_processes() {
     done) || true &
 }
 
+function end_installation() {
+  log_fileindex=90
+
+  detect_wifidevice
+
+  monitoring_firewalls
+  monitoring_processes
+  monitoring_ip
+
+  ln -s /var/log/daemon.log /var/log/hypercube/var_log_daemon.log
+  ln -s /var/log/syslog /var/log/hypercube/var_log_syslog.log
+
+  info "30 minutes before removing HyperCube scripts"
+  sleep 1800
+
+  info "Removing HyperCube scripts (this page will be disconnected)"
+  sleep 5
+
+  systemctl disable hypercube
+}
+
 
 ########################
 ### GLOBAL VARIABLES ###
@@ -404,50 +423,36 @@ json=
 trap cleaning EXIT
 trap cleaning ERR
 
-# Cube image installed not finished
-if [ ! -f /etc/yunohost/cube_installed ]; then
+# YunoHost was installed without the HyperCube system
+if [ -f /etc/yunohost/installed -a ! -f "${log_filepath}/enabled" ]; then
+  systemctl disable hypercube
   exit 0
 fi
 
 set_logpermissions
 start_logwebserver
 
-# HyperCube installed
-if [ -f /etc/yunohost/installed ]; then
-  log_fileindex=90
+# firstrun/secondrun not finished
+if [ ! -f /etc/yunohost/cube_installed ]; then
+  info "Waiting for the end of the FS resizing..."
+  exit 0
+fi
 
-  detect_wifidevice
-
-  monitoring_firewalls
-  monitoring_processes
-  monitoring_ip
-
-  ln -s /var/log/daemon.log /var/log/hypercube/var_log_daemon.log
-  ln -s /var/log/syslog /var/log/hypercube/var_log_syslog.log
-
+# Second boot
+if [ -f "${log_filepath}/enabled" ]; then
   info "End of installation"
-  info "30 minutes before removing HyperCube scripts"
-  sleep 1800
+  end_installation
 
-  info "Removing HyperCube scripts (this page will be disconnected)"
-  sleep 5
-
-  systemctl disable hypercube
-  rm -f /etc/systemd/system/hypercube.service
-  rm -f /usr/local/bin/hypercube{,_dkim}.sh
-  rm -f /var/log/hypercube/install.html
-
-# HyperCube not installed
+# First boot
 else
-  info "Installing some additional required packages..."
-  install_packages
-
   info "Looking for HyperCube file"
   find_hypercubefile
   
   if [ -z "${hypercube_file}" ]; then
     exit_error "No install.hypercube(.txt) file found"
   fi
+
+  touch "${log_filepath}/enabled"
   
   info "Loading JSON"
   load_json
@@ -461,7 +466,7 @@ else
   info "Extracting settings for VPN Client (logging purposes)"
   extract_settings vpnclient
   
-  info "Extracting dot cube file for VPN Client"
+  info "Extracting .cube file for VPN Client"
   extract_dotcube
 
   info "Updating Debian root password"
@@ -475,10 +480,6 @@ else
   
   info "Doing YunoHost post-installation..."
   ynh_postinstall
-
-  # Included in YunoHost
-  # info "Installing DKIM"
-  # ynh_installdkim
 
   if ! [[ "${settings[yunohost,domain]}" =~ \.nohost\.me$ || "${settings[yunohost,domain]}" =~ \.noho\.st$ ]]; then
     info "Removing DynDNS cron"

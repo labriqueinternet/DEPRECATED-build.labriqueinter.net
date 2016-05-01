@@ -12,5 +12,6 @@ echo "##############################"
 echo ""
 /sbin/resize2fs /dev/mmcblk0p1
 /bin/systemctl disable secondrun
+touch /etc/yunohost/cube_installed
 
 exit 0

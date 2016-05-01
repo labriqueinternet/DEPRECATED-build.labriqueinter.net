@@ -79,12 +79,16 @@ textarea {
   display: inline;
 }
 
-.visible:hover {
-  height: 250px;
-  width: 90%;
+#comments span {
+  font-weight: bold;
+  color: red;
 }
 </style>
 <script>
+
+window.addEventListener('load', update, false);
+window.addEventListener('unload', confirm_exit, false);
+window.onbeforeunload = confirm_exit;
 
 function update() {
   var xhttp = new XMLHttpRequest();
@@ -177,15 +181,20 @@ function update_file(id, file) {
   xhttp.open('GET', file + '?_=' + new Date().getTime(), true);
   xhttp.send();
 }
+
+function confirm_exit() {
+  return confirm("If you quit or reload this page, you can not be sure to be able to access it again. Did you save it with Ctrl+S before?");
+}
+
 </script>
 </head>
 
-<body onload="update()">
+<body>
   <h1>Installation</h1>
   <ul id="comments">
-    <li>Never reload this page by yourself during the process!</li>
-    <li><strong>Use <em>Ctrl+S</em> to save this page</strong> on your computer when you think that the process is complete.</li>
+    <li><strong>Use <em>Ctrl+S</em> to save this page</strong> on your computer, when you want.</li>
     <li>You can share a copy of this page for debbuging purposes (no password and no certificate in logs).</li>
+    <li>Please, <span>NEVER RELOAD</span> this page by yourself, if do not want to risk losing your logs.</li>
     <li>From the time when the installation is complete, this page will be available and updated for 30 minutes, then disconnected.</li>
   </ul>
 
