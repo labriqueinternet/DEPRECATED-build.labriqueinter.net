@@ -3,6 +3,35 @@
 set -e
 set -x
 
+show_usage() {
+cat <<EOF
+# NAME
+
+  $(basename $0) -- Script to create Debian images for olinux boards
+
+# OPTIONS
+
+  -d		yunohost distribution (default: stable)
+
+EOF
+exit 1
+}
+
+INSTALL_YUNOHOST_DIST='stable'
+INSTALL_YUNOHOST_TESTING=
+DEBIAN_RELEASE=jessie
+
+while getopts ":d:" opt; do
+  case $opt in
+    d)
+      INSTALL_YUNOHOST_DIST=$OPTARG
+      ;;
+    \?)
+      show_usage
+      ;;
+  esac
+done
+
 if [ "$(id -u)" != "0" ]; then
   echo "This script must be run as root" 1>&2
   exit 1
@@ -12,10 +41,14 @@ chroot_deb (){
 	  LC_ALL=C LANGUAGE=C LANG=C chroot $1 /bin/bash -c "$2"
 }
 
+if [ "${INSTALL_YUNOHOST_DIST}" != stable ]; then
+  INSTALL_YUNOHOST_TESTING="-testing"
+fi
+
 cd  /opt/build.labriqueinter.net/ && git pull
 
 # Build olinux debootstrap with yunohost
-./build/create_arm_debootstrap.sh \
+./build/create_arm_debootstrap.sh -d "${INSTALL_YUNOHOST_DIST}" -r "${DEBIAN_RELEASE}" \
  -t /srv/olinux/debootstrap -p localhost -y -e | tee /srv/olinux/debootstrap.log
 
 cp /srv/olinux/debootstrap.log /srv/olinux/debootstrap/root/
@@ -28,7 +61,7 @@ for BOARD in ${boardlist[@]}; do
   echo $FLASH_KERNEL > /srv/olinux/debootstrap/etc/flash-kernel/machine
   chroot_deb /srv/olinux/debootstrap 'update-initramfs -u -k all'
   ./build/create_device.sh -D img -s 1500 \
-   -t /srv/olinux/labriqueinternet_${FILE}_encryptedfs_"$(date '+%Y-%m-%d')".img \
+   -t /srv/olinux/labriqueinternet_${FILE}_encryptedfs_"$(date '+%Y-%m-%d')"_${DEBIAN_RELEASE}${INSTALL_YUNOHOST_TESTING}.img \
    -d /srv/olinux/debootstrap \
    -b $BOARD
   
@@ -45,7 +78,7 @@ for BOARD in ${boardlist[@]}; do
   echo $FLASH_KERNEL > /srv/olinux/debootstrap/etc/flash-kernel/machine
   chroot_deb /srv/olinux/debootstrap 'update-initramfs -u -k all'
   ./build/create_device.sh -D img -s 1500 \
-   -t /srv/olinux/labriqueinternet_${FILE}_"$(date '+%Y-%m-%d')".img \
+   -t /srv/olinux/labriqueinternet_${FILE}_"$(date '+%Y-%m-%d')"_${DEBIAN_RELEASE}${INSTALL_YUNOHOST_TESTING}.img \
    -d /srv/olinux/debootstrap \
    -b $BOARD
   
