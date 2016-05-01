@@ -20,7 +20,8 @@ cat <<EOF
   -n		hostname				(default: olinux)
   -t		target directory for debootstrap	(default: ./tmp/debootstrap)
   -y		install yunohost (doesn't work with cross debootstrap)
-  -d		yunohost distribution (default: stable	
+  -r		debian release				(default: jessie)
+  -d		yunohost distribution			(default: stable)
   -c		cross debootstrap
   -p		use and set aptcacher proxy
   -e		configure for encrypted partition	(default: false)
@@ -36,7 +37,7 @@ REP=$(dirname $0)
 APT='DEBIAN_FRONTEND=noninteractive apt-get install -y --force-yes'
 INSTALL_YUNOHOST_DIST='stable'
 
-while getopts ":a:b:n:t:d:ycp:e" opt; do
+while getopts ":a:b:n:t:d:r:ycp:e" opt; do
   case $opt in
     b)
       BOARD=$OPTARG
@@ -55,6 +56,9 @@ while getopts ":a:b:n:t:d:ycp:e" opt; do
       ;;
     d)
       INSTALL_YUNOHOST_DIST=$OPTARG
+      ;;
+    r)
+      DEBIAN_RELEASE=$OPTARG
       ;;
     c)
       CROSS=yes
@@ -227,9 +231,17 @@ mkdir $TARGET_DIR/var/log/hypercube
 install -m 444 -o root -g root ${REP}/script/hypercube/install.html $TARGET_DIR/var/log/hypercube/
 
 if [ $INSTALL_YUNOHOST ] ; then
+  if [ "${INSTALL_YUNOHOST_DIST}" != stable ]; then
+    chroot_deb $TARGET_DIR "mkdir -p /run/systemd/system/"
+  fi
+
   chroot_deb $TARGET_DIR "$APT git"
   chroot_deb $TARGET_DIR "git clone https://github.com/YunoHost/install_script /tmp/install_script"
   chroot_deb $TARGET_DIR "cd /tmp/install_script && ./install_yunohost -a -d ${INSTALL_YUNOHOST_DIST}"
+
+  if [ "${INSTALL_YUNOHOST_DIST}" != stable ]; then
+    chroot_deb $TARGET_DIR "rmdir /run/systemd/system/ /run/systemd/"
+  fi
 fi
 
 echo 'deb http://ftp.fr.debian.org/debian jessie-backports main' > $TARGET_DIR/etc/apt/sources.list.d/backports.list
