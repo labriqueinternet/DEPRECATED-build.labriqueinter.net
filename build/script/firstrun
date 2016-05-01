@@ -57,6 +57,7 @@ else
   rm /etc/initramfs-tools/root/.ssh/id_*
   rm /etc/initramfs-tools/etc/dropbear/dropbear_*
   /usr/sbin/update-initramfs -u -k all
+  touch /etc/yunohost/cube_installed
 fi
 
 exit 0

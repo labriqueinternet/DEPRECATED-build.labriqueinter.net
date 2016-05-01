@@ -148,6 +148,9 @@ fi
 
 chroot_deb $TARGET_DIR 'apt-get update'
 
+# Add HyperCube packages
+PACKAGES="jq udisks-glue php5-fpm ntfs-3g $PACKAGES"
+
 # Add useful packages
 chroot_deb $TARGET_DIR "$APT openssh-server ntp parted locales vim-nox bash-completion rng-tools $PACKAGES"
 echo 'HRNGDEVICE=/dev/urandom' >> $TARGET_DIR/etc/default/rng-tools
