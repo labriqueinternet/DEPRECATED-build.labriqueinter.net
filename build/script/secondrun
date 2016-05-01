@@ -11,6 +11,6 @@ echo "# Expanding rootfs partition #"
 echo "##############################"
 echo ""
 /sbin/resize2fs /dev/mmcblk0p1
-/usr/sbin/systemctl disable secondrun
+/bin/systemctl disable secondrun
 
 exit 0
