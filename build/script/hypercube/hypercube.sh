@@ -391,7 +391,8 @@ function end_installation() {
   ln -s /var/log/daemon.log /var/log/hypercube/var_log_daemon.log
   ln -s /var/log/syslog /var/log/hypercube/var_log_syslog.log
 
-  info "30 minutes before removing HyperCube scripts"
+  info "30 minutes before disabling this interface"
+  info "Please, wait 5 minutes and save this page with Ctrl+S"
   sleep 1800
 
   info "Removing HyperCube scripts (this page will be disconnected)"
