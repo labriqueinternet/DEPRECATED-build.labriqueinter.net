@@ -175,7 +175,6 @@ function detect_wifidevice() {
 }
 
 function deb_changepassword() {
-  # TODO: Remove service asking to change Debian password at first login
   echo "root:${settings[yunohost,password]}" | /usr/sbin/chpasswd
 }
 
@@ -502,6 +501,11 @@ else
   configure_hotspot
   
   info "Rebooting..."
+
+  if [ -f /etc/crypttab ]; then
+    info "WARN: Once rebooted, you have to give the passphrase for uncrypting your Cube"
+  fi
+
   sleep 5
   systemctl reboot
 fi
