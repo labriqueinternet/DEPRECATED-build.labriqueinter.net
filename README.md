@@ -87,7 +87,13 @@ cd /opt/build.labriqueinter.net && bash init.sh
 cd /opt/build.labriqueinter.net && bash build_labriqueinternet_lime.sh
 ```
 
-Now, if everything gone well you should have images on /srv/olinux/ !
+The stable version of yunohost is installed by default, but you can install another version (e.g. testing), changing the last line this way:
+
+```shell
+cd /opt/build.labriqueinter.net && bash build_labriqueinternet_lime.sh -d testing
+```
+
+Now, if everything gone well you should have images on /srv/olinux/!
 
 # Compress images
 
