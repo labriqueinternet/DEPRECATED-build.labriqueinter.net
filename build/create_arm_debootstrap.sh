@@ -241,7 +241,7 @@ if [ $INSTALL_YUNOHOST ] ; then
   chroot_deb $TARGET_DIR "cd /tmp/install_script && ./install_yunohost -a -d ${INSTALL_YUNOHOST_DIST}"
 
   if [ "${INSTALL_YUNOHOST_DIST}" != stable ]; then
-    chroot_deb $TARGET_DIR "rmdir /run/systemd/system/ /run/systemd/"
+    chroot_deb $TARGET_DIR "rmdir /run/systemd/system/ /run/systemd/ 2> /dev/null || true"
   fi
 fi
 
