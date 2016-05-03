@@ -20,7 +20,7 @@ $apt install vim debootstrap tar wget bzip2 screen zerofree apt-cacher-ng
 
 # Configure apt proxy
 if [ ! -f /etc/apt/apt.conf.d/01proxy ] ; then
-  echo Acquire::http::Proxy "http://localhost:3142"; >> \
+  echo 'Acquire::http::Proxy "http://localhost:3142";' >> \
    /etc/apt/apt.conf.d/01proxy
 fi
 
