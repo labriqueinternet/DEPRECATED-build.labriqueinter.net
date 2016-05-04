@@ -280,7 +280,9 @@ fi
 
 mkdir $TARGET_DIR/etc/flash-kernel
 echo $FLASH_KERNEL > $TARGET_DIR/etc/flash-kernel/machine
-chroot_deb $TARGET_DIR "DEBIAN_FRONTEND=noninteractive $APT linux-image-armmp flash-kernel u-boot-sunxi u-boot-tools $PACKAGES"
+# Force kernel version (temporary bug with kernel 4.5)
+# chroot_deb $TARGET_DIR "DEBIAN_FRONTEND=noninteractive $APT linux-image-armmp flash-kernel u-boot-sunxi u-boot-tools $PACKAGES"
+chroot_deb $TARGET_DIR "DEBIAN_FRONTEND=noninteractive $APT linux-image-3.16.0-4-armmp flash-kernel u-boot-sunxi u-boot-tools $PACKAGES"
 
 if [ $ENCRYPT ] ; then
   echo 'aes' >> $TARGET_DIR/etc/initramfs-tools/modules
