@@ -57,12 +57,14 @@ function urlencode() {
 #################
 
 function cleaning() {
-  if iptables -nL INPUT | grep -q 2468; then
-    iptables -D INPUT -p tcp -s 10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,169.254.0.0/16 --dport 2468 -j ACCEPT
-  fi
+  sleep 10
 
   if [ -d "${tmp_dir}" ]; then
     rm -r "${tmp_dir}"
+  fi
+
+  if iptables -nL INPUT | grep -q 2468; then
+    iptables -D INPUT -p tcp -s 10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,169.254.0.0/16 --dport 2468 -j ACCEPT
   fi
 }
 
