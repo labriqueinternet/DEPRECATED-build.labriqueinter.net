@@ -510,8 +510,11 @@ else
   info "Configuring Wifi Hotspot..."
   configure_hotspot
 
-  info "Installing Roundcube Webmail..."
-  install_webmail
+  # Do not install roundcube because of this exception:
+  #  The app is incompatible with your YunoHost version: The app package need
+  #  to be updated to follow YunoHost changes
+  # info "Installing Roundcube Webmail..."
+  # install_webmail
   
   info "Rebooting..."
 
