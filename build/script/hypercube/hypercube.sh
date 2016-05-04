@@ -232,6 +232,14 @@ function install_hotspot() {
     --args "domain=$(urlencode "${settings[yunohost,domain]}")&path=/wifiadmin&wifi_ssid=$(urlencode "${settings[hotspot,wifi_ssid]}")&wifi_passphrase=$(urlencode "${settings[hotspot,wifi_passphrase]}")&firmware_nonfree=$(urlencode "${settings[hotspot,firmware_nonfree]}")" &>> $log_file
 }
 
+function install_webmail() {
+  logfile ${FUNCNAME[0]}
+
+  # Roundcube app should be in the official YunoHost apps organization
+  yunohost app install https://github.com/Kloadut/roundcube_ynh\
+    --args "domain=$(urlencode "${settings[yunohost,domain]}")&path=/webmail" &>> $log_file
+}
+
 function configure_hotspot() {
   logfile ${FUNCNAME[0]}
   local ynh_wifi_device=
@@ -474,10 +482,11 @@ else
 
   info "Updating hosts file"
   deb_updatehosts
-  
-  info "Upgrading Debian/YunoHost..."
-  deb_upgrade
-  
+
+  # Do not upgrade (temporary bug with kernel 4.5)
+  # info "Upgrading Debian/YunoHost..."
+  # deb_upgrade
+
   info "Doing YunoHost post-installation..."
   ynh_postinstall
 
@@ -500,6 +509,9 @@ else
   
   info "Configuring Wifi Hotspot..."
   configure_hotspot
+
+  info "Installing Roundcube Webmail..."
+  install_webmail
   
   info "Rebooting..."
 

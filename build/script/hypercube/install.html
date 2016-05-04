@@ -17,10 +17,13 @@ h2 {
   background-color: #eee;
   padding: 6px;
   border-radius: 3px;
+  text-decoration: underline;
+  cursor: pointer;
 }
 
-h2:hover {
+h2:hover, h2.active {
   background-color: #ccc;
+  text-decoration: none;
 }
 
 #indicator {
@@ -140,10 +143,16 @@ function create_file(file) {
       var nextClass = this.nextSibling.getAttribute('class');
       nextClass = nextClass ? nextClass : '';
 
+      var thisClass = this.getAttribute('class');
+      thisClass = thisClass ? thisClass : '';
+
       if(nextClass.match('visible')) {
         this.nextSibling.setAttribute('class', nextClass.replace('visible', ''));
+        this.setAttribute('class', thisClass.replace('active', ''));
+        
       } else {
-        this.nextSibling.setAttribute('class', nextClass + 'visible');
+        this.nextSibling.setAttribute('class', nextClass + ' visible');
+        this.setAttribute('class', thisClass + ' active');
       }
     };
 
