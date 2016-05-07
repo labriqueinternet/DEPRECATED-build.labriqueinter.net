@@ -57,7 +57,17 @@ function urlencode() {
 #################
 
 function cleaning() {
-  sleep 10
+  sleep 5
+
+  if $export_logs; then
+    local usb=$(find /media/ -mindepth 1 -maxdepth 1)
+
+    for i in $usb; do
+      rm -fr "${i}/hypercube_logs/"
+      cp -fr $log_filepath "${i}/hypercube_logs/"
+      sync
+    done
+  fi
 
   if [ -d "${tmp_dir}" ]; then
     rm -r "${tmp_dir}"
@@ -122,15 +132,15 @@ function extract_settings() {
   fi
 
   IFS=$'\n'; for i in $vars; do
-    local key=$(echo $i | cut -d= -f1)
-    local value=$(echo $i | cut -d= -f2-)
+    local key=$(echo "${i}" | cut -d= -f1)
+    local value=$(echo "${i}" | cut -d= -f2-)
 
-    settings[$1,$key]=$value
+    settings[$1,$key]="${value}"
 
     if [[ ! -z "$value" && ( "$key" =~ ^crt_ || "$key" =~ _passphrase$ || "$key" =~ _password$ ) ]]; then
-      echo "settings[$1,$key]=/removed/" &>> $log_file
+      echo "settings[${1},${key}]=/removed/" &>> $log_file
     else
-      echo "settings[$1,$key]=$value" &>> $log_file
+      echo "settings[${1},${key}]=${value}" &>> $log_file
     fi
   done
 }
@@ -203,11 +213,23 @@ function ynh_postinstall() {
   yunohost tools postinstall -d "${settings[yunohost,domain]}" -p "${settings[yunohost,password]}" &>> $log_file
 }
 
-function ynh_installdkim() {
+function check_dyndns_list() {
   logfile ${FUNCNAME[0]}
 
-  hypercube_dkim.sh "${settings[yunohost,domain]}" &>> $log_file
-  echo $(cat /etc/opendkim/keys/${settings[yunohost,domain]}/mail.txt) | sed 's/" "//; s/.*"\([^"]\+\)".*/\1/' > "${log_filepath}/dkim-dns-record.TXT"
+  local domains_file="${tmp_dir}/domains"
+  curl https://dyndns.yunohost.org/domains > $domains_file 2>> $log_file
+
+  local vars=$(jq -r 'to_entries|map("\(.key)=\(.value|tostring)")|.[]' ${domains_file} 2>> $log_file)
+
+  IFS=$'\n'; for i in $vars; do
+    local domain=$(echo "${i}" | cut -d= -f2-)
+    echo "dyndns_domain: ${domain}" &>> $log_file
+
+    if [[ "${settings[yunohost,domain]}" =~ "${domain}"$ ]]; then
+      is_dyndns_useful=true
+      echo "DynDNS is useful: ${domain}" &>> $log_file
+    fi
+  done
 }
 
 function ynh_removedyndns() {
@@ -398,8 +420,10 @@ function end_installation() {
   monitoring_processes
   monitoring_ip
 
-  ln -s /var/log/daemon.log /var/log/hypercube/var_log_daemon.log
-  ln -s /var/log/syslog /var/log/hypercube/var_log_syslog.log
+  ln -s /var/log/daemon.log "${log_filepath}/var_log_daemon.log"
+  ln -s /var/log/syslog "${log_filepath}/var_log_syslog.log"
+
+  rm -f /root/install.hypercube
 
   info "30 minutes before disabling this interface"
   info "Please, wait 5 minutes and save this page with Ctrl+S"
@@ -418,10 +442,12 @@ function end_installation() {
 
 declare -A settings
 tmp_dir=$(mktemp -dp /tmp/ labriqueinternet-installhypercube-XXXXX)
+is_dyndns_useful=false
 log_filepath=/var/log/hypercube/
 log_mainfile=install.log
 log_fileindex=0
 log_file=
+export_logs=true
 hypercube_file=
 json=
 
@@ -439,12 +465,17 @@ if [ -f /etc/yunohost/installed -a ! -f "${log_filepath}/enabled" ]; then
   exit 0
 fi
 
+udisks-glue
+sleep 10
+
 set_logpermissions
 start_logwebserver
 
 # firstrun/secondrun not finished
 if [ ! -f /etc/yunohost/cube_installed ]; then
   info "Waiting for the end of the FS resizing..."
+  export_logs=false
+
   exit 0
 fi
 
@@ -492,7 +523,10 @@ else
   info "Doing YunoHost post-installation..."
   ynh_postinstall
 
-  if ! [[ "${settings[yunohost,domain]}" =~ \.nohost\.me$ || "${settings[yunohost,domain]}" =~ \.noho\.st$ ]]; then
+  info "Check online DynDNS domains list"
+  check_dyndns_list
+
+  if ! $is_dyndns_useful; then
     info "Removing DynDNS cron"
     ynh_removedyndns
   fi
