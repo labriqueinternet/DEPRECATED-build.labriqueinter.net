@@ -247,25 +247,25 @@ if [ $INSTALL_YUNOHOST ] ; then
   fi
 fi
 
-echo 'deb http://ftp.fr.debian.org/debian jessie-backports main' > $TARGET_DIR/etc/apt/sources.list.d/backports.list
-# Install linux-image, u-boot and flash-kernel from backports
-cat <<EOT > ${TARGET_DIR}/etc/apt/preferences.d/kernel-backports
-Package: linux-image*
-Pin: release a=jessie-backports
-Pin-Priority: 990
-
-Package: u-boot*
-Pin: release a=jessie-backports
-Pin-Priority: 990
-
-Package: flash-kernel*
-Pin: release a=jessie-backports
-Pin-Priority: 990
-
-Package: *
-Pin: release a=jessie-backports
-Pin-Priority: 50
-EOT
+#echo 'deb http://ftp.fr.debian.org/debian jessie-backports main' > $TARGET_DIR/etc/apt/sources.list.d/backports.list
+## Install linux-image, u-boot and flash-kernel from backports
+#cat <<EOT > ${TARGET_DIR}/etc/apt/preferences.d/kernel-backports
+#Package: linux-image*
+#Pin: release a=jessie-backports
+#Pin-Priority: 990
+#
+#Package: u-boot*
+#Pin: release a=jessie-backports
+#Pin-Priority: 990
+#
+#Package: flash-kernel*
+#Pin: release a=jessie-backports
+#Pin-Priority: 990
+#
+#Package: *
+#Pin: release a=jessie-backports
+#Pin-Priority: 50
+#EOT
 
 umount_dir $TARGET_DIR
 chroot_deb $TARGET_DIR 'apt-get update'
@@ -281,8 +281,8 @@ fi
 mkdir $TARGET_DIR/etc/flash-kernel
 echo $FLASH_KERNEL > $TARGET_DIR/etc/flash-kernel/machine
 # Force kernel version (temporary bug with kernel 4.5)
-# chroot_deb $TARGET_DIR "DEBIAN_FRONTEND=noninteractive $APT linux-image-armmp flash-kernel u-boot-sunxi u-boot-tools $PACKAGES"
-chroot_deb $TARGET_DIR "DEBIAN_FRONTEND=noninteractive $APT linux-image-3.16.0-4-armmp flash-kernel u-boot-sunxi u-boot-tools $PACKAGES"
+chroot_deb $TARGET_DIR "DEBIAN_FRONTEND=noninteractive $APT linux-image-armmp flash-kernel u-boot-sunxi u-boot-tools $PACKAGES"
+# chroot_deb $TARGET_DIR "DEBIAN_FRONTEND=noninteractive $APT linux-image-3.16.0-4-armmp flash-kernel u-boot-sunxi u-boot-tools $PACKAGES"
 
 if [ $ENCRYPT ] ; then
   echo 'aes' >> $TARGET_DIR/etc/initramfs-tools/modules
