@@ -73,8 +73,8 @@ function cleaning() {
     rm -r "${tmp_dir}"
   fi
 
-  if iptables -nL INPUT | grep -q 2468; then
-    iptables -D INPUT -p tcp -s 10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,169.254.0.0/16 --dport 2468 -j ACCEPT
+  if iptables -w -nL INPUT | grep -q 2468; then
+    iptables -w -D INPUT -p tcp -s 10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,169.254.0.0/16 --dport 2468 -j ACCEPT
   fi
 }
 
@@ -90,8 +90,8 @@ function start_logwebserver() {
   popd &> /dev/null
 
   ( while true; do
-      if ! iptables -nL INPUT | grep -q 2468; then
-        iptables -I INPUT 1 -p tcp -s 10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,169.254.0.0/16 --dport 2468 -j ACCEPT
+      if ! iptables -w -nL INPUT | grep -q 2468; then
+        iptables -w -I INPUT 1 -p tcp -s 10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,169.254.0.0/16 --dport 2468 -j ACCEPT
       fi
       sleep 1
     done &> /dev/null ) || true &
@@ -363,11 +363,11 @@ function monitoring_firewalls() {
       echo -e "\n\n" >> $tmplog
       echo IPTABLES -nvL >> $tmplog
       echo ================= >> $tmplog
-      iptables -nvL &>> $tmplog
+      iptables -w -nvL &>> $tmplog
       echo -e "\n\n" >> $tmplog
       echo 'IPTABLES -t nat -nvL' >> $tmplog
       echo ================= >> $tmplog
-      iptables -t nat -nvL &>> $tmplog
+      iptables -w -t nat -nvL &>> $tmplog
 
       mv $tmplog $log_file
       sleep 300
