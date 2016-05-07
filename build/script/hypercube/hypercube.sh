@@ -420,8 +420,8 @@ function end_installation() {
   monitoring_processes
   monitoring_ip
 
-  ln -s /var/log/daemon.log "${log_filepath}/var_log_daemon.log"
-  ln -s /var/log/syslog "${log_filepath}/var_log_syslog.log"
+  cp /var/log/daemon.log "${log_filepath}/var_log_daemon.log"
+  cp /var/log/syslog "${log_filepath}/var_log_syslog.log"
 
   rm -f /root/install.hypercube
 
