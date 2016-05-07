@@ -462,6 +462,8 @@ trap cleaning ERR
 # YunoHost was installed without the HyperCube system
 if [ -f /etc/yunohost/installed -a ! -f "${log_filepath}/enabled" ]; then
   systemctl disable hypercube
+  export_logs=false
+
   exit 0
 fi
 
@@ -474,7 +476,6 @@ start_logwebserver
 # firstrun/secondrun not finished
 if [ ! -f /etc/yunohost/cube_installed ]; then
   info "Waiting for the end of the FS resizing..."
-  export_logs=false
 
   exit 0
 fi
@@ -490,6 +491,7 @@ else
   find_hypercubefile
   
   if [ -z "${hypercube_file}" ]; then
+    export_logs=false
     exit_error "No install.hypercube(.txt) file found"
   fi
 
