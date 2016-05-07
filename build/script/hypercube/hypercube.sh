@@ -519,8 +519,8 @@ else
   deb_updatehosts
 
   # Do not upgrade (temporary bug with kernel 4.5)
-  # info "Upgrading Debian/YunoHost..."
-  # deb_upgrade
+  info "Upgrading Debian/YunoHost..."
+  deb_upgrade
 
   info "Doing YunoHost post-installation..."
   ynh_postinstall
