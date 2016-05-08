@@ -28,6 +28,7 @@ fi
 
 apt-get clean
 apt-get update
+
 DEBIAN_FRONTEND=noninteractive apt install -y --force-yes linux-image-armmp flash-kernel u-boot-sunxi u-boot-tools
 update-initramfs -k all -u
 
