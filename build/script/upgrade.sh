@@ -36,12 +36,13 @@ else
   echo 'LINUX_KERNEL_CMDLINE="console=tty0 hdmi.audio=EDID:0 disp.screen0_output_mode=EDID:1280x720p60 root=/dev/mmcblk0p1 rootwait sunxi_ve_mem_reserve=0 sunxi_g2d_mem_reserve=0 sunxi_no_mali_mem_reserve sunxi_fb_mem_reserve=0 panic=10 loglevel=6 consoleblank=0"' >  /etc/default/flash-kernel
 fi
 
-if grep -q testing /etc/apt/sources.list ; then
+YUNOHOST_SOURCES='/etc/apt/sources.list.d/yunohost.list'
+if grep -q testing "${YUNOHOST_SOURCES}" ; then
   echo "##################################################################"
   echo "# Warning; you probably doesn't want yunohost testing repository #"
   echo "##################################################################"
   echo "line:"
-  grep testing /etc/apt/sources.list
+  grep testing "${YUNOHOST_SOURCES}"
 fi
 echo 'Now you can run (answer no, and type enter twice):'
 echo 'apt-get update'
