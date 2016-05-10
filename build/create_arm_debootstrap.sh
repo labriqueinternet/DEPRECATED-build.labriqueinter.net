@@ -239,6 +239,19 @@ if [ $INSTALL_YUNOHOST ] ; then
   chroot_deb $TARGET_DIR "$APT git"
   chroot_deb $TARGET_DIR "git clone https://github.com/YunoHost/install_script /tmp/install_script"
   chroot_deb $TARGET_DIR "cd /tmp/install_script && ./install_yunohost -a -d ${INSTALL_YUNOHOST_DIST}"
+fi
+
+echo 'deb http://ftp.fr.debian.org/debian jessie-backports main' > $TARGET_DIR/etc/apt/sources.list.d/backports.list
+# Install linux-image, u-boot and flash-kernel from backports
+cat <<EOT > ${TARGET_DIR}/etc/apt/preferences.d/kernel-backports
+Package: linux-image*
+Pin: release a=jessie-backports
+Pin-Priority: 990
+
+Package: u-boot*
+Pin: release a=jessie-backports
+Pin-Priority: 990
+>>>>>>> Rename install_yunohost script to follow upstream changes.
 
   chroot_deb $TARGET_DIR "rmdir /run/systemd/system/ /run/systemd/ 2> /dev/null || true"
 fi
