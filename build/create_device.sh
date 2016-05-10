@@ -12,7 +12,7 @@ cat <<EOF
 # OPTIONS
 
   -b		olinux board (see config_board.sh) 	(default: a20lime)
-  -d		debootstrap directory, .img or tarball	(default: /tmp/debootstrap)
+  -d		debootstrap directory, .img or tarball	(default: ./tmp/debootstrap)
   -D		device name (img, /dev/sdc, /dev/mmc)	(mandatory)
   -s		size of img in MB		 	(mandatory only for img device option)
   -t		final image name			(default: /tmp/olinux.img)
