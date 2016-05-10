@@ -198,11 +198,17 @@ function deb_upgrade() {
   apt-get autoremove -y --force-yes &>> $log_file || true
 }
 
+function deb_changehostname() {
+  hostnamectl --static set-hostname "${settings[yunohost,domain]}"
+  hostnamectl --transient set-hostname "${settings[yunohost,domain]}"
+  hostnamectl --pretty set-hostname "${settings[yunohost,domain]}"
+}
+
 function deb_updatehosts() {
   logfile ${FUNCNAME[0]}
 
-  echo "127.0.0.1 ${settings[yunohost,domain]} ${settings[yunohost,add_domain]}" >> /etc/hosts
-  echo "::1 ${settings[yunohost,domain]} ${settings[yunohost,add_domain]}" >> /etc/hosts
+  echo "127.0.0.1 ${settings[yunohost,domain]}" >> /etc/hosts
+  echo "::1 ${settings[yunohost,domain]}" >> /etc/hosts
 
   cat /etc/hosts &>> $log_file
 }
@@ -515,10 +521,12 @@ else
   info "Updating Debian root password"
   deb_changepassword
 
+  info "Changing hostname"
+  deb_changehostname
+
   info "Updating hosts file"
   deb_updatehosts
 
-  # Do not upgrade (temporary bug with kernel 4.5)
   info "Upgrading Debian/YunoHost..."
   deb_upgrade
 
@@ -548,11 +556,8 @@ else
   info "Configuring Wifi Hotspot..."
   configure_hotspot
 
-  # Do not install roundcube because of this exception:
-  #  The app is incompatible with your YunoHost version: The app package need
-  #  to be updated to follow YunoHost changes
-  # info "Installing Roundcube Webmail..."
-  # install_webmail
+  info "Installing Roundcube Webmail..."
+  install_webmail || true
   
   info "Rebooting..."
 
