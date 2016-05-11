@@ -64,6 +64,8 @@ for BOARD in ${boardlist[@]}; do
    -t /srv/olinux/labriqueinternet_${FILE}_encryptedfs_"$(date '+%Y-%m-%d')"_${DEBIAN_RELEASE}${INSTALL_YUNOHOST_TESTING}.img \
    -d /srv/olinux/debootstrap \
    -b $BOARD
+
+  tar czf /srv/olinux/labriqueinternet_${FILE}_encryptedfs_"$(date '+%Y-%m-%d')"_${DEBIAN_RELEASE}${INSTALL_YUNOHOST_TESTING}.img{.tar.xz,}
   
 done
 
@@ -82,6 +84,7 @@ for BOARD in ${boardlist[@]}; do
    -d /srv/olinux/debootstrap \
    -b $BOARD
   
+   tar czf /srv/olinux/labriqueinternet_${FILE}_"$(date '+%Y-%m-%d')"_${DEBIAN_RELEASE}${INSTALL_YUNOHOST_TESTING}.img{.tar.xz,}
 done
 
 exit 0
