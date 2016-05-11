@@ -201,7 +201,7 @@ function deb_upgrade() {
 function deb_changehostname() {
   hostnamectl --static set-hostname "${settings[yunohost,domain]}"
   hostnamectl --transient set-hostname "${settings[yunohost,domain]}"
-  hostnamectl --pretty set-hostname "Internet Cube (${settings[yunohost,domain]})"
+  hostnamectl --pretty set-hostname "Brique Internet (${settings[yunohost,domain]})"
 }
 
 function deb_updatehosts() {
