@@ -137,7 +137,7 @@ function extract_settings() {
 
     settings[$1,$key]="${value}"
 
-    if [[ ! -z "$value" && ( "$key" =~ ^crt_ || "$key" =~ _passphrase$ || "$key" =~ _password$ ) ]]; then
+    if [[ ! -z "$value" && ( "$key" =~ ^crt_ || "$key" =~ pass(word|phrase) ) ]]; then
       echo "settings[${1},${key}]=/removed/" &>> $log_file
     else
       echo "settings[${1},${key}]=${value}" &>> $log_file
@@ -201,7 +201,7 @@ function deb_upgrade() {
 function deb_changehostname() {
   hostnamectl --static set-hostname "${settings[yunohost,domain]}"
   hostnamectl --transient set-hostname "${settings[yunohost,domain]}"
-  hostnamectl --pretty set-hostname "${settings[yunohost,domain]}"
+  hostnamectl --pretty set-hostname "Internet Cube (${settings[yunohost,domain]})"
 }
 
 function deb_updatehosts() {
