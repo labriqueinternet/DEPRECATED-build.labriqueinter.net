@@ -187,7 +187,7 @@ function detect_wifidevice() {
 }
 
 function deb_changepassword() {
-  echo "root:${settings[yunohost,password]}" | /usr/sbin/chpasswd
+  echo "root:${settings[unix,root_password]}" | /usr/sbin/chpasswd
 }
 
 function deb_upgrade() {
@@ -211,6 +211,13 @@ function deb_updatehosts() {
   echo "::1 ${settings[yunohost,domain]}" >> /etc/hosts
 
   cat /etc/hosts &>> $log_file
+}
+
+function deb_setlocales() {
+  case "${settings[unix,lang]}" in
+    fr) echo 'LC_ALL="fr_FR.UTF-8"' > /etc/environment ;;
+    *) echo 'LC_ALL="en_US.UTF-8"' > /etc/environment
+  esac
 }
 
 function ynh_postinstall() {
@@ -302,115 +309,130 @@ function monitoring_ip() {
   logfile ${FUNCNAME[0]}
 
   (for i in {1-6}; do
-      tmplog=$(mktemp /tmp/hypercube-monitoring_ip-XXXX)
+     tmplog=$(mktemp /tmp/hypercube-monitoring_ip-XXXX)
 
-      date >> $tmplog
-      echo -e "\n" >> $tmplog
-      echo IP ADDRESS >> $tmplog
-      echo ================= >> $tmplog
-      ip addr &>> $tmplog
-      echo -e "\n\n" >> $tmplog
-      echo IP6 ROUTE >> $tmplog
-      echo ================= >> $tmplog
-      ip -6 route &>> $tmplog
-      echo -e "\n\n" >> $tmplog
-      echo IP4 ROUTE >> $tmplog
-      echo ================= >> $tmplog
-      ip route &>> $tmplog
-      echo -e "\n\n" >> $tmplog
-      echo RESOLV.CONF >> $tmplog
-      echo ================= >> $tmplog
-      cat /etc/resolv.conf &>> $tmplog
-      echo -e "\n\n" >> $tmplog
-      echo PING6 WIKIPEDIA.ORG >> $tmplog
-      echo ================= >> $tmplog
-      ping6 -c 3 wikipedia.org &>> $tmplog
-      echo -e "\n\n" >> $tmplog
-      echo PING4 WIKIPEDIA.ORG >> $tmplog
-      echo ================= >> $tmplog
-      ping -c 3 wikipedia.org &>> $tmplog
-      echo -e "\n\n" >> $tmplog
-      echo PING 2620:0:862:ed1a::1 >> $tmplog
-      echo ================= >> $tmplog
-      ping6 -c 3 2620:0:862:ed1a::1 &>> $tmplog
-      echo -e "\n\n" >> $tmplog
-      echo PING 91.198.174.192 >> $tmplog
-      echo ================= >> $tmplog
-      ping -c 3 91.198.174.192 &>> $tmplog
-      echo -e "\n\n" >> $tmplog
-      echo TRACEROUTE 2620:0:862:ed1a::1 >> $tmplog
-      echo ================= >> $tmplog
-      traceroute6 -n 2620:0:862:ed1a::1 &>> $tmplog
-      echo -e "\n\n" >> $tmplog
-      echo TRACEROUTE 91.198.174.192 >> $tmplog
-      echo ================= >> $tmplog
-      traceroute -n 91.198.174.192 &>> $tmplog
-      echo -e "\n\n" >> $tmplog
-      echo IW DEV >> $tmplog
-      echo ================= >> $tmplog
-      iw dev &>> $tmplog
+     date >> $tmplog
+     echo -e "\n" >> $tmplog
+     echo IP ADDRESS >> $tmplog
+     echo ================= >> $tmplog
+     ip addr &>> $tmplog
+     echo -e "\n\n" >> $tmplog
+     echo IP6 ROUTE >> $tmplog
+     echo ================= >> $tmplog
+     ip -6 route &>> $tmplog
+     echo -e "\n\n" >> $tmplog
+     echo IP4 ROUTE >> $tmplog
+     echo ================= >> $tmplog
+     ip route &>> $tmplog
+     echo -e "\n\n" >> $tmplog
+     echo RESOLV.CONF >> $tmplog
+     echo ================= >> $tmplog
+     cat /etc/resolv.conf &>> $tmplog
+     echo -e "\n\n" >> $tmplog
+     echo PING6 WIKIPEDIA.ORG >> $tmplog
+     echo ================= >> $tmplog
+     ping6 -c 3 wikipedia.org &>> $tmplog
+     echo -e "\n\n" >> $tmplog
+     echo PING4 WIKIPEDIA.ORG >> $tmplog
+     echo ================= >> $tmplog
+     ping -c 3 wikipedia.org &>> $tmplog
+     echo -e "\n\n" >> $tmplog
+     echo PING 2620:0:862:ed1a::1 >> $tmplog
+     echo ================= >> $tmplog
+     ping6 -c 3 2620:0:862:ed1a::1 &>> $tmplog
+     echo -e "\n\n" >> $tmplog
+     echo PING 91.198.174.192 >> $tmplog
+     echo ================= >> $tmplog
+     ping -c 3 91.198.174.192 &>> $tmplog
+     echo -e "\n\n" >> $tmplog
+     echo TRACEROUTE 2620:0:862:ed1a::1 >> $tmplog
+     echo ================= >> $tmplog
+     traceroute6 -n 2620:0:862:ed1a::1 &>> $tmplog
+     echo -e "\n\n" >> $tmplog
+     echo TRACEROUTE 91.198.174.192 >> $tmplog
+     echo ================= >> $tmplog
+     traceroute -n 91.198.174.192 &>> $tmplog
+     echo -e "\n\n" >> $tmplog
+     echo IW DEV >> $tmplog
+     echo ================= >> $tmplog
+     iw dev &>> $tmplog
 
-      mv $tmplog $log_file
-      sleep 300
-    done) || true &
+     mv $tmplog $log_file
+     sleep 300
+   done) || true &
 }
 
 function monitoring_firewalls() {
   logfile ${FUNCNAME[0]}
 
   (for i in {1-6}; do
-      tmplog=$(mktemp /tmp/hypercube-monitoring_firewalls-XXXX)
+     tmplog=$(mktemp /tmp/hypercube-monitoring_firewalls-XXXX)
 
-      date >> $tmplog
-      echo -e "\n" >> $tmplog
-      echo IP6TABLES -nvL >> $tmplog
-      echo ================= >> $tmplog
-      ip6tables -nvL &>> $tmplog
-      echo -e "\n\n" >> $tmplog
-      echo IPTABLES -nvL >> $tmplog
-      echo ================= >> $tmplog
-      iptables -w -nvL &>> $tmplog
-      echo -e "\n\n" >> $tmplog
-      echo 'IPTABLES -t nat -nvL' >> $tmplog
-      echo ================= >> $tmplog
-      iptables -w -t nat -nvL &>> $tmplog
+     date >> $tmplog
+     echo -e "\n" >> $tmplog
+     echo IP6TABLES -nvL >> $tmplog
+     echo ================= >> $tmplog
+     ip6tables -nvL &>> $tmplog
+     echo -e "\n\n" >> $tmplog
+     echo IPTABLES -nvL >> $tmplog
+     echo ================= >> $tmplog
+     iptables -w -nvL &>> $tmplog
+     echo -e "\n\n" >> $tmplog
+     echo 'IPTABLES -t nat -nvL' >> $tmplog
+     echo ================= >> $tmplog
+     iptables -w -t nat -nvL &>> $tmplog
 
-      mv $tmplog $log_file
-      sleep 300
-    done) || true &
+     mv $tmplog $log_file
+     sleep 300
+   done) || true &
 }
 
 function monitoring_processes() {
   logfile ${FUNCNAME[0]}
 
   (for i in {1-6}; do
-      tmplog=$(mktemp /tmp/hypercube-monitoring_processes-XXXX)
+     tmplog=$(mktemp /tmp/hypercube-monitoring_processes-XXXX)
+
+     date >> $tmplog
+     echo -e "\n" >> $tmplog
+     echo YNH-VPNCLIENT STATUS >> $tmplog
+     echo ================= >> $tmplog
+     ynh-vpnclient status &>> $tmplog
+     echo -e "\n\n" >> $tmplog
+     echo YNH-HOTSPOT STATUS >> $tmplog
+     echo ================= >> $tmplog
+     ynh-hotspot status &>> $tmplog
+     echo -e "\n\n" >> $tmplog
+     echo 'PS AUX | GREP OPENVPN' >> $tmplog
+     echo ================= >> $tmplog
+     ps aux | grep openvpn &>> $tmplog
+     echo -e "\n\n" >> $tmplog
+     echo 'PS AUX | GREP DNSMASQ' >> $tmplog
+     echo ================= >> $tmplog
+     ps aux | grep dnsmasq &>> $tmplog
+     echo -e "\n\n" >> $tmplog
+     echo 'PS AUX | GREP HOSTAPD' >> $tmplog
+     echo ================= >> $tmplog
+     ps aux | grep hostapd &>> $tmplog
+     echo -e "\n\n" >> $tmplog
+     echo 'NETSTAT -pnat' >> $tmplog
+     echo ================= >> $tmplog
+     netstat -pnat &>> $tmplog
+
+     mv $tmplog $log_file
+     sleep 300
+   done) || true &
+}
+
+function monitoring_yunohost() {
+  logfile ${FUNCNAME[0]}
+
+  (for i in {1-6}; do
+      tmplog=$(mktemp /tmp/hypercube-monitoring_ynh-XXXX)
 
       date >> $tmplog
       echo -e "\n" >> $tmplog
-      echo YNH-VPNCLIENT STATUS >> $tmplog
-      echo ================= >> $tmplog
-      ynh-vpnclient status &>> $tmplog
-      echo -e "\n\n" >> $tmplog
-      echo YNH-HOTSPOT STATUS >> $tmplog
-      echo ================= >> $tmplog
-      ynh-hotspot status &>> $tmplog
-      echo -e "\n\n" >> $tmplog
-      echo 'PS AUX | GREP OPENVPN' >> $tmplog
-      echo ================= >> $tmplog
-      ps aux | grep openvpn &>> $tmplog
-      echo -e "\n\n" >> $tmplog
-      echo 'PS AUX | GREP DNSMASQ' >> $tmplog
-      echo ================= >> $tmplog
-      ps aux | grep dnsmasq &>> $tmplog
-      echo -e "\n\n" >> $tmplog
-      echo 'PS AUX | GREP HOSTAPD' >> $tmplog
-      echo ================= >> $tmplog
-      ps aux | grep hostapd &>> $tmplog
-      echo -e "\n\n" >> $tmplog
-      echo 'NETSTAT -pnat' >> $tmplog
-      echo ================= >> $tmplog
-      netstat -pnat &>> $tmplog
+      yunohost tools diagnosis &>> $tmplog
 
       mv $tmplog $log_file
       sleep 300
@@ -422,9 +444,10 @@ function end_installation() {
 
   detect_wifidevice
 
+  monitoring_ip
   monitoring_firewalls
   monitoring_processes
-  monitoring_ip
+  monitoring_yunohost
 
   cp /var/log/daemon.log "${log_filepath}/var_log_daemon.log"
   cp /var/log/syslog "${log_filepath}/var_log_syslog.log"
@@ -505,14 +528,17 @@ else
   
   info "Loading JSON"
   load_json
+
+  info "Extracting settings for Unix"
+  extract_settings unix
+
+  info "Extracting settings for YunoHost"
+  extract_settings yunohost
   
   info "Extracting settings for Wifi Hotspot"
   extract_settings hotspot
-  
-  info "Extracting settings for YunoHost"
-  extract_settings yunohost
 
-  info "Extracting settings for VPN Client (logging purposes)"
+  info "Extracting settings for VPN Client (logging)"
   extract_settings vpnclient
   
   info "Extracting .cube file for VPN Client"
@@ -526,6 +552,9 @@ else
 
   info "Updating hosts file"
   deb_updatehosts
+
+  info "Setting locales"
+  deb_setlocales
 
   info "Upgrading Debian/YunoHost..."
   deb_upgrade
