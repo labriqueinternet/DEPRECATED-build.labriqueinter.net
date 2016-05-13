@@ -35,6 +35,14 @@ function info() {
   log "[INFO] ${1}"
 }
 
+function warn() {
+  log "[WARN] ${1}"
+}
+
+function err() {
+  log "[ERR] ${1}"
+}
+
 function logfile() {
   (( log_fileindex++ )) || true
   log_file="${log_filepath}/$(printf %02d "${log_fileindex}")-${1}.log"
@@ -56,7 +64,15 @@ function urlencode() {
 ### FUNCTIONS ###
 #################
 
+function cleaning_error() {
+  err "There was an error - installation aborted :("
+  cleaning
+}
+
 function cleaning() {
+  trap EXIT
+  trap ERR
+
   sleep 5
 
   if $export_logs; then
@@ -66,6 +82,8 @@ function cleaning() {
       rm -fr "${i}/hypercube_logs/"
       cp -fr $log_filepath "${i}/hypercube_logs/"
       sync
+
+      info "All logs have been copied to the USB stick - you can remove it"
     done
   fi
 
@@ -486,7 +504,7 @@ json=
 ##############
 
 trap cleaning EXIT
-trap cleaning ERR
+trap cleaning_error ERR
 
 # YunoHost was installed without the HyperCube system
 if [ -f /etc/yunohost/installed -a ! -f "${log_filepath}/enabled" ]; then
@@ -591,7 +609,7 @@ else
   info "Rebooting..."
 
   if [ -f /etc/crypttab ]; then
-    info "WARN: Once rebooted, you have to give the passphrase for uncrypting your Cube"
+    warn "Once rebooted, you have to give the passphrase for uncrypting your Cube"
   fi
 
   sleep 5
