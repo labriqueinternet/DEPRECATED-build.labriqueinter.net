@@ -276,27 +276,27 @@ function ynh_removedyndns() {
 function ynh_createuser() {
   logfile ${FUNCNAME[0]}
 
-  yunohost user create "${settings[yunohost,user]}" -f "${settings[yunohost,user_firstname]}" -l "${settings[yunohost,user_lastname]}" -m "${settings[yunohost,user]}@${settings[yunohost,domain]}" -q 0 -p "${settings[yunohost,user_password]}" --admin-password "${settings[yunohost,password]}" --verbose &>> $log_file
+  yunohost user create "${settings[yunohost,user]}" -f "${settings[yunohost,user_firstname]}" -l "${settings[yunohost,user_lastname]}" -m "${settings[yunohost,user]}@${settings[yunohost,domain]}" -q 0 -p "${settings[yunohost,user_password]}" --admin-password "${settings[yunohost,password]}" &>> $log_file
 }
 
 function install_vpnclient() {
   logfile ${FUNCNAME[0]}
 
-  yunohost app install vpnclient --verbose\
+  yunohost app install vpnclient\
     --args "domain=$(urlencode "${settings[yunohost,domain]}")&path=/vpnadmin" &>> $log_file
 }
 
 function install_hotspot() {
   logfile ${FUNCNAME[0]}
 
-  yunohost app install hotspot --verbose\
+  yunohost app install hotspot\
     --args "domain=$(urlencode "${settings[yunohost,domain]}")&path=/wifiadmin&wifi_ssid=$(urlencode "${settings[hotspot,wifi_ssid]}")&wifi_passphrase=$(urlencode "${settings[hotspot,wifi_passphrase]}")&firmware_nonfree=$(urlencode "${settings[hotspot,firmware_nonfree]}")" &>> $log_file
 }
 
 function install_webmail() {
   logfile ${FUNCNAME[0]}
 
-  yunohost app install roundcube --verbose\
+  yunohost app install roundcube\
     --args "domain=$(urlencode "${settings[yunohost,domain]}")&path=/webmail" &>> $log_file
 }
 
