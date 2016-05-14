@@ -244,6 +244,12 @@ function ynh_postinstall() {
   yunohost tools postinstall -d "${settings[yunohost,domain]}" -p "${settings[yunohost,password]}" &>> $log_file
 }
 
+function ynh_addappslist() {
+  logfile ${FUNCNAME[0]}
+
+  yunohost app fetchlist -n labriqueinternet -u https://raw.githubusercontent.com/labriqueinternet/labriqueinter.net/master/apps/labriqueinternet.json &>> $log_file
+}
+
 function check_dyndns_list() {
   logfile ${FUNCNAME[0]}
 
@@ -578,6 +584,9 @@ else
 
   info "Doing YunoHost post-installation..."
   ynh_postinstall
+
+  info "Fetching YunoHost apps list for labriqueinternet"
+  ynh_addappslist
 
   info "Check online DynDNS domains list"
   check_dyndns_list
