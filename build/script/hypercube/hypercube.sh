@@ -276,22 +276,21 @@ function ynh_createuser() {
 function install_vpnclient() {
   logfile ${FUNCNAME[0]}
 
-  yunohost app install https://github.com/labriqueinternet/vpnclient_ynh\
+  yunohost app install vpnclient\
     --args "domain=$(urlencode "${settings[yunohost,domain]}")&path=/vpnadmin" &>> $log_file
 }
 
 function install_hotspot() {
   logfile ${FUNCNAME[0]}
 
-  yunohost app install https://github.com/labriqueinternet/hotspot_ynh\
+  yunohost app install hotspot\
     --args "domain=$(urlencode "${settings[yunohost,domain]}")&path=/wifiadmin&wifi_ssid=$(urlencode "${settings[hotspot,wifi_ssid]}")&wifi_passphrase=$(urlencode "${settings[hotspot,wifi_passphrase]}")&firmware_nonfree=$(urlencode "${settings[hotspot,firmware_nonfree]}")" &>> $log_file
 }
 
 function install_webmail() {
   logfile ${FUNCNAME[0]}
 
-  # Roundcube app should be in the official YunoHost apps organization
-  yunohost app install https://github.com/Kloadut/roundcube_ynh\
+  yunohost app install roundcube\
     --args "domain=$(urlencode "${settings[yunohost,domain]}")&path=/webmail" &>> $log_file
 }
 
