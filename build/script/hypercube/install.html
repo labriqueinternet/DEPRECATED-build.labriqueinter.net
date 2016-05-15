@@ -106,7 +106,9 @@ function start() {
   }
 
   for(var i = 0; i < textarea.length; i++) {
-    textarea[i].setAttribute('class', textarea[i].getAttribute('class').replace(/ ?changes/, ''));
+    if(textarea[i].getAttribute('class')) {
+      textarea[i].setAttribute('class', textarea[i].getAttribute('class').replace(/ ?changes/, ''));
+    }
   }
 
   update();
