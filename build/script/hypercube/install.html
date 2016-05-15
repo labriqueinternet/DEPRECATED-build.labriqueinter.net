@@ -95,6 +95,7 @@ window.onbeforeunload = confirm_exit;
 
 function start() {
   var h2 = document.getElementsByTagName('h2');
+  var textarea = document.getElementsByTagName('textarea');
 
   for(var i = 0; i < h2.length; i++) {
     h2[i].onclick = titleClick;
@@ -102,6 +103,10 @@ function start() {
     if(h2[i].getAttribute('class') && h2[i].getAttribute('class').match('active')) {
       h2[i].click();
     }
+  }
+
+  for(var i = 0; i < textarea.length; i++) {
+    textarea[i].setAttribute('class', textarea[i].getAttribute('class').replace(/ ?changes/, ''));
   }
 
   update();
