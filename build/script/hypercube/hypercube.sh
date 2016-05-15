@@ -48,6 +48,30 @@ function logfile() {
   log_file="${log_filepath}/$(printf %02d "${log_fileindex}")-${1}.log"
 }
 
+function logfilter() {
+  while read line; do
+    local passwords=(\
+      "${settings[vpnclient,login_passphrase]}" \
+      "${settings[hotspot,wifi_passphrase]}" \
+      "${settings[yunohost,password]}" \
+      "${settings[yunohost,user_password]}" \
+      "${settings[unix,root_password]}" \
+      "$(cat /etc/yunohost/mysql 2> /dev/null)"\
+    )
+
+    IFS=$'\n'
+    local passwords_sorted=($(perl -ne 'push @a, $_; END { print reverse sort { length $a <=> length $b } @a }' <<< "$(printf "%s\n" "${passwords[@]}")"))
+
+    for i in $(printf "%s\n" "${passwords_sorted[@]}"); do
+      i=$(echo "${i}" | tr '@' '#')
+      line=$(echo "${line}" | tr '@' '#')
+      line=$(echo "${line}" | perl -pe "s@\Q${i}\E@/removed/@g")
+    done
+
+    echo "${line}" >> $log_file
+  done
+}
+
 function exit_error() {
   log "[ERR] ${1}"
 
@@ -156,9 +180,9 @@ function extract_settings() {
     settings[$1,$key]="${value}"
 
     if [[ ! -z "$value" && ( "$key" =~ ^crt_ || "$key" =~ pass(word|phrase) ) ]]; then
-      echo "settings[${1},${key}]=/removed/" &>> $log_file
+      echo "settings[${1},${key}]=/removed/" >> $log_file
     else
-      echo "settings[${1},${key}]=${value}" &>> $log_file
+      echo "settings[${1},${key}]=${value}" >> $log_file
     fi
   done
 }
@@ -241,7 +265,7 @@ function deb_setlocales() {
 function ynh_postinstall() {
   logfile ${FUNCNAME[0]}
 
-  yunohost tools postinstall -d "${settings[yunohost,domain]}" -p "${settings[yunohost,password]}" --verbose &>> $log_file
+  yunohost tools postinstall -d "${settings[yunohost,domain]}" -p "${settings[yunohost,password]}" --verbose |& logfilter
 }
 
 function ynh_addappslist() {
@@ -276,28 +300,28 @@ function ynh_removedyndns() {
 function ynh_createuser() {
   logfile ${FUNCNAME[0]}
 
-  yunohost user create "${settings[yunohost,user]}" -f "${settings[yunohost,user_firstname]}" -l "${settings[yunohost,user_lastname]}" -m "${settings[yunohost,user]}@${settings[yunohost,domain]}" -q 0 -p "${settings[yunohost,user_password]}" --admin-password "${settings[yunohost,password]}" &>> $log_file
+  yunohost user create "${settings[yunohost,user]}" -f "${settings[yunohost,user_firstname]}" -l "${settings[yunohost,user_lastname]}" -m "${settings[yunohost,user]}@${settings[yunohost,domain]}" -q 0 -p "${settings[yunohost,user_password]}" --admin-password "${settings[yunohost,password]}" --verbose |& logfilter
 }
 
 function install_vpnclient() {
   logfile ${FUNCNAME[0]}
 
-  yunohost app install vpnclient\
+  yunohost app install vpnclient --verbose\
     --args "domain=$(urlencode "${settings[yunohost,domain]}")&path=/vpnadmin" &>> $log_file
 }
 
 function install_hotspot() {
   logfile ${FUNCNAME[0]}
 
-  yunohost app install hotspot\
-    --args "domain=$(urlencode "${settings[yunohost,domain]}")&path=/wifiadmin&wifi_ssid=$(urlencode "${settings[hotspot,wifi_ssid]}")&wifi_passphrase=$(urlencode "${settings[hotspot,wifi_passphrase]}")&firmware_nonfree=$(urlencode "${settings[hotspot,firmware_nonfree]}")" &>> $log_file
+  yunohost app install hotspot --verbose\
+    --args "domain=$(urlencode "${settings[yunohost,domain]}")&path=/wifiadmin&wifi_ssid=$(urlencode "${settings[hotspot,wifi_ssid]}")&wifi_passphrase=$(urlencode "${settings[hotspot,wifi_passphrase]}")&firmware_nonfree=$(urlencode "${settings[hotspot,firmware_nonfree]}")" |& logfilter
 }
 
 function install_webmail() {
   logfile ${FUNCNAME[0]}
 
-  yunohost app install roundcube\
-    --args "domain=$(urlencode "${settings[yunohost,domain]}")&path=/webmail" &>> $log_file
+  yunohost app install roundcube --verbose\
+    --args "domain=$(urlencode "${settings[yunohost,domain]}")&path=/webmail" |& logfilter
 }
 
 function configure_hotspot() {
