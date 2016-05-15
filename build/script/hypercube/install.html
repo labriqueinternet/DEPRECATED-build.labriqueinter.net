@@ -111,7 +111,14 @@ function start() {
     }
   }
 
+  connectionLost();
   update();
+}
+
+function connectionLost() {
+  document.getElementById('fileinstalllog').setAttribute('class', 'notprocessing');
+  document.getElementById('indicator').setAttribute('class', 'error');
+  document.getElementById('indicator').innerHTML = "Connection lost (don't panic and please wait)";
 }
 
 function update() {
@@ -127,9 +134,9 @@ function update() {
           for(var i = 0; i < lines.length; i++) {
             if(lines[i].match(/\.log">/)) {
               var file = lines[i].replace(/.*"(.*)".*/, '$1');
-              var id = create_file(file);
+              var id = createFile(file);
 
-              update_file(id, file);
+              updateFile(id, file);
             }
           }
 
@@ -139,9 +146,7 @@ function update() {
         break;
 
         default:
-          document.getElementById('fileinstalllog').setAttribute('class', 'notprocessing');
-          document.getElementById('indicator').setAttribute('class', 'error');
-          document.getElementById('indicator').innerHTML = "Connection lost (don't panic and please wait)";
+          connectionLost();
       }
 
       window.setTimeout(update, 1000);
@@ -169,7 +174,7 @@ function titleClick() {
   }
 }
 
-function create_file(file) {
+function createFile(file) {
   var id = 'file' + file.replace(/[^a-zA-Z0-9_-]/g, '');
 
   if(!document.getElementById(id)) {
@@ -188,7 +193,7 @@ function create_file(file) {
   return id;
 }
 
-function update_file(id, file) {
+function updateFile(id, file) {
   var xhttp = new XMLHttpRequest();
 
   xhttp.onreadystatechange = function() {
@@ -231,7 +236,7 @@ function confirm_exit() {
     <li><strong>Use <em>Ctrl+S</em> to save this page</strong> on your computer, when you want.</li>
     <li>You can share a copy of this page for debbuging purposes (no password and no certificate in logs).</li>
     <li>Please, <span>NEVER RELOAD</span> this page by yourself, if you do not want to risk losing your logs.</li>
-    <li>From the time when the installation is complete, this page will be available and updated for 30 minutes, then disconnected.</li>
+    <li>From the time when the installation is finished or aborted, this page will be available and updated for 4 hours (without reboot), then disconnected.</li>
   </ul>
 
   <div id="infos">

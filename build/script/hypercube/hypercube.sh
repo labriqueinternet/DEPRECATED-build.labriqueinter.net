@@ -50,13 +50,18 @@ function logfile() {
 
 function logfilter() {
   while read line; do
+    if [[ "${line^^}" =~ DB_PWD=|DESKEY ]]; then
+      continue
+    fi
+
     local passwords=(\
       "${settings[vpnclient,login_passphrase]}" \
       "${settings[hotspot,wifi_passphrase]}" \
       "${settings[yunohost,password]}" \
       "${settings[yunohost,user_password]}" \
       "${settings[unix,root_password]}" \
-      "$(cat /etc/yunohost/mysql 2> /dev/null)"\
+      "$(cat /etc/yunohost/mysql 2> /dev/null)" \
+      "$(grep mysqlpwd /etc/yunohost/apps/roundcube/settings.yml 2> /dev/null | cut -f2 -d' ')"\
     )
 
     IFS=$'\n'
@@ -75,7 +80,6 @@ function logfilter() {
 function exit_error() {
   log "[ERR] ${1}"
 
-  sleep 1800
   exit 1
 }
 
@@ -114,6 +118,13 @@ function cleaning() {
   if [ -d "${tmp_dir}" ]; then
     rm -r "${tmp_dir}"
   fi
+
+  info "4 hours (without reboot) before disabling this interface"
+  info "Please, wait 5 minutes and save this page with Ctrl+S"
+  sleep 14400
+
+  warn "Disabling this interface (you will be disconnected)..."
+  sleep 5
 
   if iptables -w -nL INPUT | grep -q 2468; then
     iptables -w -D INPUT -p tcp -s 10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,169.254.0.0/16 --dport 2468 -j ACCEPT
@@ -499,15 +510,9 @@ function end_installation() {
   cp /var/log/daemon.log "${log_filepath}/var_log_daemon.log"
   cp /var/log/syslog "${log_filepath}/var_log_syslog.log"
 
+  info "Finished :)"
+
   rm -f /root/install.hypercube
-
-  info "30 minutes before disabling this interface"
-  info "Please, wait 5 minutes and save this page with Ctrl+S"
-  sleep 1800
-
-  info "Removing HyperCube scripts (this page will be disconnected)"
-  sleep 5
-
   systemctl disable hypercube
 }
 
