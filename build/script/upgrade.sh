@@ -5,17 +5,18 @@ set -xe
 KERNEL_VERSION=$(uname -r)
 
 if dpkg -l | grep -q linux-image; then
-  echo $KERNEL_VERSION | grep -q 3.16 
-  
-  if [ $? -eq 0 ] ; then 
-   echo "Nothing to do, quit"
-   exit 1
 
-  else
-    rm -f /etc/apt/sources.list.d/{testing,backport}.list
+  if [[ $KERNEL_VERSION =~ ^4\. ]] ; then
+
+    rm -f /etc/apt/sources.list.d/{testing,backports}.list
     rm -f /etc/apt/preferences.d/kernel-{backports,testing}
     echo "linux-image-$KERNEL_VERSION linux-image-$KERNEL_VERSION/prerm/removing-running-kernel-$KERNEL_VERSION boolean false" | debconf-set-selections
     DEBIAN_FRONTEND=noninteractive apt-get remove -y --force-yes --purge linux-image-4* flash-kernel u-boot-tools u-boot-sunxi
+
+  else
+
+    echo "Nothing to do, quit"
+    exit 1
 
   fi
 fi
