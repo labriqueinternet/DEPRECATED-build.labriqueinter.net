@@ -153,8 +153,8 @@ function titleClick() {
   thisClass = thisClass ? thisClass : '';
 
   if(nextClass.match('visible')) {
-    this.nextSibling.setAttribute('class', nextClass.replace('visible', ''));
-    this.setAttribute('class', thisClass.replace('active', ''));
+    this.nextSibling.setAttribute('class', nextClass.replace(/ ?visible/, ''));
+    this.setAttribute('class', thisClass.replace(/ ?active/, ''));
     
   } else {
     this.nextSibling.setAttribute('class', nextClass + ' visible');
@@ -188,16 +188,21 @@ function update_file(id, file) {
     if(xhttp.readyState == 4 && xhttp.status == 200) {
       var oldValue = document.getElementById(id).value;
 
+      var currentClass = document.getElementById(id).getAttribute('class');
+      currentClass = currentClass ? currentClass : '';
+
       document.getElementById(id).value = xhttp.responseText;
 
       if(xhttp.responseText.replace(/[\s\n]/gm, '') != oldValue.replace(/[\s\n]/gm, '')) {
-        var currentClass = document.getElementById(id).getAttribute('class');
 
-        document.getElementById(id).setAttribute('class', (currentClass ? currentClass : '') + ' changes');
+        if(!currentClass.match('changes')) {
+          document.getElementById(id).setAttribute('class', currentClass + ' changes');
+        }
+
         document.getElementById(id).scrollTop = document.getElementById(id).scrollHeight;
 
-      } else if(document.getElementById(id).getAttribute('class')) {
-        document.getElementById(id).setAttribute('class', document.getElementById(id).getAttribute('class').replace('changes', ''));
+      } else {
+        document.getElementById(id).setAttribute('class', currentClass.replace(/ ?changes/, ''));
       }
     }
   };
