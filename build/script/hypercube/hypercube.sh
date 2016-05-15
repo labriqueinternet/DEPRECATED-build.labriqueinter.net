@@ -282,7 +282,7 @@ function ynh_postinstall() {
 function ynh_addappslist() {
   logfile ${FUNCNAME[0]}
 
-  yunohost app fetchlist -n labriqueinternet -u https://raw.githubusercontent.com/labriqueinternet/labriqueinter.net/master/apps/labriqueinternet.json --verbose &>> $log_file
+  yunohost app fetchlist -n labriqueinternet -u https://labriqueinter.net/apps/labriqueinternet.json --verbose &>> $log_file
 }
 
 function check_dyndns_list() {
