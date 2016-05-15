@@ -60,8 +60,7 @@ function logfilter() {
       "${settings[yunohost,password]}" \
       "${settings[yunohost,user_password]}" \
       "${settings[unix,root_password]}" \
-      "$(cat /etc/yunohost/mysql 2> /dev/null)" \
-      "$(grep mysqlpwd /etc/yunohost/apps/roundcube/settings.yml 2> /dev/null | cut -f2 -d' ')"\
+      "$(cat /etc/yunohost/mysql 2> /dev/null)"\
     )
 
     IFS=$'\n'
@@ -218,14 +217,14 @@ function detect_wifidevice() {
   local ynh_wifi_device=$(yunohost app setting hotspot wifi_device 2> /dev/null)
 
   if [ "${ynh_wifi_device}" == none ]; then
-    info "Wifi device missing"
 
     ynh_wifi_device=$(iw_devices | awk -F\| '{ print $1 }')
     echo -n 'WIFI DEVICES: ' >> $log_file
     iw_devices &>> $log_file
 
     if [ ! -z "${ynh_wifi_device}" ]; then
-      info "Wifi device detected: ${ynh_wifi_device}"
+      info "Wifi device correctly detected after rebooting"
+      echo "SELECTED: ${ynh_wifi_device}" >> $log_file
 
       systemctl stop ynh-hotspot &>> $log_file
       yunohost app setting hotspot wifi_device -v "${ynh_wifi_device}" --verbose &>> $log_file
@@ -235,7 +234,7 @@ function detect_wifidevice() {
       info "No wifi device detected :("
     fi
   else
-    echo Nothing to do >> $log_file
+    echo "SELECTED WIFI DEVICE: ${ynh_wifi_device}" >> $log_file
   fi
 }
 
@@ -331,8 +330,8 @@ function install_hotspot() {
 function install_webmail() {
   logfile ${FUNCNAME[0]}
 
-  yunohost app install roundcube --verbose\
-    --args "domain=$(urlencode "${settings[yunohost,domain]}")&path=/webmail" |& logfilter
+  yunohost app install roundcube\
+    --args "domain=$(urlencode "${settings[yunohost,domain]}")&path=/webmail" &>> $log_file
 }
 
 function configure_hotspot() {
