@@ -89,9 +89,23 @@ textarea {
 </style>
 <script>
 
-window.addEventListener('load', update, false);
+window.addEventListener('load', start, false);
 window.addEventListener('unload', confirm_exit, false);
 window.onbeforeunload = confirm_exit;
+
+function start() {
+  var h2 = document.getElementsByTagName('h2');
+
+  for(var i = 0; i < h2.length; i++) {
+    h2[i].onclick = titleClick;
+
+    if(h2[i].getAttribute('class') && h2[i].getAttribute('class').match('active')) {
+      h2[i].click();
+    }
+  }
+
+  update();
+}
 
 function update() {
   var xhttp = new XMLHttpRequest();
@@ -131,6 +145,23 @@ function update() {
   xhttp.send();
 }
 
+function titleClick() {
+  var nextClass = this.nextSibling.getAttribute('class');
+  nextClass = nextClass ? nextClass : '';
+
+  var thisClass = this.getAttribute('class');
+  thisClass = thisClass ? thisClass : '';
+
+  if(nextClass.match('visible')) {
+    this.nextSibling.setAttribute('class', nextClass.replace('visible', ''));
+    this.setAttribute('class', thisClass.replace('active', ''));
+    
+  } else {
+    this.nextSibling.setAttribute('class', nextClass + ' visible');
+    this.setAttribute('class', thisClass + ' active');
+  }
+}
+
 function create_file(file) {
   var id = 'file' + file.replace(/[^a-zA-Z0-9_-]/g, '');
 
@@ -139,23 +170,7 @@ function create_file(file) {
     var titleContent = document.createTextNode(file);
     var textarea = document.createElement('textarea');
 
-    title.onclick = function() {
-      var nextClass = this.nextSibling.getAttribute('class');
-      nextClass = nextClass ? nextClass : '';
-
-      var thisClass = this.getAttribute('class');
-      thisClass = thisClass ? thisClass : '';
-
-      if(nextClass.match('visible')) {
-        this.nextSibling.setAttribute('class', nextClass.replace('visible', ''));
-        this.setAttribute('class', thisClass.replace('active', ''));
-        
-      } else {
-        this.nextSibling.setAttribute('class', nextClass + ' visible');
-        this.setAttribute('class', thisClass + ' active');
-      }
-    };
-
+    title.onclick = titleClick;
     title.appendChild(titleContent);
     textarea.setAttribute('id', id);
 
