@@ -20,6 +20,8 @@ cat <<EOF
   -n		hostname				(default: olinux)
   -t		target directory for debootstrap	(default: ./tmp/debootstrap)
   -y		install yunohost (doesn't work with cross debootstrap)
+  -r		debian release				(default: jessie)
+  -d		yunohost distribution			(default: stable)
   -c		cross debootstrap
   -p		use and set aptcacher proxy
   -e		configure for encrypted partition	(default: false)
@@ -33,8 +35,9 @@ TARGET_DIR=./tmp/debootstrap
 DEB_HOSTNAME=olinux
 REP=$(dirname $0)
 APT='DEBIAN_FRONTEND=noninteractive apt-get install -y --force-yes'
+INSTALL_YUNOHOST_DIST='stable'
 
-while getopts ":a:b:n:t:ycp:e" opt; do
+while getopts ":a:b:n:t:d:r:ycp:e" opt; do
   case $opt in
     b)
       BOARD=$OPTARG
@@ -50,6 +53,12 @@ while getopts ":a:b:n:t:ycp:e" opt; do
       ;;
     y)
       INSTALL_YUNOHOST=yes
+      ;;
+    d)
+      INSTALL_YUNOHOST_DIST=$OPTARG
+      ;;
+    r)
+      DEBIAN_RELEASE=$OPTARG
       ;;
     c)
       CROSS=yes
@@ -139,6 +148,9 @@ fi
 
 chroot_deb $TARGET_DIR 'apt-get update'
 
+# Add HyperCube packages
+PACKAGES="jq udisks-glue php5-fpm ntfs-3g $PACKAGES"
+
 # Add useful packages
 chroot_deb $TARGET_DIR "$APT openssh-server ntp parted locales vim-nox bash-completion rng-tools $PACKAGES"
 echo 'HRNGDEVICE=/dev/urandom' >> $TARGET_DIR/etc/default/rng-tools
@@ -209,36 +221,27 @@ sed -i "1i127.0.1.1\t${DEB_HOSTNAME}" $TARGET_DIR/etc/hosts
 # Add firstrun and secondrun init script
 install -m 755 -o root -g root ${REP}/script/firstrun $TARGET_DIR/usr/local/bin/
 install -m 755 -o root -g root ${REP}/script/secondrun $TARGET_DIR/usr/local/bin/
+install -m 755 -o root -g root ${REP}/script/hypercube/hypercube.sh $TARGET_DIR/usr/local/bin/
 install -m 444 -o root -g root ${REP}/script/firstrun.service $TARGET_DIR/etc/systemd/system/
 install -m 444 -o root -g root ${REP}/script/secondrun.service $TARGET_DIR/etc/systemd/system/
+install -m 444 -o root -g root ${REP}/script/hypercube/hypercube.service $TARGET_DIR/etc/systemd/system/
 chroot_deb $TARGET_DIR "/bin/systemctl daemon-reload >> /dev/null"
 chroot_deb $TARGET_DIR "/bin/systemctl enable firstrun >> /dev/null"
+chroot_deb $TARGET_DIR "/bin/systemctl enable hypercube >> /dev/null"
+
+# Add hypercube scripts
+mkdir $TARGET_DIR/var/log/hypercube
+install -m 444 -o root -g root ${REP}/script/hypercube/install.html $TARGET_DIR/var/log/hypercube/
 
 if [ $INSTALL_YUNOHOST ] ; then
+  chroot_deb $TARGET_DIR "mkdir -p /run/systemd/system/"
+
   chroot_deb $TARGET_DIR "$APT git"
   chroot_deb $TARGET_DIR "git clone https://github.com/YunoHost/install_script /tmp/install_script"
-  chroot_deb $TARGET_DIR "cd /tmp/install_script && ./install_yunohost -a"
+  chroot_deb $TARGET_DIR "cd /tmp/install_script && ./install_yunohost -a -d ${INSTALL_YUNOHOST_DIST}"
+
+  chroot_deb $TARGET_DIR "rmdir /run/systemd/system/ /run/systemd/ 2> /dev/null || true"
 fi
-
-echo 'deb http://ftp.fr.debian.org/debian jessie-backports main' > $TARGET_DIR/etc/apt/sources.list.d/backports.list
-# Install linux-image, u-boot and flash-kernel from backports
-cat <<EOT > ${TARGET_DIR}/etc/apt/preferences.d/kernel-backports
-Package: linux-image*
-Pin: release a=jessie-backports
-Pin-Priority: 990
-
-Package: u-boot*
-Pin: release a=jessie-backports
-Pin-Priority: 990
-
-Package: flash-kernel*
-Pin: release a=jessie-backports
-Pin-Priority: 990
-
-Package: *
-Pin: release a=jessie-backports
-Pin-Priority: 50
-EOT
 
 umount_dir $TARGET_DIR
 chroot_deb $TARGET_DIR 'apt-get update'
@@ -253,6 +256,7 @@ fi
 
 mkdir $TARGET_DIR/etc/flash-kernel
 echo $FLASH_KERNEL > $TARGET_DIR/etc/flash-kernel/machine
+
 chroot_deb $TARGET_DIR "DEBIAN_FRONTEND=noninteractive $APT linux-image-armmp flash-kernel u-boot-sunxi u-boot-tools $PACKAGES"
 
 if [ $ENCRYPT ] ; then

@@ -17,10 +17,13 @@ h2 {
   background-color: #eee;
   padding: 6px;
   border-radius: 3px;
+  text-decoration: underline;
+  cursor: pointer;
 }
 
-h2:hover {
+h2:hover, h2.active {
   background-color: #ccc;
+  text-decoration: none;
 }
 
 #indicator {
@@ -79,12 +82,37 @@ textarea {
   display: inline;
 }
 
-.visible:hover {
-  height: 250px;
-  width: 90%;
+#comments span {
+  font-weight: bold;
+  color: red;
 }
 </style>
 <script>
+
+window.addEventListener('load', start, false);
+window.addEventListener('unload', confirm_exit, false);
+window.onbeforeunload = confirm_exit;
+
+function start() {
+  var h2 = document.getElementsByTagName('h2');
+  var textarea = document.getElementsByTagName('textarea');
+
+  for(var i = 0; i < h2.length; i++) {
+    h2[i].onclick = titleClick;
+
+    if(h2[i].getAttribute('class') && h2[i].getAttribute('class').match('active')) {
+      h2[i].click();
+    }
+  }
+
+  for(var i = 0; i < textarea.length; i++) {
+    if(textarea[i].getAttribute('class')) {
+      textarea[i].setAttribute('class', textarea[i].getAttribute('class').replace(/ ?changes/, ''));
+    }
+  }
+
+  update();
+}
 
 function update() {
   var xhttp = new XMLHttpRequest();
@@ -124,6 +152,23 @@ function update() {
   xhttp.send();
 }
 
+function titleClick() {
+  var nextClass = this.nextSibling.getAttribute('class');
+  nextClass = nextClass ? nextClass : '';
+
+  var thisClass = this.getAttribute('class');
+  thisClass = thisClass ? thisClass : '';
+
+  if(nextClass.match('visible')) {
+    this.nextSibling.setAttribute('class', nextClass.replace(/ ?visible/, ''));
+    this.setAttribute('class', thisClass.replace(/ ?active/, ''));
+    
+  } else {
+    this.nextSibling.setAttribute('class', nextClass + ' visible');
+    this.setAttribute('class', thisClass + ' active');
+  }
+}
+
 function create_file(file) {
   var id = 'file' + file.replace(/[^a-zA-Z0-9_-]/g, '');
 
@@ -132,17 +177,7 @@ function create_file(file) {
     var titleContent = document.createTextNode(file);
     var textarea = document.createElement('textarea');
 
-    title.onclick = function() {
-      var nextClass = this.nextSibling.getAttribute('class');
-      nextClass = nextClass ? nextClass : '';
-
-      if(nextClass.match('visible')) {
-        this.nextSibling.setAttribute('class', nextClass.replace('visible', ''));
-      } else {
-        this.nextSibling.setAttribute('class', nextClass + 'visible');
-      }
-    };
-
+    title.onclick = titleClick;
     title.appendChild(titleContent);
     textarea.setAttribute('id', id);
 
@@ -160,16 +195,21 @@ function update_file(id, file) {
     if(xhttp.readyState == 4 && xhttp.status == 200) {
       var oldValue = document.getElementById(id).value;
 
+      var currentClass = document.getElementById(id).getAttribute('class');
+      currentClass = currentClass ? currentClass : '';
+
       document.getElementById(id).value = xhttp.responseText;
 
       if(xhttp.responseText.replace(/[\s\n]/gm, '') != oldValue.replace(/[\s\n]/gm, '')) {
-        var currentClass = document.getElementById(id).getAttribute('class');
 
-        document.getElementById(id).setAttribute('class', (currentClass ? currentClass : '') + ' changes');
+        if(!currentClass.match('changes')) {
+          document.getElementById(id).setAttribute('class', currentClass + ' changes');
+        }
+
         document.getElementById(id).scrollTop = document.getElementById(id).scrollHeight;
 
-      } else if(document.getElementById(id).getAttribute('class')) {
-        document.getElementById(id).setAttribute('class', document.getElementById(id).getAttribute('class').replace('changes', ''));
+      } else {
+        document.getElementById(id).setAttribute('class', currentClass.replace(/ ?changes/, ''));
       }
     }
   };
@@ -177,15 +217,20 @@ function update_file(id, file) {
   xhttp.open('GET', file + '?_=' + new Date().getTime(), true);
   xhttp.send();
 }
+
+function confirm_exit() {
+  return confirm("If you quit or reload this page, you can not be sure to be able to access it again. Did you save it with Ctrl+S before?");
+}
+
 </script>
 </head>
 
-<body onload="update()">
+<body>
   <h1>Installation</h1>
   <ul id="comments">
-    <li>Never reload this page by yourself during the process!</li>
-    <li><strong>Use <em>Ctrl+S</em> to save this page</strong> on your computer when you think that the process is complete.</li>
+    <li><strong>Use <em>Ctrl+S</em> to save this page</strong> on your computer, when you want.</li>
     <li>You can share a copy of this page for debbuging purposes (no password and no certificate in logs).</li>
+    <li>Please, <span>NEVER RELOAD</span> this page by yourself, if you do not want to risk losing your logs.</li>
     <li>From the time when the installation is complete, this page will be available and updated for 30 minutes, then disconnected.</li>
   </ul>
 

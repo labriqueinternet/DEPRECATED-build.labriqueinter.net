@@ -1,8 +1,0 @@
-- add .cube download link even if all is okay
-- copy .logs on USB stick
-- add option install-sd.sh pour :2468 address
-- build a first Debian image
-- create a webpage with explanations about :2468
-- rename hypercube.labriqueinter.net to install.labriqueinter.net
-- replace hover effect by click effect on textareas?
-- add indicators at the end, based on the status of ynh_vpnclient and ynh_hotspot
