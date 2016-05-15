@@ -40,6 +40,7 @@
     "user_password": "qwerty42"
   },
   "unix": {
-    "root_password": "qwerty42"
+    "root_password": "qwerty42",
+    "lang": "fr"
   }
 }
