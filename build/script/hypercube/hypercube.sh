@@ -224,7 +224,7 @@ function detect_wifidevice() {
 
     if [ ! -z "${ynh_wifi_device}" ]; then
       info "Wifi device correctly detected after rebooting"
-      echo "SELECTED: ${ynh_wifi_device}" >> $log_file
+      echo -e "\nSELECTED: ${ynh_wifi_device}" >> $log_file
 
       systemctl stop ynh-hotspot &>> $log_file
       yunohost app setting hotspot wifi_device -v "${ynh_wifi_device}" --verbose &>> $log_file
@@ -506,6 +506,7 @@ function end_installation() {
   monitoring_processes
   monitoring_yunohost
 
+  cp /var/log/openvpn-client.log "${log_filepath}/var_log_openvpn.log" || true
   cp /var/log/daemon.log "${log_filepath}/var_log_daemon.log"
   cp /var/log/syslog "${log_filepath}/var_log_syslog.log"
 
