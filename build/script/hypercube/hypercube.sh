@@ -61,7 +61,7 @@ function logfilter() {
       "${settings[yunohost,password]}" \
       "${settings[yunohost,user_password]}" \
       "${settings[unix,root_password]}" \
-      "$(cat /etc/yunohost/mysql 2> /dev/null)"\
+      "$(cat /etc/yunohost/mysql 2> /dev/null || true)"\
     )
 
     IFS=$'\n'
@@ -78,7 +78,8 @@ function logfilter() {
 }
 
 function exit_error() {
-  log "[ERR] ${1}"
+  err "${1}"
+  err "Installation aborted"
 
   exit_status=1
   cleaning
@@ -94,7 +95,8 @@ function urlencode() {
 #################
 
 function cleaning_error() {
-  err "There was an error on line $1 - installation aborted :("
+  err "There was an error on line $1"
+  err "Installation aborted"
 
   exit_status=1
   cleaning
@@ -111,8 +113,11 @@ function cleaning() {
   fi
 
   if $keep_debugging; then
-    info "Please, wait 2 minutes..."
-    sleep 2m
+
+    if [ $exit_status -eq 0 ]; then
+      info "Please, wait 2 minutes..."
+      sleep 2m
+    fi
 
     local usb=$(find /media/ -mindepth 1 -maxdepth 1)
 
@@ -150,7 +155,7 @@ function cleaning() {
     }
   fi
 
-  exit ${exit_status}
+  exit $exit_status
 }
 
 function set_logpermissions() {
@@ -173,14 +178,21 @@ function start_logwebserver() {
 }
 
 function find_hypercubefile() {
-  hypercube_file=$(find /media/ -mindepth 2 -maxdepth 2 -regex '.*/install\.hypercube\(\.txt\)?$' | head -n1)
+  logfile ${FUNCNAME[0]}
 
-  if [ -z "${hypercube_file}" ]; then
-    hypercube_file=$(find /root/ -mindepth 1 -maxdepth 1 -regex '.*/install\.hypercube\(\.txt\)?$' | head -n1)
+  local file_found=$(find /media/ -mindepth 2 -maxdepth 2 -regex '.*/install\.hypercube\(\.txt\)?$' | head -n1)
+
+  if [ -z "${file_found}" ]; then
+    file_found=$(find /root/ -mindepth 1 -maxdepth 1 -regex '.*/install\.hypercube\(\.txt\)?$' | head -n1)
   fi
 
-  if [ ! -z "${hypercube_file}" ]; then
-    info "Found HyperCube file: ${hypercube_file}"
+  if [ ! -z "${file_found}" ]; then
+    info "HyperCube file found"
+
+    echo "DETECTED FILE: ${file_found}" >> $log_file
+    echo "MIME/CHARSET: $(file -bi "${file_found}")" >> $log_file
+
+    iconv -f "$(file -bi "${file_found}" | cut -d= -f2)" -t UTF-8 "${file_found}" -o "${hypercube_file}" &>> $log_file
   fi
 }
 
@@ -392,136 +404,140 @@ function configure_vpnclient() {
 
 function monitoring_ip() {
   logfile ${FUNCNAME[0]}
+  set +E
 
-  (for i in {1-6}; do
-     tmplog=$(mktemp /tmp/hypercube-monitoring_ip-XXXX)
+  for i in {1-6}; do
+    tmplog=$(mktemp /tmp/hypercube-monitoring_ip-XXXX)
 
-     date >> $tmplog
-     echo -e "\n" >> $tmplog
-     echo IP ADDRESS >> $tmplog
-     echo ================= >> $tmplog
-     ip addr &>> $tmplog
-     echo -e "\n\n" >> $tmplog
-     echo IP6 ROUTE >> $tmplog
-     echo ================= >> $tmplog
-     ip -6 route &>> $tmplog
-     echo -e "\n\n" >> $tmplog
-     echo IP4 ROUTE >> $tmplog
-     echo ================= >> $tmplog
-     ip route &>> $tmplog
-     echo -e "\n\n" >> $tmplog
-     echo RESOLV.CONF >> $tmplog
-     echo ================= >> $tmplog
-     cat /etc/resolv.conf &>> $tmplog
-     echo -e "\n\n" >> $tmplog
-     echo PING6 WIKIPEDIA.ORG >> $tmplog
-     echo ================= >> $tmplog
-     ping6 -c 3 wikipedia.org &>> $tmplog
-     echo -e "\n\n" >> $tmplog
-     echo PING4 WIKIPEDIA.ORG >> $tmplog
-     echo ================= >> $tmplog
-     ping -c 3 wikipedia.org &>> $tmplog
-     echo -e "\n\n" >> $tmplog
-     echo PING 2620:0:862:ed1a::1 >> $tmplog
-     echo ================= >> $tmplog
-     ping6 -c 3 2620:0:862:ed1a::1 &>> $tmplog
-     echo -e "\n\n" >> $tmplog
-     echo PING 91.198.174.192 >> $tmplog
-     echo ================= >> $tmplog
-     ping -c 3 91.198.174.192 &>> $tmplog
-     echo -e "\n\n" >> $tmplog
-     echo TRACEROUTE 2620:0:862:ed1a::1 >> $tmplog
-     echo ================= >> $tmplog
-     traceroute6 -n 2620:0:862:ed1a::1 &>> $tmplog
-     echo -e "\n\n" >> $tmplog
-     echo TRACEROUTE 91.198.174.192 >> $tmplog
-     echo ================= >> $tmplog
-     traceroute -n 91.198.174.192 &>> $tmplog
-     echo -e "\n\n" >> $tmplog
-     echo IW DEV >> $tmplog
-     echo ================= >> $tmplog
-     iw dev &>> $tmplog
+    date >> $tmplog
+    echo -e "\n" >> $tmplog
+    echo IP ADDRESS >> $tmplog
+    echo ================= >> $tmplog
+    ip addr &>> $tmplog
+    echo -e "\n\n" >> $tmplog
+    echo IP6 ROUTE >> $tmplog
+    echo ================= >> $tmplog
+    ip -6 route &>> $tmplog
+    echo -e "\n\n" >> $tmplog
+    echo IP4 ROUTE >> $tmplog
+    echo ================= >> $tmplog
+    ip route &>> $tmplog
+    echo -e "\n\n" >> $tmplog
+    echo RESOLV.CONF >> $tmplog
+    echo ================= >> $tmplog
+    cat /etc/resolv.conf &>> $tmplog
+    echo -e "\n\n" >> $tmplog
+    echo PING6 WIKIPEDIA.ORG >> $tmplog
+    echo ================= >> $tmplog
+    ping6 -c 3 wikipedia.org &>> $tmplog
+    echo -e "\n\n" >> $tmplog
+    echo PING4 WIKIPEDIA.ORG >> $tmplog
+    echo ================= >> $tmplog
+    ping -c 3 wikipedia.org &>> $tmplog
+    echo -e "\n\n" >> $tmplog
+    echo PING 2620:0:862:ed1a::1 >> $tmplog
+    echo ================= >> $tmplog
+    ping6 -c 3 2620:0:862:ed1a::1 &>> $tmplog
+    echo -e "\n\n" >> $tmplog
+    echo PING 91.198.174.192 >> $tmplog
+    echo ================= >> $tmplog
+    ping -c 3 91.198.174.192 &>> $tmplog
+    echo -e "\n\n" >> $tmplog
+    echo TRACEROUTE 2620:0:862:ed1a::1 >> $tmplog
+    echo ================= >> $tmplog
+    traceroute6 -n 2620:0:862:ed1a::1 &>> $tmplog
+    echo -e "\n\n" >> $tmplog
+    echo TRACEROUTE 91.198.174.192 >> $tmplog
+    echo ================= >> $tmplog
+    traceroute -n 91.198.174.192 &>> $tmplog
+    echo -e "\n\n" >> $tmplog
+    echo IW DEV >> $tmplog
+    echo ================= >> $tmplog
+    iw dev &>> $tmplog
 
-     mv $tmplog $log_file
-     sleep 300
-   done) || true &
+    mv $tmplog $log_file
+    sleep 300
+  done &
 }
 
 function monitoring_firewalls() {
   logfile ${FUNCNAME[0]}
+  set +E
 
-  (for i in {1-6}; do
-     tmplog=$(mktemp /tmp/hypercube-monitoring_firewalls-XXXX)
+  for i in {1-6}; do
+    tmplog=$(mktemp /tmp/hypercube-monitoring_firewalls-XXXX)
 
-     date >> $tmplog
-     echo -e "\n" >> $tmplog
-     echo IP6TABLES -nvL >> $tmplog
-     echo ================= >> $tmplog
-     ip6tables -nvL &>> $tmplog
-     echo -e "\n\n" >> $tmplog
-     echo IPTABLES -nvL >> $tmplog
-     echo ================= >> $tmplog
-     iptables -w -nvL &>> $tmplog
-     echo -e "\n\n" >> $tmplog
-     echo 'IPTABLES -t nat -nvL' >> $tmplog
-     echo ================= >> $tmplog
-     iptables -w -t nat -nvL &>> $tmplog
+    date >> $tmplog
+    echo -e "\n" >> $tmplog
+    echo IP6TABLES -nvL >> $tmplog
+    echo ================= >> $tmplog
+    ip6tables -nvL &>> $tmplog
+    echo -e "\n\n" >> $tmplog
+    echo IPTABLES -nvL >> $tmplog
+    echo ================= >> $tmplog
+    iptables -w -nvL &>> $tmplog
+    echo -e "\n\n" >> $tmplog
+    echo 'IPTABLES -t nat -nvL' >> $tmplog
+    echo ================= >> $tmplog
+    iptables -w -t nat -nvL &>> $tmplog
 
-     mv $tmplog $log_file
-     sleep 300
-   done) || true &
+    mv $tmplog $log_file
+    sleep 300
+  done &
 }
 
 function monitoring_processes() {
   logfile ${FUNCNAME[0]}
+  set +E
 
-  (for i in {1-6}; do
-     tmplog=$(mktemp /tmp/hypercube-monitoring_processes-XXXX)
+  for i in {1-6}; do
+    tmplog=$(mktemp /tmp/hypercube-monitoring_processes-XXXX)
 
-     date >> $tmplog
-     echo -e "\n" >> $tmplog
-     echo YNH-VPNCLIENT STATUS >> $tmplog
-     echo ================= >> $tmplog
-     ynh-vpnclient status &>> $tmplog
-     echo -e "\n\n" >> $tmplog
-     echo YNH-HOTSPOT STATUS >> $tmplog
-     echo ================= >> $tmplog
-     ynh-hotspot status &>> $tmplog
-     echo -e "\n\n" >> $tmplog
-     echo 'PS AUX | GREP OPENVPN' >> $tmplog
-     echo ================= >> $tmplog
-     ps aux | grep openvpn &>> $tmplog
-     echo -e "\n\n" >> $tmplog
-     echo 'PS AUX | GREP DNSMASQ' >> $tmplog
-     echo ================= >> $tmplog
-     ps aux | grep dnsmasq &>> $tmplog
-     echo -e "\n\n" >> $tmplog
-     echo 'PS AUX | GREP HOSTAPD' >> $tmplog
-     echo ================= >> $tmplog
-     ps aux | grep hostapd &>> $tmplog
-     echo -e "\n\n" >> $tmplog
-     echo 'NETSTAT -pnat' >> $tmplog
-     echo ================= >> $tmplog
-     netstat -pnat &>> $tmplog
+    date >> $tmplog
+    echo -e "\n" >> $tmplog
+    echo YNH-VPNCLIENT STATUS >> $tmplog
+    echo ================= >> $tmplog
+    ynh-vpnclient status &>> $tmplog
+    echo -e "\n\n" >> $tmplog
+    echo YNH-HOTSPOT STATUS >> $tmplog
+    echo ================= >> $tmplog
+    ynh-hotspot status &>> $tmplog
+    echo -e "\n\n" >> $tmplog
+    echo 'PS AUX | GREP OPENVPN' >> $tmplog
+    echo ================= >> $tmplog
+    ps aux | grep openvpn &>> $tmplog
+    echo -e "\n\n" >> $tmplog
+    echo 'PS AUX | GREP DNSMASQ' >> $tmplog
+    echo ================= >> $tmplog
+    ps aux | grep dnsmasq &>> $tmplog
+    echo -e "\n\n" >> $tmplog
+    echo 'PS AUX | GREP HOSTAPD' >> $tmplog
+    echo ================= >> $tmplog
+    ps aux | grep hostapd &>> $tmplog
+    echo -e "\n\n" >> $tmplog
+    echo 'NETSTAT -pnat' >> $tmplog
+    echo ================= >> $tmplog
+    netstat -pnat &>> $tmplog
 
-     mv $tmplog $log_file
-     sleep 300
-   done) || true &
+    mv $tmplog $log_file
+    sleep 300
+  done &
 }
 
 function monitoring_yunohost() {
   logfile ${FUNCNAME[0]}
+  set +E
 
-  (for i in {1-6}; do
-      tmplog=$(mktemp /tmp/hypercube-monitoring_ynh-XXXX)
+  for i in {1-6}; do
+    tmplog=$(mktemp /tmp/hypercube-monitoring_ynh-XXXX)
 
-      date >> $tmplog
-      echo -e "\n" >> $tmplog
-      yunohost tools diagnosis --verbose &>> $tmplog
+    date >> $tmplog
+    echo -e "\n" >> $tmplog
+    yunohost tools diagnosis --verbose &>> $tmplog
 
-      mv $tmplog $log_file
-      sleep 300
-    done) || true &
+    mv $tmplog $log_file
+    sleep 300
+  done &
 }
 
 function end_installation() {
@@ -551,6 +567,7 @@ function end_installation() {
 
 declare -A settings
 tmp_dir=$(mktemp -dp /tmp/ labriqueinternet-installhypercube-XXXXX)
+hypercube_file="${tmp_dir}/install.hypercube"
 exit_status=0
 is_dyndns_useful=false
 log_filepath=/var/log/hypercube/
@@ -558,7 +575,6 @@ log_mainfile=install.log
 log_fileindex=0
 log_file=
 keep_debugging=true
-hypercube_file=
 json=
 
 
@@ -577,6 +593,8 @@ if [ -f /etc/yunohost/installed -a ! -f "${log_filepath}/enabled" ]; then
   exit 0
 fi
 
+info "Detecting USB sticks..."
+
 udisks-glue
 sleep 10
 
@@ -587,6 +605,7 @@ start_logwebserver
 if [ ! -f /etc/yunohost/cube_installed ]; then
   info "Waiting for the end of the FS resizing..."
 
+  keep_debugging=false
   exit 0
 fi
 
