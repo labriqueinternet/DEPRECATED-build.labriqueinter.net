@@ -20,7 +20,8 @@
 # Packages: jq udisks-glue php5-fpm ntfs-3g
 # TODO: Send dkim dns txt record by mail?
 
-set -e
+set -E
+set -o pipefail
 
 
 ###############
@@ -79,7 +80,8 @@ function logfilter() {
 function exit_error() {
   log "[ERR] ${1}"
 
-  exit 1
+  exit_status=1
+  cleaning
 }
 
 function urlencode() {
@@ -92,15 +94,15 @@ function urlencode() {
 #################
 
 function cleaning_error() {
-  err "There was an error - installation aborted :("
+  err "There was an error on line $1 - installation aborted :("
+
+  exit_status=1
   cleaning
 }
 
 function cleaning() {
-  trap EXIT
-  trap ERR
-
-  set +e
+  trap - EXIT ERR
+  set +E
 
   if [ -d "${tmp_dir}" ]; then
     rm -r "${tmp_dir}" || {
@@ -147,6 +149,8 @@ function cleaning() {
       err "Unable to delete the netfilter rule"
     }
   fi
+
+  exit ${exit_status}
 }
 
 function set_logpermissions() {
@@ -534,7 +538,7 @@ function end_installation() {
   cp /var/log/daemon.log "${log_filepath}/var_log_daemon.log"
   cp /var/log/syslog "${log_filepath}/var_log_syslog.log"
 
-  info "Finished :)"
+  info "Finished!"
 
   rm -f /root/install.hypercube
   systemctl disable hypercube
@@ -547,6 +551,7 @@ function end_installation() {
 
 declare -A settings
 tmp_dir=$(mktemp -dp /tmp/ labriqueinternet-installhypercube-XXXXX)
+exit_status=0
 is_dyndns_useful=false
 log_filepath=/var/log/hypercube/
 log_mainfile=install.log
@@ -562,7 +567,7 @@ json=
 ##############
 
 trap cleaning EXIT
-trap cleaning_error ERR
+trap 'cleaning_error $LINENO' ERR
 
 # YunoHost was installed without the HyperCube system
 if [ -f /etc/yunohost/installed -a ! -f "${log_filepath}/enabled" ]; then
