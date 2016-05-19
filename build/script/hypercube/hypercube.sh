@@ -100,9 +100,14 @@ function cleaning() {
   trap EXIT
   trap ERR
 
-  sleep 5
+  if [ -d "${tmp_dir}" ]; then
+    rm -r "${tmp_dir}"
+  fi
 
-  if $export_logs; then
+  if $keep_debugging; then
+    info "Please, wait 2 minutes..."
+    sleep 2m
+
     local usb=$(find /media/ -mindepth 1 -maxdepth 1)
 
     for i in $usb; do
@@ -112,17 +117,15 @@ function cleaning() {
 
       info "All logs have been copied to the USB stick - you can remove it"
     done
+
+    info "4 hours (without reboot) before disabling this interface"
+    info "Please, save this page with Ctrl+S"
+    sleep 4h
+  
+    warn "Time's up!"
+    warn "Shutting down the debugging webserver (this page will be disconnected)..."
   fi
 
-  if [ -d "${tmp_dir}" ]; then
-    rm -r "${tmp_dir}"
-  fi
-
-  info "4 hours (without reboot) before disabling this interface"
-  info "Please, wait 5 minutes and save this page with Ctrl+S"
-  sleep 14400
-
-  warn "Disabling this interface (you will be disconnected)..."
   sleep 5
 
   if iptables -w -nL INPUT | grep -q 2468; then
@@ -234,6 +237,7 @@ function detect_wifidevice() {
       info "No wifi device detected :("
     fi
   else
+    info "Wifi device already detected, nothing to do"
     echo "SELECTED WIFI DEVICE: ${ynh_wifi_device}" >> $log_file
   fi
 }
@@ -332,6 +336,10 @@ function install_webmail() {
 
   yunohost app install roundcube\
     --args "domain=$(urlencode "${settings[yunohost,domain]}")&path=/webmail" &>> $log_file
+
+  if [ $? -ne 0 ]; then
+    warn "Roundcube installation failed"
+  fi
 }
 
 function configure_hotspot() {
@@ -528,7 +536,7 @@ log_filepath=/var/log/hypercube/
 log_mainfile=install.log
 log_fileindex=0
 log_file=
-export_logs=true
+keep_debugging=true
 hypercube_file=
 json=
 
@@ -543,7 +551,7 @@ trap cleaning_error ERR
 # YunoHost was installed without the HyperCube system
 if [ -f /etc/yunohost/installed -a ! -f "${log_filepath}/enabled" ]; then
   systemctl disable hypercube
-  export_logs=false
+  keep_debugging=false
 
   exit 0
 fi
@@ -563,7 +571,7 @@ fi
 
 # Second boot
 if [ -f "${log_filepath}/enabled" ]; then
-  info "End of installation"
+  info "Starting second step"
   end_installation
 
 # First boot
@@ -572,7 +580,7 @@ else
   find_hypercubefile
   
   if [ -z "${hypercube_file}" ]; then
-    export_logs=false
+    keep_debugging=false
     exit_error "No install.hypercube(.txt) file found"
   fi
 
