@@ -100,8 +100,12 @@ function cleaning() {
   trap EXIT
   trap ERR
 
+  set +e
+
   if [ -d "${tmp_dir}" ]; then
-    rm -r "${tmp_dir}"
+    rm -r "${tmp_dir}" || {
+      err "Unable to remove ${tmp_dir}"
+    }
   fi
 
   if $keep_debugging; then
@@ -111,12 +115,22 @@ function cleaning() {
     local usb=$(find /media/ -mindepth 1 -maxdepth 1)
 
     for i in $usb; do
-      rm -fr "${i}/hypercube_logs/"
-      cp -fr $log_filepath "${i}/hypercube_logs/"
+      rm -fr "${i}/hypercube_logs/" || {
+        err "Unable to remove ${i}/hypercube_logs/"
+      }
+
+      cp -fr $log_filepath "${i}/hypercube_logs/" || {
+        err "Unable to copy $log_filepath to ${i}/hypercube_logs/"
+      }
+
       sync
 
       info "All logs have been copied to the USB stick - you can remove it"
     done
+
+    if [ -z "${usb}" ]; then
+      info "No USB stick detected for log copying"
+    fi
 
     info "4 hours (without reboot) before disabling this interface"
     info "Please, save this page with Ctrl+S"
@@ -129,7 +143,9 @@ function cleaning() {
   sleep 5
 
   if iptables -w -nL INPUT | grep -q 2468; then
-    iptables -w -D INPUT -p tcp -s 10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,169.254.0.0/16 --dport 2468 -j ACCEPT
+    iptables -w -D INPUT -p tcp -s 10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,169.254.0.0/16 --dport 2468 -j ACCEPT || {
+      err "Unable to delete the netfilter rule"
+    }
   fi
 }
 
@@ -314,7 +330,9 @@ function ynh_removedyndns() {
 function ynh_createuser() {
   logfile ${FUNCNAME[0]}
 
-  yunohost user create "${settings[yunohost,user]}" -f "${settings[yunohost,user_firstname]}" -l "${settings[yunohost,user_lastname]}" -m "${settings[yunohost,user]}@${settings[yunohost,domain]}" -q 0 -p "${settings[yunohost,user_password]}" --admin-password "${settings[yunohost,password]}" --verbose |& logfilter
+  yunohost user create "${settings[yunohost,user]}" -f "${settings[yunohost,user_firstname]}"\
+    -l "${settings[yunohost,user_lastname]}" -m "${settings[yunohost,user]}@${settings[yunohost,domain]}"\
+    -q 0 -p "${settings[yunohost,user_password]}" --admin-password "${settings[yunohost,password]}" --verbose |& logfilter
 }
 
 function install_vpnclient() {
@@ -335,11 +353,9 @@ function install_webmail() {
   logfile ${FUNCNAME[0]}
 
   yunohost app install roundcube\
-    --args "domain=$(urlencode "${settings[yunohost,domain]}")&path=/webmail" &>> $log_file
-
-  if [ $? -ne 0 ]; then
+    --args "domain=$(urlencode "${settings[yunohost,domain]}")&path=/webmail" &>> $log_file || {
     warn "Roundcube installation failed"
-  fi
+  }
 }
 
 function configure_hotspot() {
