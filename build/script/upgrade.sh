@@ -2,7 +2,7 @@
 
 set -xe
 
-expxort DEBIAN_FRONTEND=noninteractive
+export DEBIAN_FRONTEND=noninteractive
 KERNEL_VERSION=$(uname -r)
 
 if ! dpkg -l | grep -q linux-image || ! [[ $KERNEL_VERSION =~ ^4\. ]]; then
