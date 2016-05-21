@@ -127,7 +127,7 @@ function cleaning() {
         cp -fr $log_filepath "${i}/hypercube_logs/" || {
           err "Unable to copy $log_filepath to ${i}/hypercube_logs/"
         }
-  
+
         sync
 
         info "All logs have been copied to the USB stick - you can remove it"
@@ -140,9 +140,9 @@ function cleaning() {
     sync
     sleep 4h
   
-    warn "Time's up!"
+    info "Time's up!"
     warn "This page will be disconnected"
-    warn "Shutting down the debugging webserver..."
+    info "Shutting down the debugging webserver..."
   fi
 
   sleep 5
@@ -171,14 +171,15 @@ function start_logwebserver() {
   python -m SimpleHTTPServer 2468 &> /dev/null &
   popd &> /dev/null
 
-  ( while true; do
+  webserver_pid=$(
+    (while true; do
       if ! iptables -w -nL INPUT | grep -q 2468; then
-        iptables -w -I INPUT 1 -p tcp -s 10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,169.254.0.0/16 --dport 2468 -j ACCEPT
+        iptables -w -I INPUT 1 -p tcp -s 10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,169.254.0.0/16 --dport 2468 -j ACCEPT || true
       fi
       sleep 1
-    done &> /dev/null ) || true &
-
-  webserver_pid=$!
+    done &> /dev/null &
+    echo $!) | { read pid; echo $pid; }
+  )
 }
 
 function find_hypercubefile() {
@@ -645,8 +646,7 @@ else
   find_hypercubefile
   
   if [ ! -r "${hypercube_file}" -o ! -s "${hypercube_file}" ]; then
-    keep_debugging=false
-    exit_error "Unable to use HyperCube file"
+    exit_error "Cannot continue without a usable HyperCube file"
   fi
 
   touch "${log_filepath}/enabled"
