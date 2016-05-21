@@ -109,6 +109,10 @@ function start() {
     if(textarea[i].getAttribute('class')) {
       textarea[i].setAttribute('class', textarea[i].getAttribute('class').replace(/ ?changes/, ''));
     }
+
+    textarea[i].style.width = '80%';
+    textarea[i].style.height = '60pt';
+    textarea[i].scrollTop = textarea[i].scrollHeight;
   }
 
   connectionLost();
@@ -185,6 +189,7 @@ function createFile(file) {
     title.onclick = titleClick;
     title.appendChild(titleContent);
     textarea.setAttribute('id', id);
+    textarea.setAttribute('readonly', true);
 
     document.getElementById('files').insertBefore(textarea, document.getElementById('files').firstChild);
     document.getElementById('files').insertBefore(title, document.getElementById('files').firstChild);
@@ -240,7 +245,7 @@ function confirm_exit() {
   </ul>
 
   <div id="infos">
-    <textarea id="fileinstalllog"></textarea>
+    <textarea id="fileinstalllog" readonly="readonly"></textarea>
     <p id="indicator"></p>
   </div>
 

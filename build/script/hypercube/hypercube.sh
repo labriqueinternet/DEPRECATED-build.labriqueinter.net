@@ -51,10 +51,6 @@ function logfile() {
 
 function logfilter() {
   while read line; do
-    if [[ "${line^^}" =~ DB_PWD=|DESKEY ]]; then
-      continue
-    fi
-
     local passwords=(\
       "${settings[vpnclient,login_passphrase]}" \
       "${settings[hotspot,wifi_passphrase]}" \
@@ -113,41 +109,47 @@ function cleaning() {
   fi
 
   if $keep_debugging; then
-
-    if [ $exit_status -eq 0 ]; then
-      info "Please, wait 2 minutes..."
-      sleep 2m
-    fi
-
     local usb=$(find /media/ -mindepth 1 -maxdepth 1)
-
-    for i in $usb; do
-      rm -fr "${i}/hypercube_logs/" || {
-        err "Unable to remove ${i}/hypercube_logs/"
-      }
-
-      cp -fr $log_filepath "${i}/hypercube_logs/" || {
-        err "Unable to copy $log_filepath to ${i}/hypercube_logs/"
-      }
-
-      sync
-
-      info "All logs have been copied to the USB stick - you can remove it"
-    done
 
     if [ -z "${usb}" ]; then
       info "No USB stick detected for log copying"
+    else
+      if [ $exit_status -eq 0 ]; then
+        info "Please, wait 2 minutes for log copying..."
+        sleep 2m
+      fi
+
+      for i in $usb; do
+        rm -fr "${i}/hypercube_logs/" || {
+          err "Unable to remove ${i}/hypercube_logs/"
+        }
+  
+        cp -fr $log_filepath "${i}/hypercube_logs/" || {
+          err "Unable to copy $log_filepath to ${i}/hypercube_logs/"
+        }
+  
+        sync
+
+        info "All logs have been copied to the USB stick - you can remove it"
+      done
     fi
 
     info "4 hours (without reboot) before disabling this interface"
     info "Please, save this page with Ctrl+S"
+
+    sync
     sleep 4h
   
     warn "Time's up!"
-    warn "Shutting down the debugging webserver (this page will be disconnected)..."
+    warn "This page will be disconnected"
+    warn "Shutting down the debugging webserver..."
   fi
 
   sleep 5
+
+  if [ ! -z "${webserver_pid}" ]; then
+    kill "${webserver_pid}"
+  fi
 
   if iptables -w -nL INPUT | grep -q 2468; then
     iptables -w -D INPUT -p tcp -s 10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,169.254.0.0/16 --dport 2468 -j ACCEPT || {
@@ -175,6 +177,8 @@ function start_logwebserver() {
       fi
       sleep 1
     done &> /dev/null ) || true &
+
+  webserver_pid=$!
 }
 
 function find_hypercubefile() {
@@ -193,6 +197,8 @@ function find_hypercubefile() {
     echo "MIME/CHARSET: $(file -bi "${file_found}")" >> $log_file
 
     iconv -f "$(file -bi "${file_found}" | cut -d= -f2)" -t UTF-8 "${file_found}" -o "${hypercube_file}" &>> $log_file
+  else
+    err "No install.hypercube(.txt) file found"
   fi
 }
 
@@ -339,6 +345,19 @@ function check_dyndns_list() {
   done
 }
 
+function is_dyndns_available() {
+  logfile ${FUNCNAME[0]}
+
+  local dyndns=$(curl -s -o /dev/null -I -w '%{http_code}' "https://dyndns.yunohost.org/test/${settings[yunohost,domain]}" 2>> $log_file || true)
+  echo "STATUS CODE: ${dyndns}" >> $log_file
+
+  if [ "${dyndns}" -ne 200 ]; then
+    return 1
+  fi
+
+  return 0
+}
+
 function ynh_removedyndns() {
   rm -f /etc/cron.d/yunohost-dyndns
 }
@@ -369,7 +388,7 @@ function install_webmail() {
   logfile ${FUNCNAME[0]}
 
   yunohost app install roundcube\
-    --args "domain=$(urlencode "${settings[yunohost,domain]}")&path=/webmail" &>> $log_file || {
+    --args "domain=$(urlencode "${settings[yunohost,domain]}")&path=/webmail&with_carddav=1" &>> $log_file || {
     warn "Roundcube installation failed"
   }
 }
@@ -569,6 +588,7 @@ declare -A settings
 tmp_dir=$(mktemp -dp /tmp/ labriqueinternet-installhypercube-XXXXX)
 hypercube_file="${tmp_dir}/install.hypercube"
 exit_status=0
+webserver_pid=
 is_dyndns_useful=false
 log_filepath=/var/log/hypercube/
 log_mainfile=install.log
@@ -587,12 +607,16 @@ trap 'cleaning_error $LINENO' ERR
 
 # YunoHost was installed without the HyperCube system
 if [ -f /etc/yunohost/installed -a ! -f "${log_filepath}/enabled" ]; then
+  info "YunoHost is already post-installed"
+  info "Disabling HyperCube... Bye!"
+
   systemctl disable hypercube
   keep_debugging=false
 
   exit 0
 fi
 
+info "===== Start HyperCube Service ====="
 info "Detecting USB sticks..."
 
 udisks-glue
@@ -602,6 +626,7 @@ set_logpermissions
 start_logwebserver
 
 # firstrun/secondrun not finished
+# should never happen
 if [ ! -f /etc/yunohost/cube_installed ]; then
   info "Waiting for the end of the FS resizing..."
 
@@ -619,9 +644,9 @@ else
   info "Looking for HyperCube file"
   find_hypercubefile
   
-  if [ -z "${hypercube_file}" ]; then
+  if [ ! -r "${hypercube_file}" -o ! -s "${hypercube_file}" ]; then
     keep_debugging=false
-    exit_error "No install.hypercube(.txt) file found"
+    exit_error "Unable to use HyperCube file"
   fi
 
   touch "${log_filepath}/enabled"
@@ -659,19 +684,27 @@ else
   info "Upgrading Debian/YunoHost..."
   deb_upgrade
 
-  info "Doing YunoHost post-installation..."
-  ynh_postinstall
-
-  info "Fetching YunoHost apps list for labriqueinternet"
-  ynh_addappslist
-
   info "Check online DynDNS domains list"
   check_dyndns_list
+
+  if $is_dyndns_useful; then
+    info "Checking DynDNS domain availability"
+
+    if ! is_dyndns_available; then
+      exit_error "Unavailable DynDNS subdomain"
+    fi
+  fi
+
+  info "Doing YunoHost post-installation..."
+  ynh_postinstall
 
   if ! $is_dyndns_useful; then
     info "Removing DynDNS cron"
     ynh_removedyndns
   fi
+
+  info "Fetching YunoHost apps list for labriqueinternet"
+  ynh_addappslist
 
   info "Creating first user"
   ynh_createuser
@@ -698,6 +731,7 @@ else
   fi
 
   sleep 5
+  keep_debugging=false
   systemctl reboot
 fi
 
