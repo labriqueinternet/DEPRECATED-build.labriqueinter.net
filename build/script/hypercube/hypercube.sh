@@ -65,8 +65,11 @@ function logfilter() {
 
     for i in $(printf "%s\n" "${passwords_sorted[@]}"); do
       i=$(echo "${i}" | tr '@' '#')
+      local i_echoed=${i/\'/\'\'\'}
+
       line=$(echo "${line}" | tr '@' '#')
       line=$(echo "${line}" | perl -pe "s@\Q${i}\E@/removed/@g")
+      line=$(echo "${line}" | perl -pe "s@\Q${i_echoed}\E@/removed/@g")
     done
 
     echo "${line}" >> $log_file
