@@ -230,7 +230,7 @@
         }
       }
 
-      xmlHttp.send('passphrase=' + document.getElementById('passphrase').value);
+      xmlHttp.send('passphrase=' + encodeURIComponent(document.getElementById('passphrase').value));
 
       return false;
     }
