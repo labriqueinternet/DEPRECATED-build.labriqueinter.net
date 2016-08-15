@@ -161,11 +161,11 @@
 
     function progressLoader() {
       if(!document.getElementById('loader').style.display != 'none') {
-        var pc = parseInt(document.getElementById('progress').style.width.replace('%', '')) + 2;
+        var pc = parseInt(document.getElementById('progress').style.width.replace('%', '')) + 1;
         document.getElementById('progress').style.width = pc + "%";
 
         if(pc < 100) {
-          setTimeout(progressLoader, 1500);
+          setTimeout(progressLoader, 650);
         }
       }
     }
@@ -181,7 +181,7 @@
 
     function hideLoader() {
       document.getElementById('loader').style.display = 'none';
-      document.getElementById('progress').style.width = "0%";
+      document.getElementById('progress').style.width = '0%';
       document.getElementById('unlock').style.display = 'inline';
     }
 
@@ -208,12 +208,15 @@
 
       xmlHttp.onreadystatechange = function() {
         if(xmlHttp.readyState == 4) {
-          if(xmlHttp.responseText.match(/success/)) {
+          if(xmlHttp.responseText == 'success') {
             unlocked();
 
-          } else {
+          } else if(xmlHttp.responseText == 'failed') {
             hideLoader();
             failed();
+
+          } else {
+            checkSuccess();
           }
         }
       }
@@ -221,6 +224,25 @@
       xmlHttp.send('passphrase=' + encodeURIComponent(document.getElementById('passphrase').value));
 
       return false;
+    }
+
+    function checkSuccess() {
+      var xmlHttp = new XMLHttpRequest();
+      xmlHttp.open('GET', '/img/caticorn.png', true);
+
+      xmlHttp.onreadystatechange = function() {
+        if(xmlHttp.readyState == 4) {
+          if(xmlHttp.status == 200) {
+            hideLoader();
+            failed();
+
+          } else {
+            unlocked();
+          }
+        }
+      }
+
+      xmlHttp.send(null);
     }
 
     function onLoadHandler() {
