@@ -107,7 +107,7 @@ function cleaning() {
 
   if [ -d "${tmp_dir}" ]; then
     rm -r "${tmp_dir}" || {
-      err "Unable to remove ${tmp_dir}"
+      warn "Unable to remove ${tmp_dir}"
     }
   fi
 
@@ -299,7 +299,7 @@ function deb_upgrade() {
 function deb_changehostname() {
   hostnamectl --static set-hostname "${settings[yunohost,domain]}"
   hostnamectl --transient set-hostname "${settings[yunohost,domain]}"
-  hostnamectl --pretty set-hostname "Brique Internet (${settings[yunohost,domain]})"
+  hostnamectl --pretty set-hostname "La Brique Internet (${settings[yunohost,domain]})"
 }
 
 function deb_updatehosts() {
@@ -394,6 +394,14 @@ function install_webmail() {
   yunohost app install roundcube\
     --args "domain=$(urlencode "${settings[yunohost,domain]}")&path=/webmail&with_carddav=1" &>> $log_file || {
     warn "Roundcube installation failed"
+  }
+}
+
+function install_doctorcube() {
+  logfile ${FUNCNAME[0]}
+
+  yunohost app install doctorcube &>> $log_file || {
+    warn "DoctorCube installation failed"
   }
 }
 
@@ -726,6 +734,9 @@ else
 
   info "Installing Roundcube Webmail..."
   install_webmail || true
+
+  info "Installing DoctorCube..."
+  install_doctorcube || true
   
   info "Rebooting..."
 
