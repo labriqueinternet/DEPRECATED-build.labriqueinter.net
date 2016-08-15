@@ -56,9 +56,6 @@
 
     #error {
       display: none;
-      /* TPL:ERROR
-      display: block;
-      TPL:ERROR */
       color: #ca0000;
       font-weight: bold;
     }
@@ -83,14 +80,8 @@
       border-radius: 5px;
     }
 
-    #main {
-      /* TPL:UNLOCKED
-      display: none;
-      TPL:UNLOCKED */
-    }
-
     #unlocked {
-      display: none; /* TPL:UNLOCKED */
+      display: none;
       font-size: 6em;
       font-weight: bold;
     }
@@ -98,10 +89,6 @@
     #unlocked img {
       display: block;
       margin: .6em auto;
-    }
-
-    .no-js {
-      display: none;
     }
 
     .beautiful {
@@ -159,10 +146,6 @@
         background-color: #1b50e4;
       }
     }
-
-    #maintop {
-      display: none;
-    }
   </style>
 
   <script>
@@ -177,7 +160,7 @@
     }
 
     function progressLoader() {
-      var pc = parseInt(document.getElementById('progress').style.width.replace('%', '')) + 3;
+      var pc = parseInt(document.getElementById('progress').style.width.replace('%', '')) + 1.7;
       document.getElementById('progress').style.width = pc + "%";
 
       if(pc < 100) {
@@ -195,8 +178,9 @@
     }
 
     function hideLoader() {
-      document.getElementById('unlock').style.display = 'inline';
       document.getElementById('loader').style.display = 'none';
+      document.getElementById('progress').style.width = "0%";
+      document.getElementById('unlock').style.display = 'inline';
     }
 
     function unlocked() {
@@ -207,25 +191,27 @@
 
     function failed() {
       document.getElementById('doesnwork').play();
-      document.getElementById('progress').style.width = "0%";
       document.getElementById('error').style.display = 'block';
-      document.getElementById('mainimg').src = document.getElementById('mainimg').src.replace('caticorn', 'caticorn_failed');
+
+      if(!document.getElementById('mainimg').src.match(/_failed/)) {
+        document.getElementById('mainimg').src = document.getElementById('mainimg').src.replace('caticorn', 'caticorn_failed');
+      }
     }
 
     function submitForm() {
       showLoader();
 
       var xmlHttp = new XMLHttpRequest();
-      xmlHttp.open('POST', document.getElementById('form').action, true);
+      xmlHttp.open('POST', '/cgi-bin/post.sh', true);
 
       xmlHttp.onreadystatechange = function() {
         if(xmlHttp.readyState == 4) {
-          if(xmlHttp.responseText.match(/TPL:UNLOCKED/)) {
-            hideLoader();
-            failed();
+          if(xmlHttp.responseText.match(/success/)) {
+            unlocked();
 
           } else {
-            unlocked();
+            hideLoader();
+            failed();
           }
         }
       }
@@ -240,12 +226,6 @@
 
       var preloadSuccessImg = new Image();
       preloadSuccessImg.src = '/img/caticorn_success.png';
-
-      var nojs = document.getElementsByClassName('no-js');
-
-      for(var i = 0; i < nojs.length; i++) {
-        nojs[i].className = nojs[i].className.replace('no-js', '');
-      }
     }
   </script>
 </head>
@@ -254,7 +234,7 @@
   <div id="main">
     <img src="/img/caticorn.png" id="mainimg" alt="Beautiful Unicorn" />
 
-    <form method="post" id="form" action="/cgi-bin/post.sh" onsubmit="return submitForm()">
+    <form onsubmit="return submitForm()">
       <fieldset>
         <legend>Hard Drive Locked</legend>
         <p id="error">
@@ -269,7 +249,7 @@
   
         <input type="password" name="passphrase" id="passphrase" />
   
-        <p class="no-js">
+        <p>
           <label>
             <input type="checkbox" onclick="showPassword(this)" />
             <span>Show passphrase</span>

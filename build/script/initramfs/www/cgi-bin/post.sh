@@ -1,32 +1,20 @@
 #!/bin/sh
 
 read QUERY_STRING
+passphrase=$(echo "${QUERY_STRING}" | sed 's/.*passphrase=\([^&]\+\).*/\1/')
+echo -n $(httpd -d "${passphrase}") > /lib/cryptsetup/passfifo
 
-# We now split the query string at '&' then each part at '='
-# We look for the X in a=b&passphrase=X&c=d
-passphrase_urlenc=$(echo "$QUERY_STRING" | awk -F'&'   \
-  '{                                                   \
-    for(i=1; i <= NF; i++) {                           \
-      n = split($i, array, "=");                       \
-      if(n == 2 && index(array[1], "passphrase")) {    \
-        print array[2];                                \
-        break;                                         \
-      }                                                \
-    }                                                  \
-  }'                                                   \
-)
+echo -e 'Content-type: text/plain\n'
 
-echo -n $(httpd -d "$passphrase_urlenc") > /lib/cryptsetup/passfifo
-
-for i in $(seq 30); do
+for i in $(seq 60); do
   sleep 1
 
   if [ -f /dev/mapper/root ]; then
-    cat ../index.html | sed '/TPL:UNLOCKED/d'
+    echo success
     exit 0
   fi
 done
 
-cat ../index.html | sed 's/caticorn/&_failed/' | sed '/TPL:ERROR/d'
+echo failed
 
 exit 0
