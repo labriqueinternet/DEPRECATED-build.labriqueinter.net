@@ -400,7 +400,7 @@ function install_webmail() {
 function install_doctorcube() {
   logfile ${FUNCNAME[0]}
 
-  yunohost app install doctorcube &>> $log_file || {
+  yunohost app install doctorcube --verbose &>> $log_file || {
     warn "DoctorCube installation failed"
   }
 }
