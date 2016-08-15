@@ -6,7 +6,7 @@ echo -n $(httpd -d "${passphrase}") > /lib/cryptsetup/passfifo
 
 echo -e 'Content-type: text/plain\n'
 
-for i in $(seq 60); do
+for i in $(seq 75); do
   sleep 1
 
   if [ -f /dev/mapper/root ]; then

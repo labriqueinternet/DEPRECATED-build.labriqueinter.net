@@ -160,11 +160,13 @@
     }
 
     function progressLoader() {
-      var pc = parseInt(document.getElementById('progress').style.width.replace('%', '')) + 1.7;
-      document.getElementById('progress').style.width = pc + "%";
+      if(!document.getElementById('loader').style.display != 'none') {
+        var pc = parseInt(document.getElementById('progress').style.width.replace('%', '')) + 2;
+        document.getElementById('progress').style.width = pc + "%";
 
-      if(pc < 100) {
-        setTimeout(progressLoader, 1000);
+        if(pc < 100) {
+          setTimeout(progressLoader, 1500);
+        }
       }
     }
 
