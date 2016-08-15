@@ -53,7 +53,7 @@ cd  /opt/build.labriqueinter.net/ && git pull
 
 cp /srv/olinux/debootstrap.log /srv/olinux/debootstrap/root/
 
-boardlist=( 'a20lime2' 'a20lime' )
+boardlist=( 'a20lime' 'a20lime2' )
 
 for BOARD in ${boardlist[@]}; do 
 
