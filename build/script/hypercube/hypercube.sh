@@ -719,25 +719,25 @@ else
 
   info "Creating first user"
   ynh_createuser
-  
+
   info "Installing VPN Client..."
   install_vpnclient
   
   info "Installing Wifi Hotspot..."
   install_hotspot
 
+  info "Installing DoctorCube..."
+  install_doctorcube || true
+
+  info "Installing Roundcube Webmail..."
+  install_webmail || true
+
   info "Configuring VPN Client..."
   configure_vpnclient
   
   info "Configuring Wifi Hotspot..."
   configure_hotspot
-
-  info "Installing Roundcube Webmail..."
-  install_webmail || true
-
-  info "Installing DoctorCube..."
-  install_doctorcube || true
-  
+ 
   info "Rebooting..."
 
   if [ -f /etc/crypttab ]; then
