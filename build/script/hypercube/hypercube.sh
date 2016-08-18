@@ -400,9 +400,7 @@ function install_webmail() {
 function install_doctorcube() {
   logfile ${FUNCNAME[0]}
 
-  yunohost app install doctorcube --verbose &>> $log_file || {
-    warn "DoctorCube installation failed"
-  }
+  yunohost app install doctorcube --verbose &>> $log_file
 }
 
 function configure_hotspot() {
@@ -727,7 +725,7 @@ else
   install_hotspot
 
   info "Installing DoctorCube..."
-  install_doctorcube || true
+  install_doctorcube
 
   info "Installing Roundcube Webmail..."
   install_webmail || true
