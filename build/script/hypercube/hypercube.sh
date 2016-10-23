@@ -328,6 +328,7 @@ function ynh_addappslist() {
   logfile ${FUNCNAME[0]}
 
   yunohost app fetchlist -n labriqueinternet -u https://labriqueinter.net/apps/labriqueinternet.json --verbose &>> $log_file
+  yunohost app fetchlist --verbose &>> $log_file
 }
 
 function check_dyndns_list() {
@@ -340,11 +341,11 @@ function check_dyndns_list() {
 
   IFS=$'\n'; for i in $vars; do
     local domain=$(echo "${i}" | cut -d= -f2-)
-    echo "dyndns_domain: ${domain}" &>> $log_file
+    echo "dyndns_domain: ${domain}" >> $log_file
 
     if [[ "${settings[yunohost,domain]}" =~ "${domain}"$ ]]; then
       is_dyndns_useful=true
-      echo "DynDNS is useful: ${domain}" &>> $log_file
+      echo "DynDNS is useful: ${domain}" >> $log_file
     fi
   done
 }
