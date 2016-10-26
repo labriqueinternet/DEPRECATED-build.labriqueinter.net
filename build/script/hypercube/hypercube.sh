@@ -328,6 +328,7 @@ function ynh_addappslist() {
   logfile ${FUNCNAME[0]}
 
   yunohost app fetchlist -n labriqueinternet -u https://labriqueinter.net/apps/labriqueinternet.json --verbose &>> $log_file
+  yunohost app fetchlist --verbose &>> $log_file
 }
 
 function check_dyndns_list() {
@@ -340,11 +341,11 @@ function check_dyndns_list() {
 
   IFS=$'\n'; for i in $vars; do
     local domain=$(echo "${i}" | cut -d= -f2-)
-    echo "dyndns_domain: ${domain}" &>> $log_file
+    echo "dyndns_domain: ${domain}" >> $log_file
 
     if [[ "${settings[yunohost,domain]}" =~ "${domain}"$ ]]; then
       is_dyndns_useful=true
-      echo "DynDNS is useful: ${domain}" &>> $log_file
+      echo "DynDNS is useful: ${domain}" >> $log_file
     fi
   done
 }
@@ -400,9 +401,7 @@ function install_webmail() {
 function install_doctorcube() {
   logfile ${FUNCNAME[0]}
 
-  yunohost app install doctorcube --verbose &>> $log_file || {
-    warn "DoctorCube installation failed"
-  }
+  yunohost app install doctorcube --verbose &>> $log_file
 }
 
 function configure_hotspot() {
@@ -719,25 +718,25 @@ else
 
   info "Creating first user"
   ynh_createuser
-  
+
   info "Installing VPN Client..."
   install_vpnclient
   
   info "Installing Wifi Hotspot..."
   install_hotspot
 
+  info "Installing DoctorCube..."
+  install_doctorcube
+
+  info "Installing Roundcube Webmail..."
+  install_webmail || true
+
   info "Configuring VPN Client..."
   configure_vpnclient
   
   info "Configuring Wifi Hotspot..."
   configure_hotspot
-
-  info "Installing Roundcube Webmail..."
-  install_webmail || true
-
-  info "Installing DoctorCube..."
-  install_doctorcube || true
-  
+ 
   info "Rebooting..."
 
   if [ -f /etc/crypttab ]; then
