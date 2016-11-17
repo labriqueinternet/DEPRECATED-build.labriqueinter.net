@@ -12,7 +12,7 @@ Replace the `u-boot-sunxi` package by a custom one:
 
 ```
 % apt-get remove u-boot-sunxi
-% wget -P /tmp/ https://repo.internetcu.be/images/uboot/u-boot-sunxi_2016.09+dfsg1-2.1_armhf.deb
+% wget -P /tmp/ https://repo.internetcu.be/uboot-tests/u-boot-sunxi_2016.09+dfsg1-2.1_armhf.deb
 % dpkg -i /tmp/u-boot-sunxi_2016.09+dfsg1-2.1_armhf.deb
 ```
 
