@@ -55,9 +55,10 @@ sed '/[[:space:]]\+A20-OLinuXino-Lime.\?[[:space:]]\+/!d' -i debian/targets
 export DEB_HOST_ARCH=armhf
 time fakeroot debian/rules binary |& tee "${working_dir}/uboot_makedeb.log"
 
+popd &> /dev/null
 find -maxdepth 1 -name 'u-boot-sunxi*.deb' -exec mv {} "${working_dir}/" \;
 
-cd ~2
+popd &> /dev/null
 rm -rf $tmp_dir
 
 exit 0
