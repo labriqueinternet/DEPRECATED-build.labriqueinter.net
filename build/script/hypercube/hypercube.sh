@@ -305,8 +305,10 @@ function deb_changehostname() {
 function deb_updatehosts() {
   logfile ${FUNCNAME[0]}
 
-  echo "127.0.0.1 ${settings[yunohost,domain]}" >> /etc/hosts
-  echo "::1 ${settings[yunohost,domain]}" >> /etc/hosts
+  if ! grep -q "::1 ${settings[yunohost,domain]}" /etc/hosts; then
+    echo "127.0.0.1 ${settings[yunohost,domain]}" >> /etc/hosts
+    echo "::1 ${settings[yunohost,domain]}" >> /etc/hosts
+  fi
 
   cat /etc/hosts &>> $log_file
 }
@@ -658,8 +660,6 @@ else
   if [ ! -r "${hypercube_file}" -o ! -s "${hypercube_file}" ]; then
     exit_error "Cannot continue without a usable HyperCube file"
   fi
-
-  touch "${log_filepath}/enabled"
   
   info "Loading JSON"
   load_json
@@ -704,6 +704,9 @@ else
       exit_error "Unavailable DynDNS subdomain"
     fi
   fi
+
+  # From this line, meeting an error means reflashing the sdcard before retrying
+  touch "${log_filepath}/enabled"
 
   info "Doing YunoHost post-installation..."
   ynh_postinstall
