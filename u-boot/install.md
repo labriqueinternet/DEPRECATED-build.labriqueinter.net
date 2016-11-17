@@ -1,4 +1,4 @@
-# Installing La Brique Internet u-boot for LIME/LIME2
+# Installing Internet Cube U-boot for LIME/LIME2
 
 ## Instructions
 
@@ -6,7 +6,7 @@
 
 Execute the following commands directly on an existing LIME/LIME2 Internet Cube, dedicated to tests.
 
-## U-boot binaries
+## Get new U-boot binaries
 
 Replace the `u-boot-sunxi` package by a custom one:
 
@@ -16,18 +16,18 @@ Replace the `u-boot-sunxi` package by a custom one:
 % dpkg -i /tmp/u-boot-sunxi_2016.09+dfsg1-2.1_armhf.deb
 ```
 
-## U-boot installation
+## Do U-boot replacement
 
 * LIME1:
 
 ```
-dd if=/usr/lib/u-boot/A20-OLinuXino-Lime/u-boot-sunxi-with-spl.bin of=/dev/mmcblk0 bs=1K seek=8 conv=fsync oflag=nocache,sync && sync
+% dd if=/usr/lib/u-boot/A20-OLinuXino-Lime/u-boot-sunxi-with-spl.bin of=/dev/mmcblk0 bs=1K seek=8
 ```
 
 * LIME2:
 
 ```
-% dd if=/usr/lib/u-boot/A20-OLinuXino-Lime2/u-boot-sunxi-with-spl.bin of=/dev/mmcblk0 bs=1K seek=8 conv=fsync oflag=nocache,sync && sync
+% dd if=/usr/lib/u-boot/A20-OLinuXino-Lime2/u-boot-sunxi-with-spl.bin of=/dev/mmcblk0 bs=1K seek=8
 ```
 
 ## Reboot
