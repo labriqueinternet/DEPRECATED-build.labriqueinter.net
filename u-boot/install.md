@@ -24,7 +24,9 @@ Replace the `u-boot-sunxi` package by a custom one:
 % dd if=/usr/lib/u-boot/A20-OLinuXino-Lime/u-boot-sunxi-with-spl.bin of=/dev/mmcblk0 bs=1K seek=8
 ```
 
-* LIME2:
+or
+
+* LIME2:
 
 ```
 % dd if=/usr/lib/u-boot/A20-OLinuXino-Lime2/u-boot-sunxi-with-spl.bin of=/dev/mmcblk0 bs=1K seek=8
