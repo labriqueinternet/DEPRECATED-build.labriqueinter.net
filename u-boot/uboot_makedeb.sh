@@ -2,7 +2,7 @@
 
 set -eux
 
-u-boot-sunxi Debian version (in stable or testing)
+# u-boot-sunxi Debian version (in stable or testing)
 boot_version="2016.09+dfsg1-2"
 
 working_dir=$PWD
