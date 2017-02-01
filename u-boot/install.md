@@ -44,4 +44,4 @@ You now just have to reboot your Cube and cross fingers \o/.
 
 ## Encrypted cube
 
-If you have an encrypted cube, you can apply the same procedure as above, only if you created your SD card **with a version of `e2fsprogs` before 1.43** installed on your laptop. If you have used `e2fsprogs` 1.43 or above, you have to recreate your SD card, with the last version of `install-sd.sh` (or with `-O ^metadata_csum,^64bit` option to your `mke2fs` command). For more information, read [this thread](http://lists.denx.de/pipermail/u-boot/2016-July/261415.html).
+If you have an encrypted cube, you can apply the same procedure as above, only if you created your SD card **with a version of `e2fsprogs` before 1.43** installed on your laptop. If you have used `e2fsprogs` 1.43 or above, you have to recreate your SD card, with the last version of `install-sd.sh` (or with `-O ^metadata_csum,^64bit` option to your `mke2fs` command). For more information, read [this issue](https://dev.yunohost.org/issues/404#note-25).
