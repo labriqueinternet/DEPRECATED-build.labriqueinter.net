@@ -170,7 +170,7 @@
 
         document.getElementById('progress').style.width = pc + "%";
 
-        setTimeout(progressLoader, 300);
+        setTimeout(progressLoader, 250);
       }
     }
 
@@ -180,7 +180,7 @@
       document.getElementById('unlock').style.display = 'none';
       document.getElementById('loader').style.display = 'block';
 
-      setTimeout(progressLoader, 300);
+      setTimeout(progressLoader, 250);
     }
 
     function hideLoader() {
@@ -221,7 +221,7 @@
               failed();
   
             } else {
-              setTimeout(checkSuccess, 5000);
+              setTimeout(checkSuccess, 3000);
             }
           }
         }
