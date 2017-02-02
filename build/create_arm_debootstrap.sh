@@ -276,7 +276,6 @@ if [ $ENCRYPT ] ; then
   echo '/dev/mmcblk0p1	/boot	ext4	defaults	0	2' >> $TARGET_DIR/etc/fstab
   sed -i -e 's#DEVICE=#DEVICE=eth0#' $TARGET_DIR/etc/initramfs-tools/initramfs.conf
   cp ${REP}/script/initramfs/cryptroot $TARGET_DIR/etc/initramfs-tools/hooks/cryptroot
-  cp ${REP}/script/initramfs/openvpn $TARGET_DIR/etc/initramfs-tools/hooks/openvpn
   cp ${REP}/script/initramfs/httpd $TARGET_DIR/etc/initramfs-tools/hooks/httpd
   cp ${REP}/script/initramfs/httpd_start $TARGET_DIR/etc/initramfs-tools/scripts/local-top/httpd
   cp ${REP}/script/initramfs/httpd_stop $TARGET_DIR/etc/initramfs-tools/scripts/local-bottom/httpd
