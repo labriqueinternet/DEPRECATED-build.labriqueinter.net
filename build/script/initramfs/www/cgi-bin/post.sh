@@ -11,7 +11,7 @@ status=unknown
 while [ $status = unknown ]; do
   sleep 1
 
-  if [ -f /dev/mapper/root ]; then
+  if [ -b /dev/mapper/root ]; then
     status=success
 
   elif ps aux | grep -q [c]ryptsetup/askpass; then
