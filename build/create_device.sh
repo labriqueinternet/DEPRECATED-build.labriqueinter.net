@@ -148,9 +148,9 @@ fi
 echo "[INFO] Formating"
 # create filesystem
 if mke2fs -V 2>&1 | grep -q ' 1\.42\.'; then
-  mkfs.ext4 -O ^metadata_csum,^64bit $DEVICEP1 >/dev/null 2>&1
-else
   mkfs.ext4 $DEVICEP1 >/dev/null 2>&1
+else
+  mkfs.ext4 -O ^metadata_csum,^64bit $DEVICEP1 >/dev/null 2>&1
 fi
 
 # tune filesystem
@@ -187,9 +187,9 @@ else
   cryptsetup luksOpen $DEVICEP2 olinux
 
   if mke2fs -V 2>&1 | grep -q ' 1\.42\.'; then
-    mkfs.ext4 -O ^metadata_csum,^64bit /dev/mapper/olinux >/dev/null 2>&1
-  else
     mkfs.ext4 /dev/mapper/olinux >/dev/null 2>&1
+  else
+    mkfs.ext4 -O ^metadata_csum,^64bit /dev/mapper/olinux >/dev/null 2>&1
   fi
 
   echo "[INFO] Mount filesystem"
