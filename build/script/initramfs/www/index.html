@@ -67,10 +67,11 @@
     #loader {
       display: none;
       width: 400px;
-      height: 20px;
+      height: 25px;
       background-color: #9f7ca2;
       border-radius: 5px;
       margin: 0 auto;
+      font-weight: bold;
     }
 
     #loader div {
@@ -78,6 +79,9 @@
       background-color: #9f7ca2;
       animation: bgdisco .5s ease infinite;
       border-radius: 5px;
+      color: #9f7ca2;
+      font-size: 13px;
+      padding: 3px 0 2px 0;
     }
 
     #unlocked {
@@ -160,13 +164,13 @@
     }
 
     function progressLoader() {
-      if(!document.getElementById('loader').style.display != 'none') {
-        var pc = parseInt(document.getElementById('progress').style.width.replace('%', '')) + 1;
+      if(document.getElementById('loader').style.display != 'none') {
+        var pc = parseInt(document.getElementById('progress').style.width.replace('%', '')) + 25;
+        pc = (pc > 100) ? 0 : pc;
+
         document.getElementById('progress').style.width = pc + "%";
 
-        if(pc < 100) {
-          setTimeout(progressLoader, 650);
-        }
+        setTimeout(progressLoader, 250);
       }
     }
 
@@ -176,7 +180,7 @@
       document.getElementById('unlock').style.display = 'none';
       document.getElementById('loader').style.display = 'block';
 
-      setTimeout(progressLoader, 1000);
+      setTimeout(progressLoader, 250);
     }
 
     function hideLoader() {
@@ -201,27 +205,29 @@
     }
 
     function submitForm() {
-      showLoader();
-
-      var xmlHttp = new XMLHttpRequest();
-      xmlHttp.open('POST', '/cgi-bin/post.sh', true);
-
-      xmlHttp.onreadystatechange = function() {
-        if(xmlHttp.readyState == 4) {
-          if(xmlHttp.responseText == 'success') {
-            unlocked();
-
-          } else if(xmlHttp.responseText == 'failed') {
-            hideLoader();
-            failed();
-
-          } else {
-            checkSuccess();
+      if(document.getElementById('passphrase').value != '') {
+        showLoader();
+  
+        var xmlHttp = new XMLHttpRequest();
+        xmlHttp.open('POST', '/cgi-bin/post.sh', true);
+  
+        xmlHttp.onreadystatechange = function() {
+          if(xmlHttp.readyState == 4) {
+            if(xmlHttp.responseText == 'success') {
+              unlocked();
+  
+            } else if(xmlHttp.responseText == 'failed') {
+              hideLoader();
+              failed();
+  
+            } else {
+              setTimeout(checkSuccess, 3000);
+            }
           }
         }
+  
+        xmlHttp.send('passphrase=' + encodeURIComponent(document.getElementById('passphrase').value));
       }
-
-      xmlHttp.send('passphrase=' + encodeURIComponent(document.getElementById('passphrase').value));
 
       return false;
     }
@@ -229,19 +235,16 @@
     function checkSuccess() {
       var xmlHttp = new XMLHttpRequest();
       xmlHttp.open('GET', '/img/caticorn.png', true);
-
       xmlHttp.onreadystatechange = function() {
         if(xmlHttp.readyState == 4) {
           if(xmlHttp.status == 200) {
             hideLoader();
             failed();
-
           } else {
             unlocked();
           }
         }
       }
-
       xmlHttp.send(null);
     }
 
@@ -284,7 +287,7 @@
       <input type="submit" id="unlock" value="Unlock" />
 
       <div id="loader">
-        <div id="progress" style="width: 0%"> </div>
+        <div id="progress" style="width: 0%">Decrypting...</div>
       </div>
     </form>
   </div>

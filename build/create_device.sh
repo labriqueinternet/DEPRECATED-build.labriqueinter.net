@@ -147,7 +147,11 @@ fi
 
 echo "[INFO] Formating"
 # create filesystem
-mkfs.ext4 $DEVICEP1 >/dev/null 2>&1
+if mke2fs -V 2>&1 | grep -q ' 1\.42\.'; then
+  mkfs.ext4 $DEVICEP1 >/dev/null 2>&1
+else
+  mkfs.ext4 -O ^metadata_csum,^64bit $DEVICEP1 >/dev/null 2>&1
+fi
 
 # tune filesystem
 tune2fs -o journal_data_writeback $DEVICEP1 >/dev/null 2>&1
@@ -181,7 +185,13 @@ else
   echo "[INFO] Format with encryption"
   cryptsetup -y -v luksFormat $DEVICEP2
   cryptsetup luksOpen $DEVICEP2 olinux
-  mkfs.ext4 /dev/mapper/olinux >/dev/null 2>&1
+
+  if mke2fs -V 2>&1 | grep -q ' 1\.42\.'; then
+    mkfs.ext4 /dev/mapper/olinux >/dev/null 2>&1
+  else
+    mkfs.ext4 -O ^metadata_csum,^64bit /dev/mapper/olinux >/dev/null 2>&1
+  fi
+
   echo "[INFO] Mount filesystem"
   # mount image to already prepared mount point
   mount -t ext4 /dev/mapper/olinux $MNT1

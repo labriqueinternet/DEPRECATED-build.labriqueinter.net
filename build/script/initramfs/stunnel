@@ -18,7 +18,7 @@ esac
 
 if [ ! -f /etc/initramfs-tools/stunnel.key ] ; then
   openssl genrsa -out /etc/initramfs-tools/stunnel.key 1024
-  openssl req -new -key /etc/initramfs-tools/stunnel.key -out /etc/initramfs-tools/stunnel.csr -subj /countryName=FR/stateOrProvinceName=France/localityName=Nancy/organizationName="Brique !!!"/commonName=""/
+  openssl req -new -key /etc/initramfs-tools/stunnel.key -out /etc/initramfs-tools/stunnel.csr -subj /countryName=FR/stateOrProvinceName=France/localityName=Nancy/organizationName="La Brique Internet (install)"/commonName=""/
   openssl x509 -req -days 366 -in /etc/initramfs-tools/stunnel.csr -signkey /etc/initramfs-tools/stunnel.key -out /etc/initramfs-tools/stunnel.pem
 fi
 copy_exec /usr/bin/stunnel 

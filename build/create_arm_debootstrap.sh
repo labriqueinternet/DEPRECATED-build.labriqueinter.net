@@ -243,12 +243,18 @@ if [ $INSTALL_YUNOHOST ] ; then
   chroot_deb $TARGET_DIR "rmdir /run/systemd/system/ /run/systemd/ 2> /dev/null || true"
 fi
 
+if [ $ENCRYPT ] ; then
+  echo 'deb http://ftp.fr.debian.org/debian jessie-backports main' > $TARGET_DIR/etc/apt/sources.list.d/jessie-backports.list
+fi
+
 umount_dir $TARGET_DIR
 chroot_deb $TARGET_DIR 'apt-get update'
 chroot_deb $TARGET_DIR 'apt-get upgrade -y --force-yes'
 
 if [ $ENCRYPT ] ; then
-  PACKAGES="stunnel dropbear busybox cryptsetup"
+  PACKAGES="dropbear busybox cryptsetup"
+  chroot_deb $TARGET_DIR "DEBIAN_FRONTEND=noninteractive $APT -t jessie-backports stunnel4"
+
   echo 'LINUX_KERNEL_CMDLINE="console=ttyS1 hdmi.audio=EDID:0 disp.screen0_output_mode=EDID:1280x720p60 root=/dev/mapper/root cryptopts=target=root,source=/dev/mmcblk0p2,cipher=aes-xts-plain64,size=256,hash=sha1 rootwait sunxi_ve_mem_reserve=0 sunxi_g2d_mem_reserve=0 sunxi_no_mali_mem_reserve sunxi_fb_mem_reserve=0 panic=10 loglevel=6 consoleblank=0"' > $TARGET_DIR/etc/default/flash-kernel
 else
   echo 'LINUX_KERNEL_CMDLINE="console=ttyS1 hdmi.audio=EDID:0 disp.screen0_output_mode=EDID:1280x720p60 root=/dev/mmcblk0p1 rootwait sunxi_ve_mem_reserve=0 sunxi_g2d_mem_reserve=0 sunxi_no_mali_mem_reserve sunxi_fb_mem_reserve=0 panic=10 loglevel=6 consoleblank=0"' > $TARGET_DIR/etc/default/flash-kernel
@@ -257,7 +263,10 @@ fi
 mkdir $TARGET_DIR/etc/flash-kernel
 echo $FLASH_KERNEL > $TARGET_DIR/etc/flash-kernel/machine
 
-chroot_deb $TARGET_DIR "DEBIAN_FRONTEND=noninteractive $APT linux-image-armmp flash-kernel u-boot-sunxi u-boot-tools $PACKAGES"
+chroot_deb $TARGET_DIR "DEBIAN_FRONTEND=noninteractive $APT linux-image-armmp flash-kernel u-boot-tools $PACKAGES"
+
+chroot_deb $TARGET_DIR "wget -P /tmp/ https://repo.labriqueinter.net/u-boot/u-boot-sunxi_latest_armhf.deb"
+chroot_deb $TARGET_DIR "dpkg -i /tmp/u-boot-sunxi_latest_armhf.deb"
 
 if [ $ENCRYPT ] ; then
   echo 'aes' >> $TARGET_DIR/etc/initramfs-tools/modules
@@ -276,7 +285,6 @@ if [ $ENCRYPT ] ; then
   echo '/dev/mmcblk0p1	/boot	ext4	defaults	0	2' >> $TARGET_DIR/etc/fstab
   sed -i -e 's#DEVICE=#DEVICE=eth0#' $TARGET_DIR/etc/initramfs-tools/initramfs.conf
   cp ${REP}/script/initramfs/cryptroot $TARGET_DIR/etc/initramfs-tools/hooks/cryptroot
-  cp ${REP}/script/initramfs/openvpn $TARGET_DIR/etc/initramfs-tools/hooks/openvpn
   cp ${REP}/script/initramfs/httpd $TARGET_DIR/etc/initramfs-tools/hooks/httpd
   cp ${REP}/script/initramfs/httpd_start $TARGET_DIR/etc/initramfs-tools/scripts/local-top/httpd
   cp ${REP}/script/initramfs/httpd_stop $TARGET_DIR/etc/initramfs-tools/scripts/local-bottom/httpd
