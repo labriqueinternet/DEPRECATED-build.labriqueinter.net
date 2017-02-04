@@ -12,6 +12,6 @@ case "$1" in
 esac
 
 killall httpd
-kill -9 $(ps aux | awk '/sh post.sh$/ { print $2 }')
+kill -9 $(ps aux | awk '/sh post.sh$/ { print $1 }')
 
 exit 0
