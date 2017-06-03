@@ -45,6 +45,8 @@ if [ "${INSTALL_YUNOHOST_DIST}" != stable ]; then
   INSTALL_YUNOHOST_TESTING="-testing"
 fi
 
+systemctl restart apt-cacher-ng
+
 cd  /opt/build.labriqueinter.net/ && git pull
 
 # Build olinux debootstrap with yunohost
