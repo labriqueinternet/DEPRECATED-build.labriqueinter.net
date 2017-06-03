@@ -1,108 +1,60 @@
 **[BUG REPORTS SHOULD BE OPEN HERE](https://dev.yunohost.org)**
 
-## Build on olimex board
+## How to Build
 
-### Why?
+This README describes how we currently build the Internet Cube images. We probably could find a better way, with virtualization and co - but currently, this is how it is done.
 
-## With your board 
-To build Labriqueinter.net directly with [yunohost](https://yunohost.org/) we
-cannot use debootstrap with qemu-arm-static because it is buggy and
-mysql-server-5.5 installation failed.
+### Images to Produce
 
-the first solution is to build a lightweight image without yunohost, and
-perform a full debootstrap with yunohost directly on the olimex board with the
-first debootstrap.
+For now, we support only 2 boards: Olimex LIME and Olimex LIME2. We produce 2 images for each board: for encrypted installations and for non-encrypted ones.
 
-## With qemu-system-arm 
-With qemu-arm-system we can directly create images without a board. The build
-process is compose with tow step; first, like above, we create a lightweight
-debian image with debootstrap and then we can build full image inside a qemu
-instane.
+Example of image filenames (e.g. with build on December 1st, 2017 for Debian Jessie):
 
-# Build the lightweight image 
+* LIME non-encrypted: *labriqueinternet_A20LIME_2017-12-01_jessie.img.tar.xz*
+* LIME encrypted: *labriqueinternet_A20LIME_encryptedfs_2017-12-01_jessie.img.tar.xz*
+* LIME2 non-encrypted: *labriqueinternet_A20LIME2_2017-12-01_jessie.img.tar.xz*
+* LIME2 encrypted: *labriqueinternet_A20LIME2_encryptedfs_2017-12-01_jessie.img.tar.xz*
 
-## Debootstrap
+Respecting the format of the filenames is important to ensure the compatibility with *install-sd.sh*.
 
-### With docker and apt-cacher-ng
+For generating (optional) GPG signatures, please ask on the *La Brique Internet*'s mailing list.
 
-**[BUG REPORTS SHOULD BE OPEN HERE](https://dev.yunohost.org)**
+### Preparing a Dedicated Cube for Building
 
-### Retrieve scripts
+Choose a dedicated Internet Cube (or just a SD card), and use it to build the four images in the same time. Using a LIME or LIME2 does not matter.
 
-```shell
-docker build -t debian:olinux -f build/Dockerfile .
-mkdir -p tmp/apt-cache
-docker run -d --name apt -v $(pwd)/tmp/:/tmp/ debian:olinux /usr/sbin/apt-cacher-ng ForeGround=1 CacheDir=/tmp/apt-cache
-docker run --privileged -i -t --name build --link apt:apt -v $(pwd)/build/:/olinux/ -v $(pwd)/tmp/:/tmp/ debian:olinux bash /olinux/create_arm_debootstrap.sh -c -p apt
-docker stop apt
-docker rm build
-docker rm apt
-```
-
-### Without docker and without apt-cacher-ng
-
-```shell
-sudo bash /olinux/create_arm_debootstrap.sh -c
-```
-
-## Install on sd for the board
-
-```shell
-sudo bash build/create_device.sh -D img -s 800
-sudo dd if=tmp/olinux.img of=/dev/MYSD
-```
-
-## Create a Qcow image for qemu/libvirt
-
-```shell
-sudo modprobe nbd max_part=8
-sudo bash build/create_device.sh -D qcow -s 10G
-```
- 
-#  Start the lightweight image with qemu-arm-system
-
-```shell
-wget http://ftp.nl.debian.org/debian/dists/jessie/main/installer-armhf/current/images/device-tree/vexpress-v2p-ca15-tc1.dtb -O tmp/vexpress-v2p-ca15-tc1.dtb 
-sudo qemu-system-arm -m 1024M -drive if=none,file=olinux.img,cache=writeback,id=foo -device virtio-blk-device,drive=foo -M vexpress-a15 -dtb tmp/vexpress-v2p-ca15-tc1.dtb -kernel tmp/debootstrap/boot/vmlinuz-4.2.0-0.bpo.1-armmp -initrd tmp/debootstrap/boot/initrd.img-4.2.0-0.bpo.1-armmp -append "root=/dev/vda1 console=ttyAMA0 earlycon" -no-reboot -nographic
-```
-#  Start the lightweight image with libvirt
-
-```shell
-wget http://ftp.nl.debian.org/debian/dists/jessie/main/installer-armhf/current/images/device-tree/vexpress-v2p-ca15-tc1.dtb -O tmp/vexpress-v2p-ca15-tc1.dtb 
-sudo virt-install --name olinux --memory 1024 --disk path=$(pwd)/tmp/olinux.img,bus=virtio --arch armv7l --machine vexpress-a15 --boot kernel=$(pwd)/tmp/debootstrap/vmlinuz,initrd=$(pwd)/tmp/debootstrap/initrd.img,dtb=$(pwd)/tmp/vexpress-v2p-ca15-tc1.dtb,kernel_args="root=/dev/vda1 console=ttyAMA0 earlycon" --nographics --network=bridge=br0
-```
-
-
-# Build all labriqueinter.net images
-
-On your board or on your qemu instance you should retrieve this git repository
-and configure the system for debootstrap. After that you can build
-labriqueinter.net images. You probably want to execute the last command on an
-screen.
+Prepare your building Cube:
 
 ```shell
 apt-get install git -y --force-yes
 git clone https://github.com/labriqueinternet/build.labriqueinter.net.git /opt/build.labriqueinter.net
 cd /opt/build.labriqueinter.net && bash init.sh
+```
+
+### Images Building
+
+On your building Cube, just do (you should execute this line in a *screen*/*tmux*):
+
+```shell
 cd /opt/build.labriqueinter.net && bash build_labriqueinternet_lime.sh
 ```
 
-The stable version of yunohost is installed by default, but you can install another version (e.g. testing), changing the last line this way:
+After something like 1 hour, the four images produced are available in */srv/olinux/*.
+
+FYOI the stable version of YunoHost is installed by default, but you can use another version (e.g. testing):
 
 ```shell
 cd /opt/build.labriqueinter.net && bash build_labriqueinternet_lime.sh -d testing
 ```
 
-Now, if everything gone well you should have images on /srv/olinux/!
+### Using Custom *u-boot*
 
-# Compress images
+During the images creation (above), this DEB package is download and installed:
 
-If you want to share your images you probably want to compress them:
+ *https://repo.labriqueinter.net/u-boot/u-boot-sunxi_latest_armhf.deb*
 
-```shell
-for i in *.img; do tar cfJ $i.tar.xz $i; done
-```
+This is the official Debian version of *u-boo-sunxi*, but with [some patches](https://github.com/labriqueinternet/build.labriqueinter.net/tree/master/u-boot/patches) specific to LIME/LIME2. If you want to build your own version, or update this one, you just have to execute [this script](https://github.com/labriqueinternet/build.labriqueinter.net/blob/master/u-boot/uboot_makedeb.sh) on a Cube. Then just change *build/create_arm_debootstrap.sh* in order to use your version rather than the online one.
 
-# Install 
+### Installing the New Images
 
-Now you can follow tutorials to install your [cube](https://repo.labriqueinter.net/).
+Now you can follow [tutorials](https://repo.labriqueinter.net) to install a new Internet Cube.
