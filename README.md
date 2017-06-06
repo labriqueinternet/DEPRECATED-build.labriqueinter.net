@@ -49,7 +49,7 @@ cd /opt/build.labriqueinter.net && bash build_labriqueinternet_lime.sh -d testin
 
 ### Using Custom *u-boot*
 
-During the images creation (above), this DEB package is download and installed:
+During the images creation (or during the installation, for encrypted versions), this DEB package is download and installed:
 
  *https://repo.labriqueinter.net/u-boot/u-boot-sunxi_latest_armhf.deb*
 
