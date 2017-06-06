@@ -53,7 +53,11 @@ During the images creation (above), this DEB package is download and installed:
 
  *https://repo.labriqueinter.net/u-boot/u-boot-sunxi_latest_armhf.deb*
 
-This is the official Debian version of *u-boo-sunxi*, but with [some patches](https://github.com/labriqueinternet/build.labriqueinter.net/tree/master/u-boot/patches) specific to LIME/LIME2. If you want to build your own version, or update this one, you just have to execute [this script](https://github.com/labriqueinternet/build.labriqueinter.net/blob/master/u-boot/uboot_makedeb.sh) on a Cube. Then just change *build/create_arm_debootstrap.sh* in order to use your version rather than the online one.
+This is the official Debian version of *u-boot-sunxi*, but with [some patches](https://github.com/labriqueinternet/build.labriqueinter.net/tree/master/u-boot/patches) specific to LIME/LIME2. If you want to build your own version, or update this one, you just have to execute [this script](https://github.com/labriqueinternet/build.labriqueinter.net/blob/master/u-boot/uboot_makedeb.sh) on your building Cube.
+
+For non-encrypted images: just edit *build/create_arm_debootstrap.sh* on your building Cube, in order to use your version of the DEB package, rather than the online one. Then, rebuild the images.
+
+For encrypted images: no need to rebuild the images. However, you have to edit *install-sd.sh*, in order to use your version of the DEB package, rather than the online one.
 
 ### Installing the New Images
 
