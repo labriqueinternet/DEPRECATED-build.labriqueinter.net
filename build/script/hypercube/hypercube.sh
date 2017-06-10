@@ -224,7 +224,7 @@ function extract_settings() {
   local subjson=$(echo -e "${json}" | grep "^${1}=" | cut -d= -f2-)
   local vars=$(echo "${subjson}" | jq -r 'to_entries|map("\(.key)=\(.value|tostring)")|.[]' 2>> $log_file)
 
-  if [ -z "$vars" ]; then
+  if [ -z "$vars" ] && [ "${1}" != "vpnclient" ]; then
     exit_error "${1} settings not found (or JSON syntax error)"
   fi
 
@@ -246,7 +246,8 @@ function extract_dotcube() {
   local subjson=$(echo -e "${json}" | grep "^vpnclient=" | cut -d= -f2-)
 
   if [ -z "$subjson" ]; then
-    exit_error "vpnclient settings not found"
+    info "vpnclient settings not found"
+    return
   fi
 
   echo "${subjson}" >> "${tmp_dir}/config.cube"
@@ -429,9 +430,13 @@ function configure_vpnclient() {
   logfile ${FUNCNAME[0]}
 
   yunohost app addaccess vpnclient -u "${settings[yunohost,user]}" --verbose &>> $log_file
-
-  yunohost app setting vpnclient service_enabled -v 1 --verbose &>> $log_file
-  ynh-vpnclient-loadcubefile.sh -u "${settings[yunohost,user]}" -p "${settings[yunohost,user_password]}" -c "${tmp_dir}/config.cube" &>> $log_file || true
+  
+  if [ -f "${tmp_dir}/config.cube" ]; then
+    yunohost app setting vpnclient service_enabled -v 1 --verbose &>> $log_file
+    ynh-vpnclient-loadcubefile.sh -u "${settings[yunohost,user]}" -p "${settings[yunohost,user_password]}" -c "${tmp_dir}/config.cube" &>> $log_file || true
+  else
+    warn "No VPN configured, you should configure your router and bypass hairpining"
+  fi
 }
 
 function monitoring_ip() {
