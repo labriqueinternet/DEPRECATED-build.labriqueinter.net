@@ -61,6 +61,12 @@ sudo sed -e 's/mmcblk0p1/vda1/' -i temp/usr/local/bin/secondrun
 sudo sed -e 's/mmcblk0/vda/' -i temp/usr/local/bin/firstrun
 ```
 
+Disable ssh in first boot (Avoid vagrant provisioning failure):
+
+```shell
+sudo sed -i '12 a /sbin/iptables -I INPUT -p tcp --dport 22 -j DROP' temp/usr/local/bin/firstrun
+```
+
 Retrieve files for the boot:
 
 ```shell
