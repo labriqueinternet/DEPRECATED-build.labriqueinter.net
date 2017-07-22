@@ -32,14 +32,14 @@ Vagrant.configure("2") do |config|
   # Bridged networks make the machine appear as another physical device on
   # your network.
   # config.vm.network "public_network"
-  config.vm.network "public_network", :mac => "08:01:23:45:67:89"
+  # config.vm.network "public_network", :mac => "08:01:23:45:67:89"
 
   # Share an additional folder to the guest VM. The first argument is
   # the path on the host to the actual folder. The second argument is
   # the path on the guest to mount the folder. And the optional third
   # argument is a set of non-required options.
   # config.vm.synced_folder "../data", "/vagrant_data"
-  config.vm.synced_folder ".", "/vagrant", type: 'nfs'
+  # config.vm.synced_folder ".", "/vagrant", type: 'nfs'
 
 
   # Provider-specific configuration so you can fine-tune various
@@ -56,12 +56,13 @@ Vagrant.configure("2") do |config|
   #
   # View the documentation for the provider you are using for more
   # information on available options.
+  mac = "02:" + 5.times.map { '%02x' % rand(0..255) }.join(':')
 
   config.vm.provider :libvirt do |domain|
     domain.dtb = File.expand_path('../vexpress-v2p-ca15-tc1.dtb', __FILE__)
     domain.kernel = File.expand_path('../vmlinuz', __FILE__)
     domain.initrd = File.expand_path('../initrd.img', __FILE__)
-    domain.cmd_line = 'root=/dev/vda1 rw console=ttyAMA0'
+    domain.cmd_line = 'root=/dev/vda1 rw console=ttyAMA0 elevator=noop'
     domain.machine_type = 'vexpress-a15'
     domain.machine_arch = 'armv7l'
     domain.driver = 'qemu'
@@ -70,7 +71,9 @@ Vagrant.configure("2") do |config|
     domain.cpus = 2
     domain.memory = 2048
     domain.graphics_type = 'none'
-    end
+    domain.volume_cache = 'writeback'
+    domain.management_network_mac = mac
+  end
 
   # Define a Vagrant Push strategy for pushing to Atlas. Other push strategies
   # such as FTP and Heroku are also available. See the documentation at
