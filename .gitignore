@@ -1,4 +1,6 @@
 tmp/
 *.img
 *.swp
+.vagrant
 vagrant/vagrant_brique
+Vagrantfile
