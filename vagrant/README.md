@@ -4,13 +4,11 @@
 ```shell
 vagrant box add --name brique https://repo.labriqueinter.net/vagrant/brique.box
 vagrant init brique
-vagrant up
+vagrant up --provider=libvirt
 ```
 
-You will probably get this error: Mounting NFS shared folders..
-Don't worry, just wait the Cude reboot and run vagrant ssh again.
-
-After the reboot you can ssh into the VM:
+The setup is quite long (Internet Cube do a reboot to enlarge the partition).
+When the vagrant setup is finish you can ssh into the box: 
 
 ```shell
 vagrant ssh
@@ -19,8 +17,6 @@ vagrant ssh
 Enjoy :)
 
 ## Build vagrant box
-
-This readme provide a way to build vagrant box for arm. 
 
 ### Transform Internet Cube to vagrant 
 
@@ -196,6 +192,26 @@ sudo qemu-img create -f qcow2 box.img 20G
 sudo virt-install --name debian8-arm --memory 1024 --disk path=box.img,format=qcow2,size=20 --arch armv7l --machine vexpress-a15 --initrd-inject=../preseed.cfg --extra-args="auto=true text console=ttyAMA0 earlycon hostname=debian8-arm url=file:///preseed.cfg" --nographics --network=bridge=br0 --location './' --force --noreboot --debug --boot kernel=images/pxeboot/vmlinuz,initrd=images/pxeboot/initrd.img,dtb=debian-installer/armhf/dtbs/vexpress-v2p-ca15-tc1.dtb
 ```
 
+## Build amd64 box with yunohost
+
+### build box
+
+```shell
+mkdir vagrant_yuno; cd vagrant_yuno
+sudo qemu-img create -f qcow2 box.img 20G
+cp ../conf/preseed-yuno.cfg preseed.cfg
+sudo virt-install --name debian8-yunohost --cpu host-passthrough --os-type linux --memory 512 --vcpus=2 --disk path=box.img,format=qcow2,size=20,bus=virtio  --initrd-inject=preseed.cfg --extra-args="auto=true text console=tty0 console=ttyS0,115200n8 hostname=yunohost" --nographics --network=bridge=br0 --location 'http://ftp.fr.debian.org/debian/dists/jessie/main/installer-amd64' --force --noreboot --debug
+cp ../conf/Vagrantfile-yuno Vagrantfile
+tar cvzf debian8-yuno.box Vagrantfile metadata.json box.img
+```
+
+### test new box
+
+```shell
+vagrant box add --name yuno debian8-yuno.box
+vagrant init yuno
+vagrant up
+```
 
 ## Bridge for build
 
