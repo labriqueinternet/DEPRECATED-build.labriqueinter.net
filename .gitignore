@@ -4,3 +4,4 @@ tmp/
 .vagrant
 vagrant/vagrant_brique
 Vagrantfile
+labriqueinternet_*
