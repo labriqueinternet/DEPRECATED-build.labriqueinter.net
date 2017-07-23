@@ -198,7 +198,7 @@ sudo virt-install --name debian8-arm --memory 1024 --disk path=box.img,format=qc
 
 ```shell
 mkdir vagrant_yuno; cd vagrant_yuno
-sudo qemu-img create -f qcow2 box.img 20G
+qemu-img create -f qcow2 box.img 20G
 cp ../conf/preseed-yuno.cfg preseed.cfg
 sudo virt-install --name debian8-yunohost --cpu host-passthrough --os-type linux --memory 512 --vcpus=2 --disk path=box.img,format=qcow2,size=20,bus=virtio  --initrd-inject=preseed.cfg --extra-args="auto=true text console=tty0 console=ttyS0,115200n8 hostname=yunohost" --nographics --network=bridge=br0 --location 'http://ftp.fr.debian.org/debian/dists/jessie/main/installer-amd64' --force --noreboot --debug
 cp ../conf/Vagrantfile-yuno Vagrantfile
