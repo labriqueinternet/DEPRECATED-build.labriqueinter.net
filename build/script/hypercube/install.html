@@ -6,6 +6,7 @@
 <style>
 body {
   font-family: sans;
+  margin: 0;
 }
 
 h1, #infos {
@@ -14,16 +15,20 @@ h1, #infos {
 
 h2 {
   font-size: 1em;
-  background-color: #eee;
+  background-color: #555;
   padding: 6px;
-  border-radius: 3px;
-  text-decoration: underline;
   cursor: pointer;
+  color: #fff;
+  text-transform: uppercase;
+  margin-top: 0px;
+  margin-bottom: 0px;
+  border: 1px solid #444;
 }
 
 h2:hover, h2.active {
-  background-color: #ccc;
+  background-color: #4c9ed9;
   text-decoration: none;
+  border: 1px solid #4c9ed9;
 }
 
 #indicator {
@@ -44,12 +49,16 @@ h2:hover, h2.active {
 textarea {
   display: none;
   width: 80%;
-  height: 60pt;
-  border: 1px solid #999;
+  height: 150pt;
+  border: 1px solid #aaa;
   padding: 3px;
   margin: 10px;
   border-radius: 5px;
   font-style: italic;
+  margin-left: 5%;
+  margin-right: 5%;
+  width: 90%;
+  border-radius: 3px;
 }
 
 @keyframes signal {
