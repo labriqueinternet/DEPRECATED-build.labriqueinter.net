@@ -2,7 +2,7 @@
 
 
 ```shell
-vagrant box add --name brique https://repo.labriqueinter.net/vagrant/brique.box
+vagrant box add --name brique https://repo.labriqueinter.net/vagrant/debian8-arm-brique.box
 vagrant init brique
 vagrant up --provider=libvirt
 ```
