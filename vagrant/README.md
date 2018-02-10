@@ -223,3 +223,33 @@ cp conf/dnsmasq.conf /etc/dnsmasq.d/
 iptables -t nat -A POSTROUTING -o enp0s25 -j MASQUERADE
 ifup br0
 ```
+
+## Debug Vagrant
+
+Here are some common errors and how to resolv them.
+
+### Can't find gem vagrant
+
+```/usr/lib/ruby/2.3.0/rubygems.rb:241:in `bin_path': can't find gem vagrant (>= 0.a) (Gem::GemNotFoundException)```
+
+To fix this, run: `unset GEM_HOME` and `unset GEM_PATH`
+
+### Could not load kernel
+
+```qemu: could not load kernel '/home/user/.vagrant.d/boxes/brique/0/libvirt/vmlinuz'```
+
+To fix this, make sure the user `libvirt-qemu` has read access to the file.
+
+### Domain already taken
+
+```Name `vagrant_default` of domain about to create is already taken. Please try to run
+`vagrant up` command again.```
+
+To fix this: `sudo virsh undefine vagrant_default` and `sudo virsh vol-delete vagrant_default.img --pool default`
+
+### Notes:
+
+* You can change the Vagrant home directory with: `export VAGRANT_HOME=/new/path/here`.
+* When you run `vagrant up` the owner of some files under the VAGRANT_HOME directory can change.
+* When you install a plugin (ex: `vagrant plugin install libvirt-vagrant`) the plugin is installed under the VAGRANT_HOME directory only.
+
