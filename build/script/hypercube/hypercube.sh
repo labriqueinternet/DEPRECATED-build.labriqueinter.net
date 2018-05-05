@@ -231,7 +231,7 @@ function restore() {
 
   mv "${backup_file}" "${archive_dir}"
 
-  yunohost backup restore -n backup --verbose &>> $log_file
+  yunohost backup restore -n backup --force --verbose &>> $log_file
 }
 
 function load_json() {
