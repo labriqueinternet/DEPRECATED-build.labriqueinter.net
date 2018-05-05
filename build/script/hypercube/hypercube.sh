@@ -695,6 +695,9 @@ else
       exit_error "Cannot continue without a usable HyperCube or backup file"
     fi
 
+    info "Upgrading Debian/YunoHost..."
+    deb_upgrade
+
     info "Restoring"
     restore
  
