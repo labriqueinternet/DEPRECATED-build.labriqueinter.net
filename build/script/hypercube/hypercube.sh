@@ -697,6 +697,16 @@ else
 
     info "Restoring"
     restore
+ 
+    info "Rebooting..."
+
+    if [ -f /etc/crypttab ]; then
+      warn "Once rebooted, you have to give the passphrase for uncrypting your Cube"
+    fi
+
+    sleep 5
+    keep_debugging=false
+    systemctl reboot
   fi
   
   info "Loading JSON"
