@@ -206,6 +206,34 @@ function find_hypercubefile() {
   fi
 }
 
+function find_backup() {
+  logfile ${FUNCNAME[0]}
+
+  backup_file=$(find /media/ -mindepth 2 -maxdepth 2 -regex '.*/backup\.tar\.gz$' | head -n1)
+
+  if [ -z "${backup_file}" ]; then
+    backup_file=$(find /root/ -mindepth 1 -maxdepth 1 -regex '.*/backup\.tar\.gz$' | head -n1)
+  fi
+
+  if [ ! -z "${backup_file}" ]; then
+    info "Backup file found"
+
+    echo "DETECTED FILE: ${backup_file}" >> $log_file
+
+  else
+    err "No 'backup.tar.gz' file found"
+  fi
+
+}
+
+function restore() {
+  logfile ${FUNCNAME[0]}
+
+  mv "${backup_file}" "${archive_dir}"
+
+  yunohost backup restore -n backup --verbose &>> $log_file
+}
+
 function load_json() {
   logfile ${FUNCNAME[0]}
 
@@ -600,6 +628,7 @@ function end_installation() {
 declare -A settings
 tmp_dir=$(mktemp -dp /tmp/ labriqueinternet-installhypercube-XXXXX)
 hypercube_file="${tmp_dir}/install.hypercube"
+archive_dir="/home/yunohost.backup/archives/"
 exit_status=0
 webserver_pid=
 is_dyndns_useful=false
@@ -658,7 +687,16 @@ else
   find_hypercubefile
   
   if [ ! -r "${hypercube_file}" -o ! -s "${hypercube_file}" ]; then
-    exit_error "Cannot continue without a usable HyperCube file"
+
+    info "Looking for backup file"
+    find_backup
+
+    if [ ! -r "${backup_file}" -o ! -s "${backup_file}" ]; then
+      exit_error "Cannot continue without a usable HyperCube or backup file"
+    fi
+
+    info "Restoring"
+    restore
   fi
   
   info "Loading JSON"
