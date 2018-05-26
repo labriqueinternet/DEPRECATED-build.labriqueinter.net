@@ -25,6 +25,7 @@ cat <<EOF
   -c		cross debootstrap
   -p		use and set aptcacher proxy
   -e		configure for encrypted partition	(default: false)
+  -P		run post install	(default: false)
 
 EOF
 exit 1
@@ -69,6 +70,9 @@ while getopts ":a:b:n:t:d:r:ycp:e" opt; do
     e)
       ENCRYPT=yes
       ;;
+    P)
+      POST_INSTALL=yes
+      ;;
     \?)
       show_usage
       ;;
@@ -100,7 +104,7 @@ umount_dir (){
 }
 
 finish(){
-  umount_dir $TARGET_DIR 
+  umount_dir $TARGET_DIR
 }
 trap finish EXIT
 
@@ -242,6 +246,11 @@ if [ $INSTALL_YUNOHOST ] ; then
   chroot_deb $TARGET_DIR "cd /tmp/ && ./install_yunohost -a -d ${INSTALL_YUNOHOST_DIST}"
 
   chroot_deb $TARGET_DIR "rmdir /run/systemd/system/ /run/systemd/ 2> /dev/null || true"
+
+  # run postinstall
+  if [[ $POST_INSTALL ]] ; then
+    chroot_deb $TARGET_DIR "yunohost tools postinstall -d foo.bar.labriqueinter.net -p yunohost --ignore-dyndns"
+  fi
 fi
 
 if [ $ENCRYPT ] ; then
