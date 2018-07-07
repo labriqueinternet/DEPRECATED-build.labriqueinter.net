@@ -25,7 +25,7 @@ cat <<EOF
   -c		cross debootstrap
   -p		use and set aptcacher proxy
   -e		configure for encrypted partition	(default: false)
-  -P		run post install	(default: false)
+  -i		run post install	(default: false)
 
 EOF
 exit 1
@@ -38,7 +38,7 @@ REP=$(dirname $0)
 APT='DEBIAN_FRONTEND=noninteractive apt-get install -y --force-yes'
 INSTALL_YUNOHOST_DIST='stable'
 
-while getopts ":a:b:n:t:d:r:ycp:e" opt; do
+while getopts ":a:b:n:t:d:r:ycp:ei" opt; do
   case $opt in
     b)
       BOARD=$OPTARG
@@ -70,7 +70,7 @@ while getopts ":a:b:n:t:d:r:ycp:e" opt; do
     e)
       ENCRYPT=yes
       ;;
-    P)
+    i)
       POST_INSTALL=yes
       ;;
     \?)

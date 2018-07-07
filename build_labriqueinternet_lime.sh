@@ -51,7 +51,7 @@ cd  /opt/build.labriqueinter.net/ && git pull
 
 # Build olinux debootstrap with yunohost
 ./build/create_arm_debootstrap.sh -d "${INSTALL_YUNOHOST_DIST}" -r "${DEBIAN_RELEASE}" \
- -t /srv/olinux/debootstrap -p localhost -y -e | tee /srv/olinux/debootstrap.log
+ -t /srv/olinux/debootstrap -p localhost -y -e -i | tee /srv/olinux/debootstrap.log
 
 cp /srv/olinux/debootstrap.log /srv/olinux/debootstrap/root/
 
