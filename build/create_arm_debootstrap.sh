@@ -238,9 +238,8 @@ install -m 444 -o root -g root ${REP}/script/hypercube/install.html $TARGET_DIR/
 if [ $INSTALL_YUNOHOST ] ; then
   chroot_deb $TARGET_DIR "mkdir -p /run/systemd/system/"
 
-  chroot_deb $TARGET_DIR "$APT git"
-  chroot_deb $TARGET_DIR "git clone https://github.com/YunoHost/install_script /tmp/install_script"
-  chroot_deb $TARGET_DIR "cd /tmp/install_script && ./install_yunohost -a -d ${INSTALL_YUNOHOST_DIST}"
+  chroot_deb $TARGET_DIR "wget -O /tmp/install_yunohost https://install.yunohost.org/${DEBIAN_RELEASE} && chmod +x /tmp/install_yunohost"
+  chroot_deb $TARGET_DIR "cd /tmp/ && ./install_yunohost -a -d ${INSTALL_YUNOHOST_DIST}"
 
   chroot_deb $TARGET_DIR "rmdir /run/systemd/system/ /run/systemd/ 2> /dev/null || true"
 fi
