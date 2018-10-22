@@ -17,6 +17,12 @@ EOF
 exit 1
 }
 
+if [[ "$TERM" == "screen"* ]]; then
+    echo "your TERM env will pose some problems: '$TERM'."
+    echo "Please do export TERM=xterm-color before running this script"
+    exit 42
+fi
+
 INSTALL_YUNOHOST_DIST='stable'
 INSTALL_YUNOHOST_TESTING=
 DEBIAN_RELEASE=jessie
