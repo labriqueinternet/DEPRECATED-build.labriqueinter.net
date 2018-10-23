@@ -35,7 +35,7 @@ DEBIAN_RELEASE=jessie
 TARGET_DIR=./tmp/debootstrap
 DEB_HOSTNAME=olinux
 REP=$(dirname $0)
-APT='DEBIAN_FRONTEND=noninteractive apt install -y --force-yes'
+APT='DEBIAN_FRONTEND=noninteractive apt install -y --force-yes --no-install-recommends'
 INSTALL_YUNOHOST_DIST='stable'
 
 while getopts ":a:b:n:t:d:r:ycp:ei" opt; do
@@ -132,7 +132,10 @@ deb http://security.debian.org/ $DEBIAN_RELEASE/updates main contrib non-free
 EOT
 cat <<EOT > $TARGET_DIR/etc/apt/apt.conf.d/71-no-recommends
 APT::Install-Suggests "0";
-APT::Install-Recommends "0";
+// We're too shy to disable recommends globally in yunohost
+// because apps packagers probably rely on recommended packages
+// being automatically installed.
+//APT::Install-Recommends "0";
 EOT
 
 if [ ${APTCACHER} ] ; then
@@ -147,7 +150,7 @@ fi
 _lxc_exec 'apt-get update'
 
 # Add HyperCube packages
-PACKAGES="jq udisks-glue php-fpm ntfs-3g $PACKAGES"
+PACKAGES="jq php-fpm ntfs-3g wget $PACKAGES"
 
 # Add useful packages
 _lxc_exec "$APT ca-certificates openssh-server ntp parted locales vim-nox bash-completion rng-tools $PACKAGES"

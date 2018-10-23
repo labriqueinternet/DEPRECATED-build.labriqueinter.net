@@ -25,7 +25,7 @@ fi
 
 INSTALL_YUNOHOST_DIST='stable'
 INSTALL_YUNOHOST_TESTING=
-DEBIAN_RELEASE=jessie
+DEBIAN_RELEASE=stretch
 
 while getopts ":d:" opt; do
   case $opt in
