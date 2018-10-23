@@ -80,6 +80,7 @@ while getopts ":a:b:n:t:d:r:ycp:ei" opt; do
 done
 
 LXC_ROOT=${TARGET_DIR}
+LXC_BRIDGE="ynhbuildbr0"
 CONTAINER=${DEB_HOSTNAME}
 
 . ${REP}/config_board.sh
@@ -87,15 +88,16 @@ CONTAINER=${DEB_HOSTNAME}
 if ! lxc-ls -P ${LXC_ROOT} | grep "${CONTAINER}"
 then
     lxc-create -P ${LXC_ROOT} -n "${CONTAINER}" -t debian -- -r $DEBIAN_RELEASE
+    sed -i "s/^lxc.network.type.*$/lxc.network.type = veth\nlxc.network.flags = up\nlxc.network.link = $LXC_BRIDGE\nlxc.network.name = eth0\nlxc.network.hwaddr = 00:FF:AA:BB:CC:01/" ${LXC_ROOT}/${CONTAINER}/config
 fi
 if ! lxc-ls  -P ${LXC_ROOT} --active | grep "${CONTAINER}"
 then
     lxc-start -P ${LXC_ROOT} -n "${CONTAINER}"
 fi
-TARGET_DIR=$LXC_ROOT/${CONTAINER}/rootfs
+TARGET_DIR=${LXC_ROOT}/${CONTAINER}/rootfs
 
 function _lxc_exec() {
-  LC_ALL=C LANGUAGE=C LANG=C lxc-attach  -P ${LXC_ROOT} -n ${CONTAINER} -- /bin/bash -c "$2"
+  LC_ALL=C LANGUAGE=C LANG=C lxc-attach  -P ${LXC_ROOT} -n ${CONTAINER} -- /bin/bash -c "$1"
 }
 
 trap finish EXIT

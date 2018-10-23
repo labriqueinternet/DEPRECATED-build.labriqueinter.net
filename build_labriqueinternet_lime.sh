@@ -50,7 +50,7 @@ TARGET_DIR=$LXC_ROOT/${CONTAINER}/rootfs
 
 
 function _lxc_exec() {
-  LC_ALL=C LANGUAGE=C LANG=C lxc-attach  -P ${LXC_ROOT} -n ${CONTAINER} -- /bin/bash -c "$2"
+  LC_ALL=C LANGUAGE=C LANG=C lxc-attach  -P ${LXC_ROOT} -n ${CONTAINER} -- /bin/bash -c "$1"
 }
 
 if [ "${INSTALL_YUNOHOST_DIST}" != stable ]; then
