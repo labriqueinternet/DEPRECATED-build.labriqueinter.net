@@ -93,6 +93,7 @@ fi
 if ! lxc-ls  -P ${LXC_ROOT} --active | grep "${CONTAINER}"
 then
     lxc-start -P ${LXC_ROOT} -n "${CONTAINER}"
+    sleep 5 # networking config needs time to setup correctly
 fi
 TARGET_DIR=${LXC_ROOT}/${CONTAINER}/rootfs
 
