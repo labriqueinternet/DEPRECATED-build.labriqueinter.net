@@ -188,11 +188,7 @@ function start_logwebserver() {
 function find_hypercubefile() {
   logfile ${FUNCNAME[0]}
 
-  local file_found=$(find /media/ -mindepth 2 -maxdepth 2 -regex '.*/install\.hypercube\(\.txt\)?$' | head -n1)
-
-  if [ -z "${file_found}" ]; then
-    file_found=$(find /root/ -mindepth 1 -maxdepth 1 -regex '.*/install\.hypercube\(\.txt\)?$' | head -n1)
-  fi
+  file_found=$(find /root/ -mindepth 1 -maxdepth 1 -regex '.*/install\.hypercube\(\.txt\)?$' | head -n1)
 
   if [ ! -z "${file_found}" ]; then
     info "HyperCube file found"
@@ -622,12 +618,6 @@ if [ -f /etc/yunohost/installed -a ! -f "${log_filepath}/enabled" ]; then
 
   exit 0
 fi
-
-info "===== Start HyperCube Service ====="
-info "Detecting USB sticks..."
-
-udisks-glue
-sleep 10
 
 set_logpermissions
 start_logwebserver
