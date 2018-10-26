@@ -81,7 +81,8 @@ EOT
     sleep 5
     LC_ALL=C LANGUAGE=C LANG=C sudo lxc-attach -P ${LXCPATH} -n ${LXCMASTER_NAME} -- apt-get update
     DEBIAN_FRONTEND=noninteractive LC_ALL=C LANGUAGE=C LANG=C sudo lxc-attach -P ${LXCPATH} -n ${LXCMASTER_NAME} -- apt -y --assume-yes --no-install-recommends install \
-    ca-certificates openssh-server ntp parted locales vim-nox bash-completion rng-tools wget
+    ca-certificates openssh-server ntp parted locales vim-nox bash-completion rng-tools wget \
+    gnupg2 python3 curl 'php-fpm|php5-fpm'
     sudo lxc-stop -P $LXCPATH -n $LXCMASTER_NAME
   fi
 }
