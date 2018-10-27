@@ -109,6 +109,53 @@ function yunohost_install() {
 function yunohost_post_install() {
   _lxc_exec "yunohost tools postinstall -d foo.bar.labriqueinter.net -p yunohost --ignore-dyndns --debug"
 }
+
+###.
+###' Create ISO images
+
+function _create_image_with_encrypted_fs() {
+  BOARD="${1}"
+  . ./build/config_board.sh
+  echo $FLASH_KERNEL > ${CONT_ROOTFS}/etc/flash-kernel/machine
+  _lxc_exec 'update-initramfs -u -k all'
+  ./build/create_device.sh -D img -s 1500 \
+   -t /srv/olinux/labriqueinternet_${FILE}_encryptedfs_"$(date '+%Y-%m-%d')"_${DEBIAN_RELEASE}${INSTALL_YUNOHOST_TESTING}.img \
+   -d ${CONT_ROOTFS} \
+   -b $BOARD
+
+  pushd /srv/olinux/
+  tar czf labriqueinternet_${FILE}_encryptedfs_"$(date '+%Y-%m-%d')"_${DEBIAN_RELEASE}${INSTALL_YUNOHOST_TESTING}.img{.tar.xz,}
+  popd
+}
+
+function _create_standard_image() {
+  # Switch to unencrypted root
+  echo 'LINUX_KERNEL_CMDLINE="console=tty0 hdmi.audio=EDID:0 disp.screen0_output_mode=EDID:1280x720p60 root=/dev/mmcblk0p1 rootwait sunxi_ve_mem_reserve=0 sunxi_g2d_mem_reserve=0 sunxi_no_mali_mem_reserve sunxi_fb_mem_reserve=0 panic=10 loglevel=6 consoleblank=0"' >  ${CONT_ROOTFS}/etc/default/flash-kernel
+  rm -f ${CONT_ROOTFS}/etc/crypttab
+  echo '/dev/mmcblk0p1      /     ext4    defaults        0       1' > ${CONT_ROOTFS}/etc/fstab
+
+  . ./build/config_board.sh
+  echo $FLASH_KERNEL > ${CONT_ROOTFS}/etc/flash-kernel/machine
+  _lxc_exec 'update-initramfs -u -k all'
+  ./build/create_device.sh -D img -s 1500 \
+   -t /srv/olinux/labriqueinternet_${FILE}_"$(date '+%Y-%m-%d')"_${DEBIAN_RELEASE}${INSTALL_YUNOHOST_TESTING}.img \
+   -d ${CONT_ROOTFS} \
+   -b $BOARD
+
+  pushd /srv/olinux/
+  tar czf labriqueinternet_${FILE}_"$(date '+%Y-%m-%d')"_${DEBIAN_RELEASE}${INSTALL_YUNOHOST_TESTING}.img{.tar.xz,}
+  popd
+}
+
+function create_images() {
+  if test "z${BUILD_ENCRYPTED_IMAGES}" = "zyes"
+  then
+  for BOARD in ${boardlist[@]}; do
+    _create_image_with_encrypted_fs "$BOARD"
+  done
+  fi
+}
+
 ###.
 
 # Launch the build process
