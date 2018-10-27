@@ -80,6 +80,10 @@ EOT
     sudo lxc-start -P $LXCPATH -n $LXCMASTER_NAME
     sleep 5
     LC_ALL=C LANGUAGE=C LANG=C sudo lxc-attach -P ${LXCPATH} -n ${LXCMASTER_NAME} -- apt-get update
+#    echo set locales/locales_to_be_generated en_US.UTF-8 | debconf-communicate
+#    echo set locales/default_environment_locale en_US.UTF-8 | debconf-communicate
+    LC_ALL=C LANGUAGE=C LANG=C sudo lxc-attach -P ${LXCPATH} -n ${LXCMASTER_NAME} -- locale-gen en_US.UTF-8
+    LC_ALL=C LANGUAGE=C LANG=C sudo lxc-attach -P ${LXCPATH} -n ${LXCMASTER_NAME} -- localedef -i en_US -f UTF-8 en_US.UTF-8
     DEBIAN_FRONTEND=noninteractive LC_ALL=C LANGUAGE=C LANG=C sudo lxc-attach -P ${LXCPATH} -n ${LXCMASTER_NAME} -- apt -y --assume-yes --no-install-recommends install \
     ca-certificates openssh-server ntp parted locales vim-nox bash-completion rng-tools wget \
     gnupg2 python3 curl 'php-fpm|php5-fpm'
