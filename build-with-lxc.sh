@@ -83,6 +83,8 @@ EOT
     DEBIAN_FRONTEND=noninteractive LC_ALL=C LANGUAGE=C LANG=C sudo lxc-attach -P ${LXCPATH} -n ${LXCMASTER_NAME} -- apt -y --assume-yes --no-install-recommends install \
     ca-certificates openssh-server ntp parted locales vim-nox bash-completion rng-tools wget \
     gnupg2 python3 curl 'php-fpm|php5-fpm'
+    LC_ALL=C LANGUAGE=C LANG=C sudo lxc-attach -P ${LXCPATH} -n ${LXCMASTER_NAME} -- apt -y --purge autoremove
+    LC_ALL=C LANGUAGE=C LANG=C sudo lxc-attach -P ${LXCPATH} -n ${LXCMASTER_NAME} -- apt -y clean
     sudo lxc-stop -P $LXCPATH -n $LXCMASTER_NAME
   fi
 }
