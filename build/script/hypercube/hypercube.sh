@@ -188,7 +188,15 @@ function start_logwebserver() {
 function find_hypercubefile() {
   logfile ${FUNCNAME[0]}
 
-  local file_found=$(find /media/ -mindepth 2 -maxdepth 2 -regex '.*/install\.hypercube\(\.txt\)?$' | head -n1)
+  info "Detecting USB sticks..."
+  
+  apt-get update -qq &>> $log_file
+  apt-get install -o Dpkg::Options::='--force-confold' -y --force-yes udisks2 udiskie ntfs-3g &>> $log_file || true
+  
+  udiskie-mount -a
+  sleep 10
+  
+  local file_found=$(find /media/ -mindepth 2 -maxdepth 3 -regex '.*/install\.hypercube\(\.txt\)?$' | head -n1)
 
   if [ -z "${file_found}" ]; then
     file_found=$(find /root/ -mindepth 1 -maxdepth 1 -regex '.*/install\.hypercube\(\.txt\)?$' | head -n1)
@@ -313,7 +321,16 @@ function deb_updatehosts() {
   cat /etc/hosts &>> $log_file
 }
 
-function deb_setlocales() {
+function deb_setlocales_and_tz() {
+  sed -i "s/^# fr_FR.UTF-8 UTF-8/fr_FR.UTF-8 UTF-8/" /etc/locale.gen
+  sed -i "s/^# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/" /etc/locale.gen
+
+  locale-gen en_US.UTF-8
+
+  # Update timezone
+  echo 'Europe/Paris' > $TARGET_DIR/etc/timezone
+  dpkg-reconfigure -f noninteractive tzdata
+  
   case "${settings[unix,lang]}" in
     fr) echo 'LC_ALL="fr_FR.UTF-8"' > /etc/environment ;;
     *) echo 'LC_ALL="en_US.UTF-8"' > /etc/environment
@@ -630,10 +647,6 @@ if [ -f /etc/yunohost/installed -a ! -f "${log_filepath}/enabled" ]; then
 fi
 
 info "===== Start HyperCube Service ====="
-info "Detecting USB sticks..."
-
-udisks-glue
-sleep 10
 
 set_logpermissions
 start_logwebserver
@@ -641,6 +654,14 @@ start_logwebserver
 # firstrun/secondrun not finished
 # should never happen
 if [ ! -f /etc/yunohost/cube_installed ]; then
+  info "Waiting for the end of the FS resizing..."
+
+  keep_debugging=false
+  exit 0
+fi
+
+# ARMbian not finished resizing
+if [ ! -f /var/run/resize2fs-reboot ]; then
   info "Waiting for the end of the FS resizing..."
 
   keep_debugging=false
