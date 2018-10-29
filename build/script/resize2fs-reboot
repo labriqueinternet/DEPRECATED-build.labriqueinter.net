@@ -1,7 +1,7 @@
 #!/bin/bash
 
 /bin/systemctl disable resize2fs-reboot
-
+touch /etc/yunohost/cube_installed
 if [ -f /var/run/resize2fs-reboot ]; then
     /sbin/reboot
 fi

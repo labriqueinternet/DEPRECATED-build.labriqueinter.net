@@ -44,8 +44,8 @@ EOT
 # Add firstrun and secondrun init script
 install -m 755 -o root -g root ${REP}/script/resize2fs-reboot $TARGET_DIR/usr/local/bin/
 install -m 755 -o root -g root ${REP}/script/hypercube/hypercube.sh $TARGET_DIR/usr/local/bin/
-install -m 444 -o root -g root ${REP}/script/resize2fs-reboot.service $TARGET_DIR/etc/systemd/system/
-install -m 444 -o root -g root ${REP}/script/hypercube/hypercube.service $TARGET_DIR/etc/systemd/system/
+install -m 444 -o root -g root ${REP}/script/resize2fs-reboot.service $TARGET_DIR/etc/systemd/system/multi-user.target.wants/
+install -m 444 -o root -g root ${REP}/script/hypercube/hypercube.service $TARGET_DIR/etc/systemd/system/multi-user.target.wants/
 ln -f -s '/etc/systemd/system/multi-user.target.wants/resize2fs-reboot.service' $TARGET_DIR/etc/systemd/system/resize2fs-reboot.service
 ln -f -s '/etc/systemd/system/multi-user.target.wants/hypercube.service' $TARGET_DIR/etc/systemd/system/hypercube.service
 

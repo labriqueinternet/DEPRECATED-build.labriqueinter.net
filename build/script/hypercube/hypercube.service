@@ -1,7 +1,7 @@
 [Unit]
 Description=Hypercube
 Requires=network.target
-After=network.target ynh-hotspot.service ynh-vpnclient.service resize2fs-reboot firstrun.service secondrun.service
+After=network.target dnsmasq.service ynh-hotspot.service ynh-vpnclient.service resize2fs-reboot.service firstrun.service secondrun.service
 
 [Service]
 Type=oneshot

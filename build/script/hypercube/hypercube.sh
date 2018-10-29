@@ -188,12 +188,15 @@ function start_logwebserver() {
 function find_hypercubefile() {
   logfile ${FUNCNAME[0]}
 
+  info "Install some dependencies..."
+  rm -rf /var/lib/apt/lists/*
+  apt-get clean &>> $log_file
+  apt-get update &>> $log_file
+
+  apt-get install -o Dpkg::Options::='--force-confold' -y --force-yes file udisks2 udiskie ntfs-3g jq  &>> $log_file || true
+  
   info "Detecting USB sticks..."
-  
-  apt-get update -qq &>> $log_file
-  apt-get install -o Dpkg::Options::='--force-confold' -y --force-yes udisks2 udiskie ntfs-3g &>> $log_file || true
-  
-  udiskie-mount -a
+  udiskie-mount -a || true
   sleep 10
   
   local file_found=$(find /media/ -mindepth 2 -maxdepth 3 -regex '.*/install\.hypercube\(\.txt\)?$' | head -n1)
@@ -280,8 +283,8 @@ function detect_wifidevice() {
       echo -e "\nSELECTED: ${ynh_wifi_device}" >> $log_file
 
       systemctl stop ynh-hotspot &>> $log_file
-      yunohost app setting hotspot wifi_device -v "${ynh_wifi_device}" --verbose &>> $log_file
-      yunohost app setting hotspot service_enabled -v 1 --verbose &>> $log_file
+      yunohost app setting hotspot wifi_device -v "${ynh_wifi_device}" --debug &>> $log_file
+      yunohost app setting hotspot service_enabled -v 1 --debug &>> $log_file
       systemctl start ynh-hotspot &>> $log_file
     else
       info "No wifi device detected :("
@@ -299,9 +302,10 @@ function deb_changepassword() {
 function deb_upgrade() {
   logfile ${FUNCNAME[0]}
 
-  apt-get update -qq &>> $log_file
+  apt-get update &>> $log_file
   apt-get dist-upgrade -o Dpkg::Options::='--force-confold' -y --force-yes &>> $log_file || true
   apt-get autoremove -y --force-yes &>> $log_file || true
+  if [ -f "/var/run/.reboot_required" ] ; then reboot ; fi
 }
 
 function deb_changehostname() {
@@ -340,14 +344,14 @@ function deb_setlocales_and_tz() {
 function ynh_postinstall() {
   logfile ${FUNCNAME[0]}
 
-  yunohost tools postinstall -d "${settings[yunohost,domain]}" -p "${settings[yunohost,password]}" --verbose |& logfilter
+  yunohost tools postinstall -d "${settings[yunohost,domain]}" -p "${settings[yunohost,password]}" --debug |& logfilter
 }
 
 function ynh_addappslist() {
   logfile ${FUNCNAME[0]}
 
-  yunohost app fetchlist -n labriqueinternet -u https://labriqueinter.net/apps/labriqueinternet.json --verbose &>> $log_file
-  yunohost app fetchlist --verbose &>> $log_file
+  yunohost app fetchlist -n labriqueinternet -u https://labriqueinter.net/apps/labriqueinternet.json --debug &>> $log_file
+  yunohost app fetchlist --debug &>> $log_file
 }
 
 function check_dyndns_list() {
@@ -391,20 +395,20 @@ function ynh_createuser() {
 
   yunohost user create "${settings[yunohost,user]}" -f "${settings[yunohost,user_firstname]}"\
     -l "${settings[yunohost,user_lastname]}" -m "${settings[yunohost,user]}@${settings[yunohost,domain]}"\
-    -q 0 -p "${settings[yunohost,user_password]}" --admin-password "${settings[yunohost,password]}" --verbose |& logfilter
+    -q 0 -p "${settings[yunohost,user_password]}" --admin-password "${settings[yunohost,password]}" --debug |& logfilter
 }
 
 function install_vpnclient() {
   logfile ${FUNCNAME[0]}
 
-  yunohost app install vpnclient --verbose\
+  yunohost app install vpnclient --debug\
     --args "domain=$(urlencode "${settings[yunohost,domain]}")&path=/vpnadmin" &>> $log_file
 }
 
 function install_hotspot() {
   logfile ${FUNCNAME[0]}
 
-  yunohost app install hotspot --verbose\
+  yunohost app install hotspot --debug\
     --args "domain=$(urlencode "${settings[yunohost,domain]}")&path=/wifiadmin&wifi_ssid=$(urlencode "${settings[hotspot,wifi_ssid]}")&wifi_passphrase=$(urlencode "${settings[hotspot,wifi_passphrase]}")&firmware_nonfree=$(urlencode "${settings[hotspot,firmware_nonfree]}")" |& logfilter
 }
 
@@ -412,7 +416,7 @@ function install_webmail() {
   logfile ${FUNCNAME[0]}
 
   yunohost app install roundcube\
-    --args "domain=$(urlencode "${settings[yunohost,domain]}")&path=/webmail&with_carddav=1" &>> $log_file || {
+    --args "domain=$(urlencode "${settings[yunohost,domain]}")&path=/webmail&with_carddav=1" --debug &>> $log_file || {
     warn "Roundcube installation failed"
   }
 }
@@ -420,34 +424,34 @@ function install_webmail() {
 function install_doctorcube() {
   logfile ${FUNCNAME[0]}
 
-  yunohost app install doctorcube --verbose &>> $log_file
+  yunohost app install doctorcube --debug &>> $log_file
 }
 
 function configure_hotspot() {
   logfile ${FUNCNAME[0]}
   local ynh_wifi_device=
 
-  yunohost app addaccess hotspot -u "${settings[yunohost,user]}" --verbose &>> $log_file
+  yunohost app addaccess hotspot -u "${settings[yunohost,user]}" --debug &>> $log_file
 
-  yunohost app setting hotspot ip6_dns0 -v "${settings[hotspot,ip6_dns0]}" --verbose &>> $log_file
-  yunohost app setting hotspot ip6_dns1 -v "${settings[hotspot,ip6_dns1]}" --verbose &>> $log_file
-  yunohost app setting hotspot ip4_dns0 -v "${settings[hotspot,ip4_dns0]}" --verbose &>> $log_file
-  yunohost app setting hotspot ip4_dns1 -v "${settings[hotspot,ip4_dns1]}" --verbose &>> $log_file
-  yunohost app setting hotspot ip4_nat_prefix -v "${settings[hotspot,ip4_nat_prefix]}" --verbose &>> $log_file
+  yunohost app setting hotspot ip6_dns0 -v "${settings[hotspot,ip6_dns0]}" --debug &>> $log_file
+  yunohost app setting hotspot ip6_dns1 -v "${settings[hotspot,ip6_dns1]}" --debug &>> $log_file
+  yunohost app setting hotspot ip4_dns0 -v "${settings[hotspot,ip4_dns0]}" --debug &>> $log_file
+  yunohost app setting hotspot ip4_dns1 -v "${settings[hotspot,ip4_dns1]}" --debug &>> $log_file
+  yunohost app setting hotspot ip4_nat_prefix -v "${settings[hotspot,ip4_nat_prefix]}" --debug &>> $log_file
 
   ynh_wifi_device=$(yunohost app setting hotspot wifi_device 2> /dev/null)
 
   if [ "${ynh_wifi_device}" == none ]; then
-    yunohost app setting hotspot service_enabled -v 1 --verbose &>> $log_file
+    yunohost app setting hotspot service_enabled -v 1 --debug &>> $log_file
   fi
 }
 
 function configure_vpnclient() {
   logfile ${FUNCNAME[0]}
 
-  yunohost app addaccess vpnclient -u "${settings[yunohost,user]}" --verbose &>> $log_file
+  yunohost app addaccess vpnclient -u "${settings[yunohost,user]}" --debug &>> $log_file
 
-  yunohost app setting vpnclient service_enabled -v 1 --verbose &>> $log_file
+  yunohost app setting vpnclient service_enabled -v 1 --debug &>> $log_file
   ynh-vpnclient-loadcubefile.sh -u "${settings[yunohost,user]}" -p "${settings[yunohost,user_password]}" -c "${tmp_dir}/config.cube" &>> $log_file || true
 }
 
@@ -582,7 +586,7 @@ function monitoring_yunohost() {
 
     date >> $tmplog
     echo -e "\n" >> $tmplog
-    yunohost tools diagnosis --verbose &>> $tmplog
+    yunohost tools diagnosis --debug &>> $tmplog
 
     mv $tmplog $log_file
     sleep 300
@@ -661,7 +665,7 @@ if [ ! -f /etc/yunohost/cube_installed ]; then
 fi
 
 # ARMbian not finished resizing
-if [ ! -f /var/run/resize2fs-reboot ]; then
+if [ -f /var/run/resize2fs-reboot ]; then
   info "Waiting for the end of the FS resizing..."
 
   keep_debugging=false
@@ -710,7 +714,7 @@ else
   deb_updatehosts
 
   info "Setting locales"
-  deb_setlocales
+  deb_setlocales_and_tz
 
   info "Upgrading Debian/YunoHost..."
   deb_upgrade
