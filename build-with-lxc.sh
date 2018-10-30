@@ -48,7 +48,7 @@ function _lxc_exec() {
 
 function build_lxc_master_if_needed() {
   mkdir -p "${LXCPATH}"
-  if ! lxc-ls -P ${LXCPATH} | grep "^${LXCMASTER_NAME}$"
+  if ! lxc-ls -P ${LXCPATH} -1 | grep "^${LXCMASTER_NAME}$"
   then
     # If btrfs is available, use it as a fast-cloning backend for LXC.
     fstype=$(df --output=fstype "${LXCPATH}" | tail -n 1)
