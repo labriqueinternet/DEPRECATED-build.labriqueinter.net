@@ -16,7 +16,7 @@ LXCMASTER_ROOTFS=${LXCPATH}/${LXCMASTER_NAME}/rootfs
 LOG_BUILD_LXC=/tmp/lxc-build.log
 
 # Human-readable log of the build process
-LOG=/tmp/yunobuild.log
+YUNOHOST_LOG=/tmp/yunobuild.log
 
 LXC_BRIDGE="ynhbuildbr0"
 
@@ -31,12 +31,11 @@ APT='DEBIAN_FRONTEND=noninteractive apt install -y --assume-yes --no-install-rec
 ###' Main function
 
 function main() {
-  set -x
-  spawn_temp_lxc
-  yunohost_install
-  yunohost_post_install
-  create_images
-  destroy_temp_lxc
+  spawn_temp_lxc         || die "Failed to create temporary LXC container."
+  yunohost_install       || die "Failed to install basic yunohost over Debian."
+  yunohost_post_install  || die "Failed to execute yunohost post-install."
+  create_images          || die "Failed to create images"
+  destroy_temp_lxc       || die "Failed to destroy the temporary LXC container"
 }
 
 ###.
@@ -166,6 +165,67 @@ function create_images() {
     fi
     _create_standard_image "$BOARD"
   done
+}
+
+###.
+###' HELPERS
+
+readonly normal=$(printf '\033[0m')
+readonly bold=$(printf '\033[1m')
+readonly faint=$(printf '\033[2m')
+readonly underline=$(printf '\033[4m')
+readonly negative=$(printf '\033[7m')
+readonly red=$(printf '\033[31m')
+readonly green=$(printf '\033[32m')
+readonly orange=$(printf '\033[33m')
+readonly blue=$(printf '\033[34m')
+readonly yellow=$(printf '\033[93m')
+readonly white=$(printf '\033[39m')
+
+function log()
+{
+  local level=${1}
+  local msg=${2}
+  printf "%-5s [$(date '+%Y-%m-%d %H:%M:%S')] %s\n" "${level}" "${msg}" >> ${YUNOHOST_LOG}
+  if [ "OK" = "${level}" ]; then
+    echo "[${bold}${green} ${level} ${normal}] ${msg}"
+  elif [ "INFO" = "${level}" ]; then
+    echo "[${bold}${blue}${level}${normal}] ${msg}"
+  elif [ "WARN" = "${level}" ]; then
+    echo "[${bold}${orange}${level}${normal}] ${msg}"
+  elif [ "FAIL" = "${level}" -o "ERROR" = "${level}" ]; then
+    echo "[${bold}${red}${level}${normal}] ${msg}"
+  fi
+}
+
+function success()
+{
+  local msg=${1}
+  log "OK" "${msg}"
+}
+
+function info()
+{
+  local msg=${1}
+  log "INFO" "${msg}"
+}
+
+function warn()
+{
+  local msg=${1}
+  log "WARN" "${msg}"
+}
+
+function error()
+{
+  local msg=${1}
+  log "ERROR" "${msg}"
+}
+
+function die() {
+    error "$1"
+    info "Installation logs are available in $YUNOHOST_LOG"
+    exit 1
 }
 
 ###.
