@@ -35,6 +35,7 @@ function main() {
   spawn_temp_lxc
   yunohost_install
   yunohost_post_install
+  create_images
   destroy_temp_lxc
 }
 
@@ -135,6 +136,7 @@ function _create_image_with_encrypted_fs() {
 }
 
 function _create_standard_image() {
+  BOARD="${1}"
   # Switch to unencrypted root
   echo 'LINUX_KERNEL_CMDLINE="console=tty0 hdmi.audio=EDID:0 disp.screen0_output_mode=EDID:1280x720p60 root=/dev/mmcblk0p1 rootwait sunxi_ve_mem_reserve=0 sunxi_g2d_mem_reserve=0 sunxi_no_mali_mem_reserve sunxi_fb_mem_reserve=0 panic=10 loglevel=6 consoleblank=0"' >  ${CONT_ROOTFS}/etc/default/flash-kernel
   rm -f ${CONT_ROOTFS}/etc/crypttab
@@ -154,17 +156,21 @@ function _create_standard_image() {
 }
 
 function create_images() {
-  if test "z${BUILD_ENCRYPTED_IMAGES}" = "zyes"
-  then
-  for BOARD in ${boardlist[@]}; do
-    _create_image_with_encrypted_fs "$BOARD"
+#  boardlist=( 'a20lime' 'a20lime2' )
+  boardlist=( 'a20lime2' )
+  for BOARD in ${boardlist[@]}
+  do
+    if test "z${BUILD_ENCRYPTED_IMAGES}" = "zyes"
+    then
+      _create_image_with_encrypted_fs "$BOARD"
+    fi
+    _create_standard_image "$BOARD"
   done
-  fi
 }
 
 ###.
 
 # Launch the build process
-main
+main "$@"
 
 # vim: foldmethod=marker foldmarker=###',###.
