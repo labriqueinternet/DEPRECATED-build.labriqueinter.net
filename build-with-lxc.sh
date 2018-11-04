@@ -1,5 +1,7 @@
 #! /bin/bash
 
+export TERM="xterm-256color"
+
 ###' Global variables
 
 LXCPATH=/srv/lxc
@@ -124,7 +126,7 @@ function _create_image_with_encrypted_fs() {
   . ./build/config_board.sh
   echo $FLASH_KERNEL > ${CONT_ROOTFS}/etc/flash-kernel/machine
   _lxc_exec 'update-initramfs -u -k all'
-  ./build/create_device.sh -D img -s 1500 \
+  ./build/create_device.sh -D img -s 1800 \
    -t /srv/olinux/labriqueinternet_${FILE}_encryptedfs_"$(date '+%Y-%m-%d')"_${DEBIAN_RELEASE}${INSTALL_YUNOHOST_TESTING}.img \
    -d ${CONT_ROOTFS} \
    -b $BOARD
@@ -142,9 +144,10 @@ function _create_standard_image() {
   echo '/dev/mmcblk0p1      /     ext4    defaults        0       1' > ${CONT_ROOTFS}/etc/fstab
 
   . ./build/config_board.sh
+  mkdir -p ${CONT_ROOTFS}/etc/flash-kernel
   echo $FLASH_KERNEL > ${CONT_ROOTFS}/etc/flash-kernel/machine
   _lxc_exec 'update-initramfs -u -k all'
-  ./build/create_device.sh -D img -s 1500 \
+  ./build/create_device.sh -D img -s 1800 \
    -t /srv/olinux/labriqueinternet_${FILE}_"$(date '+%Y-%m-%d')"_${DEBIAN_RELEASE}${INSTALL_YUNOHOST_TESTING}.img \
    -d ${CONT_ROOTFS} \
    -b $BOARD
