@@ -329,7 +329,7 @@ function ynh_postinstall() {
 function ynh_addappslist() {
   logfile ${FUNCNAME[0]}
 
-  yunohost app fetchlist -n labriqueinternet -u https://labriqueinter.net/apps/labriqueinternet.json --verbose &>> $log_file
+  yunohost app fetchlist -n labriqueinternet -u https://app.yunohost.org/community.json --verbose &>> $log_file
   yunohost app fetchlist --verbose &>> $log_file
 }
 
@@ -398,12 +398,6 @@ function install_webmail() {
     --args "domain=$(urlencode "${settings[yunohost,domain]}")&path=/webmail&with_carddav=1" &>> $log_file || {
     warn "Roundcube installation failed"
   }
-}
-
-function install_doctorcube() {
-  logfile ${FUNCNAME[0]}
-
-  yunohost app install doctorcube --verbose &>> $log_file
 }
 
 function configure_hotspot() {
@@ -727,9 +721,6 @@ else
   
   info "Installing Wifi Hotspot..."
   install_hotspot
-
-  info "Installing DoctorCube..."
-  install_doctorcube
 
   info "Installing Roundcube Webmail..."
   install_webmail || true
