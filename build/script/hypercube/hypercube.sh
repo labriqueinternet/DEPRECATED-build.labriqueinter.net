@@ -421,12 +421,6 @@ function install_webmail() {
   }
 }
 
-function install_doctorcube() {
-  logfile ${FUNCNAME[0]}
-
-  yunohost app install doctorcube --debug &>> $log_file
-}
-
 function configure_hotspot() {
   logfile ${FUNCNAME[0]}
   local ynh_wifi_device=
@@ -752,9 +746,6 @@ else
   
   info "Installing Wifi Hotspot..."
   install_hotspot
-
-  info "Installing DoctorCube..."
-  install_doctorcube
 
   info "Installing Roundcube Webmail..."
   install_webmail || true
