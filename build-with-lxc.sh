@@ -5,6 +5,7 @@ export TERM="xterm-256color"
 ###' Global variables
 
 LXCPATH=/srv/lxc
+OUTPUTPATH=/srv/olinux
 
 # Debian distribution 
 DEBIAN_RELEASE=stretch
@@ -127,11 +128,11 @@ function _create_image_with_encrypted_fs() {
   echo $FLASH_KERNEL > ${CONT_ROOTFS}/etc/flash-kernel/machine
   _lxc_exec 'update-initramfs -u -k all'
   ./build/create_device.sh -D img -s 1800 \
-   -t /srv/olinux/labriqueinternet_${FILE}_encryptedfs_"$(date '+%Y-%m-%d')"_${DEBIAN_RELEASE}${INSTALL_YUNOHOST_TESTING}.img \
+   -t ${OUTPUTPATH}/labriqueinternet_${FILE}_encryptedfs_"$(date '+%Y-%m-%d')"_${DEBIAN_RELEASE}${INSTALL_YUNOHOST_TESTING}.img \
    -d ${CONT_ROOTFS} \
    -b $BOARD
 
-  pushd /srv/olinux/
+  pushd ${OUTPUTPATH}/
   tar czf labriqueinternet_${FILE}_encryptedfs_"$(date '+%Y-%m-%d')"_${DEBIAN_RELEASE}${INSTALL_YUNOHOST_TESTING}.img{.tar.xz,}
   popd
 }
@@ -148,16 +149,17 @@ function _create_standard_image() {
   echo $FLASH_KERNEL > ${CONT_ROOTFS}/etc/flash-kernel/machine
   _lxc_exec 'update-initramfs -u -k all'
   ./build/create_device.sh -D img -s 1800 \
-   -t /srv/olinux/labriqueinternet_${FILE}_"$(date '+%Y-%m-%d')"_${DEBIAN_RELEASE}${INSTALL_YUNOHOST_TESTING}.img \
+   -t ${OUTPUTPATH}/labriqueinternet_${FILE}_"$(date '+%Y-%m-%d')"_${DEBIAN_RELEASE}${INSTALL_YUNOHOST_TESTING}.img \
    -d ${CONT_ROOTFS} \
    -b $BOARD
 
-  pushd /srv/olinux/
+  pushd ${OUTPUTPATH}/
   tar czf labriqueinternet_${FILE}_"$(date '+%Y-%m-%d')"_${DEBIAN_RELEASE}${INSTALL_YUNOHOST_TESTING}.img{.tar.xz,}
   popd
 }
 
 function create_images() {
+  mkdir -p ${OUTPUTPATH}
 #  boardlist=( 'a20lime' 'a20lime2' )
   boardlist=( 'a20lime2' )
   for BOARD in ${boardlist[@]}
