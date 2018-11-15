@@ -24,7 +24,7 @@ YUNOHOST_LOG=/tmp/yunobuild.log
 LXC_BRIDGE="ynhbuildbr0"
 
 # Name of the temporary container
-CONT=${LXCMASTER_NAME}-$(date +%Y%m%d-%H%M)
+CONT=tmp-${LXCMASTER_NAME}-$(date +%Y%m%d-%H%M)
 CONT_ROOTFS=${LXCPATH}/${CONT}/rootfs
 
 # APT command
@@ -58,7 +58,7 @@ function build_lxc_master_if_needed() {
     if [ "$fstype" != "btrfs" ]; then
       fstype="dir"
     fi
-    sudo lxc-create -P $LXCPATH -B $fstype -n $LXCMASTER_NAME -t debian -- -r $DEBIAN_RELEASE
+    LC_ALL=C sudo lxc-create -P $LXCPATH -B $fstype -n $LXCMASTER_NAME -t debian -- -r $DEBIAN_RELEASE
     sed -i "s/^lxc.network.type.*$/lxc.network.type = veth\nlxc.network.flags = up\nlxc.network.link = $LXC_BRIDGE\nlxc.network.name = eth0\nlxc.network.hwaddr = 00:FF:AA:BB:CC:01/" ${LXCPATH}/${LXCMASTER_NAME}/config
 
     # Configure debian apt repository
