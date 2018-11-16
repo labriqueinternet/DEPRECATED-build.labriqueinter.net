@@ -15,13 +15,11 @@ INSTALL_YUNOHOST_DIST='stable'
 LXCMASTER_NAME=yuno${DEBIAN_RELEASE}
 LXCMASTER_ROOTFS=${LXCPATH}/${LXCMASTER_NAME}/rootfs
 
-# Log file
-LOG_BUILD_LXC=/tmp/lxc-build.log
-
 # Human-readable log of the build process
 YUNOHOST_LOG=/tmp/yunobuild.log
 
 LXC_BRIDGE="ynhbuildbr0"
+LXC_SUBNET="10.44.0"
 
 # Name of the temporary container
 CONT=tmp-${LXCMASTER_NAME}-$(date +%Y%m%d-%H%M)
@@ -34,6 +32,7 @@ APT='DEBIAN_FRONTEND=noninteractive apt install -y --assume-yes --no-install-rec
 ###' Main function
 
 function main() {
+  check_prerequisites    || die "Missing pre-requisites"
   spawn_temp_lxc         || die "Failed to create temporary LXC container."
   yunohost_install       || die "Failed to install basic yunohost over Debian."
   yunohost_post_install  || die "Failed to execute yunohost post-install."
@@ -87,8 +86,10 @@ EOT
 #    echo set locales/default_environment_locale en_US.UTF-8 | debconf-communicate
     LC_ALL=C LANGUAGE=C LANG=C sudo lxc-attach -P ${LXCPATH} -n ${LXCMASTER_NAME} -- locale-gen en_US.UTF-8
     LC_ALL=C LANGUAGE=C LANG=C sudo lxc-attach -P ${LXCPATH} -n ${LXCMASTER_NAME} -- localedef -i en_US -f UTF-8 en_US.UTF-8
+    # Let's install right now some packages that will be needed by yunohost install later
     DEBIAN_FRONTEND=noninteractive LC_ALL=C LANGUAGE=C LANG=C sudo lxc-attach -P ${LXCPATH} -n ${LXCMASTER_NAME} -- apt -y --assume-yes --no-install-recommends install \
-    ca-certificates openssh-server ntp parted locales vim-nox bash-completion rng-tools wget \
+    apt-utils libtext-iconv-perl lsb-release whiptail apt-transport-https \
+    ca-certificates openssh-server ntp parted locales vim-nox bash-completion wget \
     gnupg2 python3 curl 'php-fpm|php5-fpm'
     LC_ALL=C LANGUAGE=C LANG=C sudo lxc-attach -P ${LXCPATH} -n ${LXCMASTER_NAME} -- apt -y --purge autoremove
     LC_ALL=C LANGUAGE=C LANG=C sudo lxc-attach -P ${LXCPATH} -n ${LXCMASTER_NAME} -- apt -y clean
@@ -108,15 +109,63 @@ function destroy_temp_lxc() {
   sudo lxc-destroy -P $LXCPATH -n $CONT
 }
 
+function check_prerequisites() {
+  if [ "$(id -u)" != "0" ]; then
+    echo "This script must be run as root" 1>&2
+    exit 1
+  fi
+
+
+  # We need to make sure that lxc-net will be able to create
+  # a new network interface and that dnsmasq will be able to
+  # listen on port 53
+  if $(netstat -lptun | grep -q '0.0.0.0:53\b')
+  then
+    echo "Problem. Make sure that port 53 is not already used.
+You probably should run this command first: systemctl stop dnsmasq.service" >&2
+    netstat -lptun | grep :53
+    exit 2
+  fi
+  cat <<EOF > /etc/default/lxc-net
+USE_LXC_BRIDGE="true"
+LXC_BRIDGE="${LXC_BRIDGE}"
+LXC_ADDR="${LXC_SUBNET}.254"
+LXC_NETMASK="255.255.255.0"
+LXC_NETWORK="${LXC_SUBNET}.0/24"
+LXC_DHCP_RANGE="${LXC_SUBNET}.10,${LXC_SUBNET}.99"
+LXC_DHCP_MAX="50"
+LXC_DHCP_CONFILE=""
+LXC_DOMAIN="yunobuild.lan"
+
+# Dirty hack by pitchum
+LXC_IPV6_ARG="--all-servers"
+EOF
+  systemctl restart lxc-net
+
+  # Some packages that will be needed at the end of the process
+  bins=(dd parted mkfs.ext4 zerofree losetup tune2fs)
+  for i in "${bins[@]}"; do
+    if ! which "${i}" &> /dev/null; then
+      echo >&2 "${i} command is required"
+      exit 3
+    fi
+  done
+
+}
+
 ###.
 ###' Yunohost install & post-install
 
 function yunohost_install() {
+  _lxc_exec "touch /var/log/auth.log" # Workaround for fail2ban postinstall failure when auth.log is missing
+  _lxc_exec "apt -y install fail2ban"
   _lxc_exec "wget -O /tmp/install_yunohost https://install.yunohost.org/${DEBIAN_RELEASE} && chmod +x /tmp/install_yunohost"
   _lxc_exec "cd /tmp/ && ./install_yunohost -a -d ${INSTALL_YUNOHOST_DIST}"
 }
 function yunohost_post_install() {
   _lxc_exec "yunohost tools postinstall -d foo.bar.labriqueinter.net -p yunohost --ignore-dyndns --debug"
+  _lxc_exec "apt -y --purge autoremove"
+  _lxc_exec "apt -y clean"
 }
 
 ###.
