@@ -329,7 +329,7 @@ function ynh_postinstall() {
 function ynh_addappslist() {
   logfile ${FUNCNAME[0]}
 
-  yunohost app fetchlist -n labriqueinternet -u https://app.yunohost.org/community.json --verbose &>> $log_file
+  yunohost app fetchlist -n community -u https://app.yunohost.org/community.json --verbose &>> $log_file
   yunohost app fetchlist --verbose &>> $log_file
 }
 
