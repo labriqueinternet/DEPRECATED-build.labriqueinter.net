@@ -7,7 +7,7 @@ export TERM="xterm-256color"
 LXCPATH=/srv/lxc
 OUTPUTPATH=/srv/olinux
 
-# Debian distribution 
+# Debian distribution
 DEBIAN_RELEASE=stretch
 INSTALL_YUNOHOST_DIST='stable'
 
@@ -34,6 +34,7 @@ APT='DEBIAN_FRONTEND=noninteractive apt install -y --assume-yes --no-install-rec
 function main() {
   check_prerequisites    || die "Missing pre-requisites"
   spawn_temp_lxc         || die "Failed to create temporary LXC container."
+  configure_cube         || die "Failed to configure the InternetCube system."
   yunohost_install       || die "Failed to install basic yunohost over Debian."
   yunohost_post_install  || die "Failed to execute yunohost post-install."
   create_images          || die "Failed to create images"
@@ -151,6 +152,93 @@ EOF
     fi
   done
 
+}
+
+###.
+###' Configure Cube Scripts
+
+function configure_dhcp() {
+  # Use dhcp on boot
+  cat <<EOT > $TARGET_DIR/etc/network/interfaces
+auto lo
+iface lo inet loopback
+
+auto eth0
+allow-hotplug eth0
+iface eth0 inet dhcp
+  post-up ip a a fe80::42:babe/128 dev eth0
+
+auto usb0
+allow-hotplug usb0
+iface usb0 inet dhcp
+EOT
+}
+
+function configure_misc (){
+  # flash media tunning
+  if [ -f "$TARGET_DIR/etc/default/tmpfs" ]; then
+    sed -e 's/#RAMTMP=no/RAMTMP=yes/g' -i $TARGET_DIR/etc/default/tmpfs
+    sed -e 's/#RUN_SIZE=10%/RUN_SIZE=128M/g' -i $TARGET_DIR/etc/default/tmpfs
+    sed -e 's/#LOCK_SIZE=/LOCK_SIZE=/g' -i $TARGET_DIR/etc/default/tmpfs
+    sed -e 's/#SHM_SIZE=/SHM_SIZE=128M/g' -i $TARGET_DIR/etc/default/tmpfs
+    sed -e 's/#TMP_SIZE=/TMP_SIZE=1G/g' -i $TARGET_DIR/etc/default/tmpfs
+  fi
+
+  # Generate locales
+  sed -i "s/^# fr_FR.UTF-8 UTF-8/fr_FR.UTF-8 UTF-8/" $TARGET_DIR/etc/locale.gen
+  sed -i "s/^# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/" $TARGET_DIR/etc/locale.gen
+  _lxc_exec "locale-gen en_US.UTF-8"
+
+  # Update timezone
+  echo 'Europe/Paris' > $TARGET_DIR/etc/timezone
+  _lxc_exec "dpkg-reconfigure -f noninteractive tzdata"
+
+  # Add fstab for root
+  _lxc_exec "echo '/dev/mmcblk0p1 / ext4  defaults    0   1' >> /etc/fstab"
+
+  # Configure tty
+  cat <<EOT > $TARGET_DIR/etc/init/ttyS0.conf
+start on stopped rc RUNLEVEL=[2345]
+stop on runlevel [!2345]
+
+respawn
+exec /sbin/getty --noclear 115200 ttyS0
+EOT
+  _lxc_exec 'cp /lib/systemd/system/serial-getty@.service /etc/systemd/system/getty.target.wants/serial-getty@ttyS0.service'
+  _lxc_exec 'sed -e s/"--keep-baud 115200,38400,9600"/"-L 115200"/g -i /etc/systemd/system/getty.target.wants/serial-getty@ttyS0.service'
+
+  # Configure SSH
+  _lxc_exec "sed -i 's/PermitRootLogin without-password/PermitRootLogin yes/' /etc/ssh/sshd_config"
+
+  # Good right on some directories
+  _lxc_exec 'chmod 1777 /tmp/'
+  _lxc_exec 'chgrp mail /var/mail/'
+  _lxc_exec 'chmod g+w /var/mail/'
+  _lxc_exec 'chmod g+s /var/mail/'
+
+  # Add firstrun and secondrun init script
+  install -m 755 -o root -g root build/script/firstrun $TARGET_DIR/usr/local/bin/
+  install -m 755 -o root -g root build/script/secondrun $TARGET_DIR/usr/local/bin/
+  install -m 755 -o root -g root build/script/hypercube/hypercube.sh $TARGET_DIR/usr/local/bin/
+  install -m 444 -o root -g root build/script/firstrun.service $TARGET_DIR/etc/systemd/system/
+  install -m 444 -o root -g root build/script/secondrun.service $TARGET_DIR/etc/systemd/system/
+  install -m 444 -o root -g root build/script/hypercube/hypercube.service $TARGET_DIR/etc/systemd/system/
+  _lxc_exec "/bin/systemctl daemon-reload >> /dev/null"
+  _lxc_exec "/bin/systemctl enable firstrun >> /dev/null"
+  _lxc_exec "/bin/systemctl enable hypercube >> /dev/null"
+
+  # Add hypercube scripts
+  mkdir -p $TARGET_DIR/var/log/hypercube
+  install -m 444 -o root -g root build/script/hypercube/install.html $TARGET_DIR/var/log/hypercube/
+
+  # Upgrade Packages
+  _lxc_exec 'apt-get update'
+  _lxc_exec 'apt-get upgrade -y --force-yes'
+}
+
+function configure_cube(){
+  configure_dhcp        || die "Failed to configure DHCP."
+  configure_misc        || die "Failed to configure misc configurations."
 }
 
 ###.
