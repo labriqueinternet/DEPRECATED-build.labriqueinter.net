@@ -65,11 +65,11 @@ function build_lxc_master_if_needed() {
     sed -i "s/^lxc.network.type.*$/lxc.network.type = veth\nlxc.network.flags = up\nlxc.network.link = $LXC_BRIDGE\nlxc.network.name = eth0\nlxc.network.hwaddr = 00:FF:AA:BB:CC:01/" ${LXCPATH}/${LXCMASTER_NAME}/config
 
     # Configure debian apt repository
-    cat <<EOT > $LXCMASTER_ROOTFS/etc/apt/sources.list
+    cat <<EOT > $CONT_ROOTFS/etc/apt/sources.list
 deb http://ftp.fr.debian.org/debian $DEBIAN_RELEASE main contrib non-free
 deb http://security.debian.org/ $DEBIAN_RELEASE/updates main contrib non-free
 EOT
-    cat <<EOT > $LXCMASTER_ROOTFS/etc/apt/apt.conf.d/71-no-recommends
+    cat <<EOT > $CONT_ROOTFS/etc/apt/apt.conf.d/71-no-recommends
 APT::Install-Suggests "0";
 // We're too shy to disable recommends globally in yunohost
 // because apps packagers probably rely on recommended packages
@@ -78,7 +78,7 @@ APT::Install-Suggests "0";
 EOT
 
     if [ ${APTCACHER} ] ; then
-      cat <<EOT > $LXCMASTER_ROOTFS/etc/apt/apt.conf.d/01proxy
+      cat <<EOT > $CONT_ROOTFS/etc/apt/apt.conf.d/01proxy
 Acquire::http::Proxy "http://${APTCACHER}:3142";
 EOT
     fi
@@ -166,7 +166,7 @@ EOF
 
 function configure_dhcp() {
   # Use dhcp on boot
-  cat <<EOT > $LXCMASTER_ROOTFS/etc/network/interfaces
+  cat <<EOT > $CONT_ROOTFS/etc/network/interfaces
 auto lo
 iface lo inet loopback
 
@@ -183,28 +183,28 @@ EOT
 
 function configure_misc (){
   # flash media tunning
-  if [ -f "$LXCMASTER_ROOTFS/etc/default/tmpfs" ]; then
-    sed -e 's/#RAMTMP=no/RAMTMP=yes/g' -i $LXCMASTER_ROOTFS/etc/default/tmpfs
-    sed -e 's/#RUN_SIZE=10%/RUN_SIZE=128M/g' -i $LXCMASTER_ROOTFS/etc/default/tmpfs
-    sed -e 's/#LOCK_SIZE=/LOCK_SIZE=/g' -i $LXCMASTER_ROOTFS/etc/default/tmpfs
-    sed -e 's/#SHM_SIZE=/SHM_SIZE=128M/g' -i $LXCMASTER_ROOTFS/etc/default/tmpfs
-    sed -e 's/#TMP_SIZE=/TMP_SIZE=1G/g' -i $LXCMASTER_ROOTFS/etc/default/tmpfs
+  if [ -f "$CONT_ROOTFS/etc/default/tmpfs" ]; then
+    sed -e 's/#RAMTMP=no/RAMTMP=yes/g' -i $CONT_ROOTFS/etc/default/tmpfs
+    sed -e 's/#RUN_SIZE=10%/RUN_SIZE=128M/g' -i $CONT_ROOTFS/etc/default/tmpfs
+    sed -e 's/#LOCK_SIZE=/LOCK_SIZE=/g' -i $CONT_ROOTFS/etc/default/tmpfs
+    sed -e 's/#SHM_SIZE=/SHM_SIZE=128M/g' -i $CONT_ROOTFS/etc/default/tmpfs
+    sed -e 's/#TMP_SIZE=/TMP_SIZE=1G/g' -i $CONT_ROOTFS/etc/default/tmpfs
   fi
 
   # Generate locales
-  sed -i "s/^# fr_FR.UTF-8 UTF-8/fr_FR.UTF-8 UTF-8/" $LXCMASTER_ROOTFS/etc/locale.gen
-  sed -i "s/^# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/" $LXCMASTER_ROOTFS/etc/locale.gen
+  sed -i "s/^# fr_FR.UTF-8 UTF-8/fr_FR.UTF-8 UTF-8/" $CONT_ROOTFS/etc/locale.gen
+  sed -i "s/^# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/" $CONT_ROOTFS/etc/locale.gen
   _lxc_exec "locale-gen en_US.UTF-8"
 
   # Update timezone
-  echo 'Europe/Paris' > $LXCMASTER_ROOTFS/etc/timezone
+  echo 'Europe/Paris' > $CONT_ROOTFS/etc/timezone
   _lxc_exec "dpkg-reconfigure -f noninteractive tzdata"
 
   # Add fstab for root
   _lxc_exec "echo '/dev/mmcblk0p1 / ext4  defaults    0   1' >> /etc/fstab"
 
   # Configure tty
-  cat <<EOT > $LXCMASTER_ROOTFS/etc/init/ttyS0.conf
+  cat <<EOT > $CONT_ROOTFS/etc/init/ttyS0.conf
 start on stopped rc RUNLEVEL=[2345]
 stop on runlevel [!2345]
 
@@ -224,19 +224,19 @@ EOT
   _lxc_exec 'chmod g+s /var/mail/'
 
   # Add firstrun and secondrun init script
-  install -m 755 -o root -g root build/script/firstrun $LXCMASTER_ROOTFS/usr/local/bin/
-  install -m 755 -o root -g root build/script/secondrun $LXCMASTER_ROOTFS/usr/local/bin/
-  install -m 755 -o root -g root build/script/hypercube/hypercube.sh $LXCMASTER_ROOTFS/usr/local/bin/
-  install -m 444 -o root -g root build/script/firstrun.service $LXCMASTER_ROOTFS/etc/systemd/system/
-  install -m 444 -o root -g root build/script/secondrun.service $LXCMASTER_ROOTFS/etc/systemd/system/
-  install -m 444 -o root -g root build/script/hypercube/hypercube.service $LXCMASTER_ROOTFS/etc/systemd/system/
+  install -m 755 -o root -g root build/script/firstrun $CONT_ROOTFS/usr/local/bin/
+  install -m 755 -o root -g root build/script/secondrun $CONT_ROOTFS/usr/local/bin/
+  install -m 755 -o root -g root build/script/hypercube/hypercube.sh $CONT_ROOTFS/usr/local/bin/
+  install -m 444 -o root -g root build/script/firstrun.service $CONT_ROOTFS/etc/systemd/system/
+  install -m 444 -o root -g root build/script/secondrun.service $CONT_ROOTFS/etc/systemd/system/
+  install -m 444 -o root -g root build/script/hypercube/hypercube.service $CONT_ROOTFS/etc/systemd/system/
   _lxc_exec "/bin/systemctl daemon-reload >> /dev/null"
   _lxc_exec "/bin/systemctl enable firstrun >> /dev/null"
   _lxc_exec "/bin/systemctl enable hypercube >> /dev/null"
 
   # Add hypercube scripts
-  mkdir -p $LXCMASTER_ROOTFS/var/log/hypercube
-  install -m 444 -o root -g root build/script/hypercube/install.html $LXCMASTER_ROOTFS/var/log/hypercube/
+  mkdir -p $CONT_ROOTFS/var/log/hypercube
+  install -m 444 -o root -g root build/script/hypercube/install.html $CONT_ROOTFS/var/log/hypercube/
 
   # Upgrade Packages
   _lxc_exec 'apt-get update'
