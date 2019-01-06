@@ -65,11 +65,11 @@ function build_lxc_master_if_needed() {
     sed -i "s/^lxc.network.type.*$/lxc.network.type = veth\nlxc.network.flags = up\nlxc.network.link = $LXC_BRIDGE\nlxc.network.name = eth0\nlxc.network.hwaddr = 00:FF:AA:BB:CC:01/" ${LXCPATH}/${LXCMASTER_NAME}/config
 
     # Configure debian apt repository
-    cat <<EOT > $CONT_ROOTFS/etc/apt/sources.list
+    cat <<EOT > $LXCMASTER_ROOTFS/etc/apt/sources.list
 deb http://ftp.fr.debian.org/debian $DEBIAN_RELEASE main contrib non-free
 deb http://security.debian.org/ $DEBIAN_RELEASE/updates main contrib non-free
 EOT
-    cat <<EOT > $CONT_ROOTFS/etc/apt/apt.conf.d/71-no-recommends
+    cat <<EOT > $LXCMASTER_ROOTFS/etc/apt/apt.conf.d/71-no-recommends
 APT::Install-Suggests "0";
 // We're too shy to disable recommends globally in yunohost
 // because apps packagers probably rely on recommended packages
@@ -78,7 +78,7 @@ APT::Install-Suggests "0";
 EOT
 
     if [ ${APTCACHER} ] ; then
-      cat <<EOT > $CONT_ROOTFS/etc/apt/apt.conf.d/01proxy
+      cat <<EOT > $LXCMASTER_ROOTFS/etc/apt/apt.conf.d/01proxy
 Acquire::http::Proxy "http://${APTCACHER}:3142";
 EOT
     fi
