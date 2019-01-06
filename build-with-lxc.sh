@@ -284,6 +284,12 @@ function _create_standard_image() {
   . ./build/config_board.sh
   mkdir -p ${CONT_ROOTFS}/etc/flash-kernel
   echo $FLASH_KERNEL > ${CONT_ROOTFS}/etc/flash-kernel/machine
+
+  # install boot files and tools
+  _lxc_exec "DEBIAN_FRONTEND=noninteractive $APT linux-image-armmp flash-kernel u-boot-tools initramfs-tools"
+  _lxc_exec "wget -P /tmp/ https://repo.labriqueinter.net/u-boot/u-boot-sunxi_latest_armhf.deb"
+  _lxc_exec "dpkg -i /tmp/u-boot-sunxi_latest_armhf.deb"
+
   _lxc_exec 'update-initramfs -u -k all'
   ./build/create_device.sh -D img -s 1800 \
    -t ${OUTPUTPATH}/labriqueinternet_${FILE}_"$(date '+%Y-%m-%d')"_${DEBIAN_RELEASE}${INSTALL_YUNOHOST_TESTING}.img \
