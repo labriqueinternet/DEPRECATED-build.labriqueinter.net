@@ -1,5 +1,8 @@
 #! /bin/bash
 
+set -e
+set -x
+
 export TERM="xterm-256color"
 
 ###' Global variables
@@ -36,7 +39,7 @@ function main() {
   spawn_temp_lxc         || die "Failed to create temporary LXC container."
   configure_cube         || die "Failed to configure the InternetCube system."
   yunohost_install       || die "Failed to install basic yunohost over Debian."
-  yunohost_post_install  || die "Failed to execute yunohost post-install."
+  #yunohost_post_install  || die "Failed to execute yunohost post-install."
   create_images          || die "Failed to create images"
   destroy_temp_lxc       || die "Failed to destroy the temporary LXC container"
 }
@@ -99,6 +102,8 @@ EOT
 }
 
 function spawn_temp_lxc() {
+  info "Spawning Temp LXC."
+
   build_lxc_master_if_needed
   sudo lxc-copy -P $LXCPATH -n $LXCMASTER_NAME -N $CONT
   sudo lxc-start -P $LXCPATH -n $CONT
@@ -111,6 +116,8 @@ function destroy_temp_lxc() {
 }
 
 function check_prerequisites() {
+  info "Checking Prerequisites."
+
   if [ "$(id -u)" != "0" ]; then
     echo "This script must be run as root" 1>&2
     exit 1
@@ -159,7 +166,7 @@ EOF
 
 function configure_dhcp() {
   # Use dhcp on boot
-  cat <<EOT > $TARGET_DIR/etc/network/interfaces
+  cat <<EOT > $LXCMASTER_ROOTFS/etc/network/interfaces
 auto lo
 iface lo inet loopback
 
@@ -176,28 +183,28 @@ EOT
 
 function configure_misc (){
   # flash media tunning
-  if [ -f "$TARGET_DIR/etc/default/tmpfs" ]; then
-    sed -e 's/#RAMTMP=no/RAMTMP=yes/g' -i $TARGET_DIR/etc/default/tmpfs
-    sed -e 's/#RUN_SIZE=10%/RUN_SIZE=128M/g' -i $TARGET_DIR/etc/default/tmpfs
-    sed -e 's/#LOCK_SIZE=/LOCK_SIZE=/g' -i $TARGET_DIR/etc/default/tmpfs
-    sed -e 's/#SHM_SIZE=/SHM_SIZE=128M/g' -i $TARGET_DIR/etc/default/tmpfs
-    sed -e 's/#TMP_SIZE=/TMP_SIZE=1G/g' -i $TARGET_DIR/etc/default/tmpfs
+  if [ -f "$LXCMASTER_ROOTFS/etc/default/tmpfs" ]; then
+    sed -e 's/#RAMTMP=no/RAMTMP=yes/g' -i $LXCMASTER_ROOTFS/etc/default/tmpfs
+    sed -e 's/#RUN_SIZE=10%/RUN_SIZE=128M/g' -i $LXCMASTER_ROOTFS/etc/default/tmpfs
+    sed -e 's/#LOCK_SIZE=/LOCK_SIZE=/g' -i $LXCMASTER_ROOTFS/etc/default/tmpfs
+    sed -e 's/#SHM_SIZE=/SHM_SIZE=128M/g' -i $LXCMASTER_ROOTFS/etc/default/tmpfs
+    sed -e 's/#TMP_SIZE=/TMP_SIZE=1G/g' -i $LXCMASTER_ROOTFS/etc/default/tmpfs
   fi
 
   # Generate locales
-  sed -i "s/^# fr_FR.UTF-8 UTF-8/fr_FR.UTF-8 UTF-8/" $TARGET_DIR/etc/locale.gen
-  sed -i "s/^# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/" $TARGET_DIR/etc/locale.gen
+  sed -i "s/^# fr_FR.UTF-8 UTF-8/fr_FR.UTF-8 UTF-8/" $LXCMASTER_ROOTFS/etc/locale.gen
+  sed -i "s/^# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/" $LXCMASTER_ROOTFS/etc/locale.gen
   _lxc_exec "locale-gen en_US.UTF-8"
 
   # Update timezone
-  echo 'Europe/Paris' > $TARGET_DIR/etc/timezone
+  echo 'Europe/Paris' > $LXCMASTER_ROOTFS/etc/timezone
   _lxc_exec "dpkg-reconfigure -f noninteractive tzdata"
 
   # Add fstab for root
   _lxc_exec "echo '/dev/mmcblk0p1 / ext4  defaults    0   1' >> /etc/fstab"
 
   # Configure tty
-  cat <<EOT > $TARGET_DIR/etc/init/ttyS0.conf
+  cat <<EOT > $LXCMASTER_ROOTFS/etc/init/ttyS0.conf
 start on stopped rc RUNLEVEL=[2345]
 stop on runlevel [!2345]
 
@@ -217,19 +224,19 @@ EOT
   _lxc_exec 'chmod g+s /var/mail/'
 
   # Add firstrun and secondrun init script
-  install -m 755 -o root -g root build/script/firstrun $TARGET_DIR/usr/local/bin/
-  install -m 755 -o root -g root build/script/secondrun $TARGET_DIR/usr/local/bin/
-  install -m 755 -o root -g root build/script/hypercube/hypercube.sh $TARGET_DIR/usr/local/bin/
-  install -m 444 -o root -g root build/script/firstrun.service $TARGET_DIR/etc/systemd/system/
-  install -m 444 -o root -g root build/script/secondrun.service $TARGET_DIR/etc/systemd/system/
-  install -m 444 -o root -g root build/script/hypercube/hypercube.service $TARGET_DIR/etc/systemd/system/
+  install -m 755 -o root -g root build/script/firstrun $LXCMASTER_ROOTFS/usr/local/bin/
+  install -m 755 -o root -g root build/script/secondrun $LXCMASTER_ROOTFS/usr/local/bin/
+  install -m 755 -o root -g root build/script/hypercube/hypercube.sh $LXCMASTER_ROOTFS/usr/local/bin/
+  install -m 444 -o root -g root build/script/firstrun.service $LXCMASTER_ROOTFS/etc/systemd/system/
+  install -m 444 -o root -g root build/script/secondrun.service $LXCMASTER_ROOTFS/etc/systemd/system/
+  install -m 444 -o root -g root build/script/hypercube/hypercube.service $LXCMASTER_ROOTFS/etc/systemd/system/
   _lxc_exec "/bin/systemctl daemon-reload >> /dev/null"
   _lxc_exec "/bin/systemctl enable firstrun >> /dev/null"
   _lxc_exec "/bin/systemctl enable hypercube >> /dev/null"
 
   # Add hypercube scripts
-  mkdir -p $TARGET_DIR/var/log/hypercube
-  install -m 444 -o root -g root build/script/hypercube/install.html $TARGET_DIR/var/log/hypercube/
+  mkdir -p $LXCMASTER_ROOTFS/var/log/hypercube
+  install -m 444 -o root -g root build/script/hypercube/install.html $LXCMASTER_ROOTFS/var/log/hypercube/
 
   # Upgrade Packages
   _lxc_exec 'apt-get update'
@@ -237,6 +244,8 @@ EOT
 }
 
 function configure_cube(){
+  info "Configuring Cube"
+
   configure_dhcp        || die "Failed to configure DHCP."
   configure_misc        || die "Failed to configure misc configurations."
 }
@@ -245,12 +254,14 @@ function configure_cube(){
 ###' Yunohost install & post-install
 
 function yunohost_install() {
+  info "Installing Yunohost."
   _lxc_exec "touch /var/log/auth.log" # Workaround for fail2ban postinstall failure when auth.log is missing
   _lxc_exec "apt -y install fail2ban"
   _lxc_exec "wget -O /tmp/install_yunohost https://install.yunohost.org/${DEBIAN_RELEASE} && chmod +x /tmp/install_yunohost"
   _lxc_exec "cd /tmp/ && ./install_yunohost -a -d ${INSTALL_YUNOHOST_DIST}"
 }
 function yunohost_post_install() {
+  info "Post-Installing Yunohost."
   _lxc_exec "yunohost tools postinstall -d foo.bar.labriqueinter.net -p yunohost --ignore-dyndns --debug"
   _lxc_exec "apt -y --purge autoremove"
   _lxc_exec "apt -y clean"
