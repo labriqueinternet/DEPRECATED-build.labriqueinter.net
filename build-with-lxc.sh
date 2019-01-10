@@ -275,7 +275,7 @@ function _create_image_with_encrypted_fs() {
   . ./build/config_board.sh
   echo $FLASH_KERNEL > ${CONT_ROOTFS}/etc/flash-kernel/machine
   _lxc_exec 'update-initramfs -u -k all'
-  ./build/create_device.sh -D img -s 1800 \
+  ./build/create_device.sh -D img -s 2500 \
    -t ${OUTPUTPATH}/labriqueinternet_${FILE}_encryptedfs_"$(date '+%Y-%m-%d')"_${DEBIAN_RELEASE}${INSTALL_YUNOHOST_TESTING}.img \
    -d ${CONT_ROOTFS} \
    -b $BOARD
@@ -302,7 +302,7 @@ function _create_standard_image() {
   _lxc_exec "dpkg -i /tmp/u-boot-sunxi_latest_armhf.deb"
 
   _lxc_exec 'update-initramfs -u -k all'
-  ./build/create_device.sh -D img -s 1800 \
+  ./build/create_device.sh -D img -s 2500 \
    -t ${OUTPUTPATH}/labriqueinternet_${FILE}_"$(date '+%Y-%m-%d')"_${DEBIAN_RELEASE}${INSTALL_YUNOHOST_TESTING}.img \
    -d ${CONT_ROOTFS} \
    -b $BOARD
