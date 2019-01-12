@@ -40,6 +40,7 @@ function main() {
   configure_cube         || die "Failed to configure the InternetCube system."
   yunohost_install       || die "Failed to install basic yunohost over Debian."
   #yunohost_post_install  || die "Failed to execute yunohost post-install."
+  clean_image            || die "Failed to clean image"
   create_images          || die "Failed to create images"
   destroy_temp_lxc       || die "Failed to destroy the temporary LXC container"
 }
@@ -263,6 +264,9 @@ function yunohost_install() {
 function yunohost_post_install() {
   info "Post-Installing Yunohost."
   _lxc_exec "yunohost tools postinstall -d foo.bar.labriqueinter.net -p yunohost --ignore-dyndns --debug"
+}
+
+function clean_image() {
   _lxc_exec "apt -y --purge autoremove"
   _lxc_exec "apt -y clean"
 }
