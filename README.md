@@ -1,5 +1,3 @@
-**[BUG REPORTS SHOULD BE OPEN HERE](https://dev.yunohost.org)**
-
 ## How to Build
 
 This README describes how we currently build the Internet Cube images. We probably could find a better way, with virtualization and co - but currently, this is how it is done.
