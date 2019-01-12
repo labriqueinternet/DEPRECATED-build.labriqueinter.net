@@ -296,6 +296,10 @@ function _create_standard_image() {
   mkdir -p ${CONT_ROOTFS}/etc/flash-kernel
   echo $FLASH_KERNEL > ${CONT_ROOTFS}/etc/flash-kernel/machine
 
+  # Add 'olinux' for root password and force to change it at first login
+  _lxc_exec '(echo olinux;echo olinux;) | passwd root'
+  _lxc_exec 'chage -d 0 root'
+
   # install boot files and tools
   _lxc_exec "DEBIAN_FRONTEND=noninteractive $APT linux-image-armmp flash-kernel u-boot-tools initramfs-tools"
   _lxc_exec "wget -P /tmp/ https://repo.labriqueinter.net/u-boot/u-boot-sunxi_latest_armhf.deb"
