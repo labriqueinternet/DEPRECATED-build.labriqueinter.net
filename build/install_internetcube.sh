@@ -41,12 +41,6 @@ block/mmcblk0/queue/scheduler = noop
 #block/sda/queue/scheduler = cfq
 EOT
 
-# We need to force dns to be 127.0.0.1 here,
-# because stupid armbian might install stupid network-manager,
-# which somehow takes over /etc/resolv.conf (instead of resolvconf, who knows why...)
-# which then might trigger domain name issues
-echo -e "\nsupersede domain-name-servers 127.0.0.1;" >> $TARGET_DIR/etc/dhcp/dhclient.conf
-
 # Add firstrun and secondrun init script
 install -m 755 -o root -g root ${REP}/script/resize2fs-reboot $TARGET_DIR/usr/local/bin/
 install -m 755 -o root -g root ${REP}/script/hypercube/hypercube.sh $TARGET_DIR/usr/local/bin/
