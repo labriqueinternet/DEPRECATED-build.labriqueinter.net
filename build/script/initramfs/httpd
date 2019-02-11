@@ -16,6 +16,6 @@ esac
 
 . /usr/share/initramfs-tools/hook-functions
 
-cp -r /etc/initramfs-tools/root/www "${DESTDIR}/root/"
+cp -r /etc/initramfs-tools/root "${DESTDIR}/root/"
 
 exit 0
