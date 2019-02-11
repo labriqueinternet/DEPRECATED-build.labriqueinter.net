@@ -248,7 +248,6 @@ if [ $ENCRYPT ] ; then
   echo 'deb http://ftp.fr.debian.org/debian jessie-backports main' > $TARGET_DIR/etc/apt/sources.list.d/jessie-backports.list
 fi
 
-umount_dir $TARGET_DIR
 chroot_deb $TARGET_DIR 'apt-get update'
 chroot_deb $TARGET_DIR 'apt-get upgrade -y --force-yes'
 
@@ -314,9 +313,5 @@ if [ ${APTCACHER} ] ; then
   rm $TARGET_DIR/etc/apt/apt.conf.d/01proxy
   cp $TARGET_DIR/tmp/hosts $TARGET_DIR/etc/
 fi
-
-finish(){
-  exit 0
-}
 
 exit 0
