@@ -1,0 +1,11 @@
+[Unit]
+Description=First boot script which trigger reboot if needed by armbian.
+After=resize2fs.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/resize2fs-reboot
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
