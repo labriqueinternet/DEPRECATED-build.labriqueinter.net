@@ -188,6 +188,14 @@ function start_logwebserver() {
 function find_hypercubefile() {
   logfile ${FUNCNAME[0]}
 
+  info "Heating up ..."
+  # This is a yolo-commited quick and dirty hack
+  # to try to avoid the following steps failing miserably
+  # just because DNS resolution is broken
+  # There's possibly a more elegant solution to this
+  # using systemd services but meh I'm lazy and not very expert
+  sleep 10
+
   info "Install some dependencies..."
   rm -rf /var/lib/apt/lists/*
   apt-get clean &>> $log_file
