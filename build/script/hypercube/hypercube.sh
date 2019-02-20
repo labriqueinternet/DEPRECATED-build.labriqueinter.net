@@ -401,22 +401,22 @@ function ynh_createuser() {
 function install_vpnclient() {
   logfile ${FUNCNAME[0]}
 
-  yunohost app install vpnclient --debug\
+  yunohost app install vpnclient --force --debug\
     --args "domain=$(urlencode "${settings[yunohost,domain]}")&path=/vpnadmin" &>> $log_file
 }
 
 function install_hotspot() {
   logfile ${FUNCNAME[0]}
 
-  yunohost app install hotspot --debug\
+  yunohost app install hotspot --force --debug\
     --args "domain=$(urlencode "${settings[yunohost,domain]}")&path=/wifiadmin&wifi_ssid=$(urlencode "${settings[hotspot,wifi_ssid]}")&wifi_passphrase=$(urlencode "${settings[hotspot,wifi_passphrase]}")&firmware_nonfree=$(urlencode "${settings[hotspot,firmware_nonfree]}")" |& logfilter
 }
 
 function install_webmail() {
   logfile ${FUNCNAME[0]}
 
-  yunohost app install roundcube\
-    --args "domain=$(urlencode "${settings[yunohost,domain]}")&path=/webmail&with_carddav=1" --debug &>> $log_file || {
+  yunohost app install roundcube --force --debug\
+    --args "domain=$(urlencode "${settings[yunohost,domain]}")&path=/webmail&with_carddav=1" &>> $log_file || {
     warn "Roundcube installation failed"
   }
 }
