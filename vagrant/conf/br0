@@ -1,4 +1,0 @@
-auto br0
-iface br0 inet static
-  address 172.16.1.1 
-  netmask 255.255.255.0
