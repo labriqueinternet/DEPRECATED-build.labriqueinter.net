@@ -280,7 +280,7 @@ function detect_wifidevice() {
   logfile ${FUNCNAME[0]}
   local ynh_wifi_device=$(yunohost app setting hotspot wifi_device 2> /dev/null)
 
-  if [ "${ynh_wifi_device}" == none ]; then
+  if [ -z "$ynh_wifi_device" ]; then
 
     ynh_wifi_device=$(iw_devices | awk -F\| '{ print $1 }')
     echo -n 'WIFI DEVICES: ' >> $log_file
