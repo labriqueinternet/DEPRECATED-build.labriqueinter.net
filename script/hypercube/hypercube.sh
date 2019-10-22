@@ -764,6 +764,11 @@ else
   info "Configuring Wifi Hotspot..."
   configure_hotspot
  
+  if [ -f "${log_filepath}/execute_custom_script" ]; then
+    info "Execute custom script..."
+    /usr/local/bin/hypercube_custom.sh
+  fi
+
   info "Rebooting..."
 
   if [ -f /etc/crypttab ]; then
