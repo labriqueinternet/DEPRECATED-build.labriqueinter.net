@@ -457,6 +457,12 @@ function configure_vpnclient() {
   ynh-vpnclient-loadcubefile.sh -u "${settings[yunohost,user]}" -p "${settings[yunohost,user_password]}" -c "${tmp_dir}/config.cube" &>> $log_file || true
 }
 
+function execute_customscript() {
+  logfile ${FUNCNAME[0]}
+
+  bash "$custom_script" &>> $log_file
+}
+
 function monitoring_ip() {
   logfile ${FUNCNAME[0]}
   set +E
@@ -623,6 +629,7 @@ function end_installation() {
 declare -A settings
 tmp_dir=$(mktemp -dp /tmp/ labriqueinternet-installhypercube-XXXXX)
 hypercube_file="${tmp_dir}/install.hypercube"
+custom_script="/usr/local/bin/hypercube_custom.sh"
 exit_status=0
 webserver_pid=
 is_dyndns_useful=false
@@ -764,9 +771,9 @@ else
   info "Configuring Wifi Hotspot..."
   configure_hotspot
  
-  if [ -f "/usr/local/bin/hypercube_custom.sh" ]; then
+  if [ -f "$custom_script" ]; then
     info "Execute custom script..."
-    /usr/local/bin/hypercube_custom.sh
+    execute_customscript
   fi
 
   info "Rebooting..."
