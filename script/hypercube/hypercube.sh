@@ -240,7 +240,7 @@ function load_json() {
 function extract_settings() {
   logfile "${FUNCNAME[0]}-${1}"
 
-  local subjson=$(echo -e "${json}" | grep "^${1}=" | cut -d= -f2-)
+  local subjson=$(echo "${json}" | grep "^${1}=" | cut -d= -f2-)
   local vars=$(echo "${subjson}" | jq -r 'to_entries|map("\(.key)=\(.value|tostring)")|.[]' 2>> $log_file)
 
   if [ -z "$vars" ]; then
@@ -262,7 +262,7 @@ function extract_settings() {
 }
 
 function extract_dotcube() {
-  local subjson=$(echo -e "${json}" | grep "^vpnclient=" | cut -d= -f2-)
+  local subjson=$(echo "${json}" | grep "^vpnclient=" | cut -d= -f2-)
 
   if [ -z "$subjson" ]; then
     exit_error "vpnclient settings not found"
