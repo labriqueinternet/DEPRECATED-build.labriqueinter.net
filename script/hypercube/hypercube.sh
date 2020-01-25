@@ -420,15 +420,6 @@ function install_hotspot() {
     --args "domain=$(urlencode "${settings[yunohost,domain]}")&path=/wifiadmin&wifi_ssid=$(urlencode "${settings[hotspot,wifi_ssid]}")&wifi_passphrase=$(urlencode "${settings[hotspot,wifi_passphrase]}")&firmware_nonfree=$(urlencode "${settings[hotspot,firmware_nonfree]}")" |& logfilter
 }
 
-function install_webmail() {
-  logfile ${FUNCNAME[0]}
-
-  yunohost app install roundcube --force --debug\
-    --args "domain=$(urlencode "${settings[yunohost,domain]}")&path=/webmail&with_carddav=1" &>> $log_file || {
-    warn "Roundcube installation failed"
-  }
-}
-
 function configure_hotspot() {
   logfile ${FUNCNAME[0]}
   local ynh_wifi_device=
@@ -754,9 +745,6 @@ else
   
   info "Installing Wifi Hotspot..."
   install_hotspot
-
-  info "Installing Roundcube Webmail..."
-  install_webmail || true
 
   info "Configuring VPN Client..."
   configure_vpnclient
