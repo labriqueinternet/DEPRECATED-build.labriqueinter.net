@@ -348,13 +348,6 @@ function ynh_postinstall() {
   yunohost tools postinstall -d "${settings[yunohost,domain]}" -p "${settings[yunohost,password]}" &>> $log_file
 }
 
-function ynh_addappslist() {
-  logfile ${FUNCNAME[0]}
-
-  yunohost app fetchlist -n community -u https://app.yunohost.org/community.json &>> $log_file
-  yunohost app fetchlist &>> $log_file
-}
-
 function check_dyndns_list() {
   logfile ${FUNCNAME[0]}
 
@@ -733,9 +726,6 @@ else
     info "Removing DynDNS cron"
     ynh_removedyndns
   fi
-
-  info "Fetching YunoHost apps list for labriqueinternet"
-  ynh_addappslist
 
   info "Creating first user"
   ynh_createuser
