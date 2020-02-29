@@ -4,6 +4,7 @@
 
 * See https://romanrm.net/a10/qemu
 * TODO How to build -vexpress kernel for qemu ?
+* TODO how to inject the hypercube
 
 1. `wget https://mirrors.romanrm.net/sunxi/qemu/vmlinuz-3.2.0-4-vexpress`
 1. `wget https://mirrors.romanrm.net/sunxi/qemu/initrd.img-3.2.0-4-vexpress`
@@ -11,8 +12,9 @@
 1. `qemu-img resize test.qcow2 10G`
 1. `qemu-system-arm -M vexpress-a9 -cpu cortex-a7 -m 1024 -kernel vmlinuz-4.19.62-sunxi -initrd uInitrd-4.19.62-sunxi -append root=/dev/mmcblk0p1 -drive if=sd,cache=unsafe,file=test.qcow2,format=qcow2 -net nic -net bridge,br=virbr0 -serial stdio`
 
-## For making a SD-card with openvpn server
+## Setup a local openvpn server for testing
 
+* Only needed for testing the openvpn client app
 * See https://github.com/kylemanna/docker-openvpn/blob/master/docs/docker-compose.md
 
 1. `docker-compose run --rm openvpn ovpn_genconfig -u udp://openvpn-test.local`
