@@ -416,8 +416,8 @@ function install_vpnclient() {
 function install_hotspot() {
   logfile ${FUNCNAME[0]}
 
-  if [ "${settings[hotspot,do_not_install]}" == yes ]; then
-    touch "${log_filepath}/do_not_install_hotspot"
+  if [[ ${settings[hotspot,enabled]} == false ]]; then
+    touch "${log_filepath}/hotspot_disabled"
     echo "The hotspot app won't be installed as set in the hypercube file" >> $log_file
   else
     yunohost app install hotspot --force --debug\
