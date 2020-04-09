@@ -507,7 +507,7 @@ function monitoring_ip() {
     echo TRACEROUTE 91.198.174.192 >> $tmplog
     echo ================= >> $tmplog
     traceroute -n 91.198.174.192 &>> $tmplog
-    if [ ! -f "${log_filepath}/do_not_install_hotspot" ]; then
+    if [ ! -f "${log_filepath}/hotspot_disabled" ]; then
       echo -e "\n\n" >> $tmplog
       echo IW DEV >> $tmplog
       echo ================= >> $tmplog
@@ -557,7 +557,7 @@ function monitoring_processes() {
     echo YNH-VPNCLIENT STATUS >> $tmplog
     echo ================= >> $tmplog
     ynh-vpnclient status &>> $tmplog
-    if [ ! -f "${log_filepath}/do_not_install_hotspot" ]; then
+    if [ ! -f "${log_filepath}/hotspot_disabled" ]; then
       echo -e "\n\n" >> $tmplog
       echo YNH-HOTSPOT STATUS >> $tmplog
       echo ================= >> $tmplog
@@ -571,7 +571,7 @@ function monitoring_processes() {
     echo 'PS AUX | GREP DNSMASQ' >> $tmplog
     echo ================= >> $tmplog
     ps aux | grep dnsmasq &>> $tmplog
-    if [ ! -f "${log_filepath}/do_not_install_hotspot" ]; then
+    if [ ! -f "${log_filepath}/hotspot_disabled" ]; then
       echo -e "\n\n" >> $tmplog
       echo 'PS AUX | GREP HOSTAPD' >> $tmplog
       echo ================= >> $tmplog
@@ -606,7 +606,7 @@ function monitoring_yunohost() {
 function end_installation() {
   log_fileindex=90
 
-  if [ ! -f "${log_filepath}/do_not_install_hotspot" ]; then
+  if [ ! -f "${log_filepath}/hotspot_disabled" ]; then
     detect_wifidevice
   fi
 
@@ -769,7 +769,7 @@ else
   info "Configuring VPN Client..."
   configure_vpnclient
   
-  if [ ! -f "${log_filepath}/do_not_install_hotspot" ]; then
+  if [ ! -f "${log_filepath}/hotspot_disabled" ]; then
     info "Configuring Wifi Hotspot..."
     configure_hotspot
   fi
