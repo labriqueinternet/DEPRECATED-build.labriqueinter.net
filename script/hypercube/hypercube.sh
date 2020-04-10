@@ -201,7 +201,7 @@ function find_hypercubefile() {
   apt-get clean &>> $log_file
   apt-get update &>> $log_file
 
-  apt-get install -o Dpkg::Options::='--force-confold' -y --force-yes file udisks2 udiskie ntfs-3g jq  &>> $log_file || true
+  apt-get install -o Dpkg::Options::='--force-confold' -y --force-yes file udisks2 udiskie ntfs-3g jq traceroute  &>> $log_file || true
   
   info "Detecting USB sticks..."
   udiskie-mount -a || true
