@@ -196,6 +196,10 @@ function find_hypercubefile() {
   # using systemd services but meh I'm lazy and not very expert
   sleep 10
 
+  info "Install some dependencies..."
+  apt-get update &>> $log_file
+  apt-get install -o Dpkg::Options::='--force-confold' -y --force-yes file udisks2 udiskie ntfs-3g jq  &>> $log_file || true
+
   info "Detecting USB sticks..."
   udiskie-mount -a || true
   sleep 10
