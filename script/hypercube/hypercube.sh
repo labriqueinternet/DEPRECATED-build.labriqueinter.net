@@ -403,7 +403,7 @@ function ynh_createuser() {
 
   yunohost user create "${settings[yunohost,user]}" -f "${settings[yunohost,user_firstname]}"\
     -l "${settings[yunohost,user_lastname]}" -m "${settings[yunohost,user]}@${settings[yunohost,domain]}"\
-    -q 0 -p "${settings[yunohost,user_password]}" --admin-password "${settings[yunohost,password]}" --debug |& logfilter
+    -q 0 -p "${settings[yunohost,user_password]}" --debug |& logfilter
 }
 
 function install_vpnclient() {
