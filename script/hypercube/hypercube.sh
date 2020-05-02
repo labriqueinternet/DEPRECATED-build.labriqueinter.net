@@ -406,8 +406,13 @@ function install_vpnclient() {
 function install_hotspot() {
   logfile ${FUNCNAME[0]}
 
-  yunohost app install hotspot --force \
-    --args "domain=$(urlencode "${settings[yunohost,domain]}")&path=/wifiadmin&wifi_ssid=$(urlencode "${settings[hotspot,wifi_ssid]}")&wifi_passphrase=$(urlencode "${settings[hotspot,wifi_passphrase]}")&firmware_nonfree=$(urlencode "${settings[hotspot,firmware_nonfree]}")" &>> $log_file
+  if [[ ${settings[hotspot,enabled]} == false ]]; then
+    touch "${log_filepath}/hotspot_disabled"
+    echo "The hotspot app won't be installed as set in the hypercube file" >> $log_file
+  else
+    yunohost app install hotspot --force \
+      --args "domain=$(urlencode "${settings[yunohost,domain]}")&path=/wifiadmin&wifi_ssid=$(urlencode "${settings[hotspot,wifi_ssid]}")&wifi_passphrase=$(urlencode "${settings[hotspot,wifi_passphrase]}")&firmware_nonfree=$(urlencode "${settings[hotspot,firmware_nonfree]}")" &>> $log_file
+fi
 }
 
 function configure_hotspot() {
@@ -492,10 +497,12 @@ function monitoring_ip() {
     echo TRACEROUTE 91.198.174.192 >> $tmplog
     echo ================= >> $tmplog
     traceroute -n 91.198.174.192 &>> $tmplog
-    echo -e "\n\n" >> $tmplog
-    echo IW DEV >> $tmplog
-    echo ================= >> $tmplog
-    iw dev &>> $tmplog
+    if [ ! -f "${log_filepath}/hotspot_disabled" ]; then
+      echo -e "\n\n" >> $tmplog
+      echo IW DEV >> $tmplog
+      echo ================= >> $tmplog
+      iw dev &>> $tmplog
+    fi
 
     mv $tmplog $log_file
     sleep 300
@@ -540,10 +547,12 @@ function monitoring_processes() {
     echo YNH-VPNCLIENT STATUS >> $tmplog
     echo ================= >> $tmplog
     ynh-vpnclient status &>> $tmplog
-    echo -e "\n\n" >> $tmplog
-    echo YNH-HOTSPOT STATUS >> $tmplog
-    echo ================= >> $tmplog
-    ynh-hotspot status &>> $tmplog
+    if [ ! -f "${log_filepath}/hotspot_disabled" ]; then
+      echo -e "\n\n" >> $tmplog
+      echo YNH-HOTSPOT STATUS >> $tmplog
+      echo ================= >> $tmplog
+      ynh-hotspot status &>> $tmplog
+    fi
     echo -e "\n\n" >> $tmplog
     echo 'PS AUX | GREP OPENVPN' >> $tmplog
     echo ================= >> $tmplog
@@ -552,10 +561,12 @@ function monitoring_processes() {
     echo 'PS AUX | GREP DNSMASQ' >> $tmplog
     echo ================= >> $tmplog
     ps aux | grep dnsmasq &>> $tmplog
-    echo -e "\n\n" >> $tmplog
-    echo 'PS AUX | GREP HOSTAPD' >> $tmplog
-    echo ================= >> $tmplog
-    ps aux | grep hostapd &>> $tmplog
+    if [ ! -f "${log_filepath}/hotspot_disabled" ]; then
+      echo -e "\n\n" >> $tmplog
+      echo 'PS AUX | GREP HOSTAPD' >> $tmplog
+      echo ================= >> $tmplog
+      ps aux | grep hostapd &>> $tmplog
+    fi
     echo -e "\n\n" >> $tmplog
     echo 'NETSTAT -pnat' >> $tmplog
     echo ================= >> $tmplog
@@ -585,7 +596,9 @@ function monitoring_yunohost() {
 function end_installation() {
   log_fileindex=90
 
-  detect_wifidevice
+  if [ ! -f "${log_filepath}/hotspot_disabled" ]; then
+    detect_wifidevice
+  fi
 
   monitoring_ip
   monitoring_firewalls
@@ -743,8 +756,10 @@ else
   info "Configuring VPN Client..."
   configure_vpnclient
   
-  info "Configuring Wifi Hotspot..."
-  configure_hotspot
+  if [ ! -f "${log_filepath}/hotspot_disabled" ]; then
+    info "Configuring Wifi Hotspot..."
+    configure_hotspot
+  fi
  
   if [ -f "$custom_script" ]; then
     info "Execute custom script..."
