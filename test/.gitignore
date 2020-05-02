@@ -1,0 +1,4 @@
+initrd.img-3.2.0-4-vexpress
+vmlinuz-3.2.0-4-vexpress
+openvpn-data
+*.qcow2
