@@ -1,0 +1,13 @@
+{
+  "server_name": "192.168.1.",
+  "server_port": "1194",
+  "server_proto": "udp",
+  "dns0": "79.143.250.1",
+  "dns1": "80.67.169.40",
+  "crt_server_ca": "-----BEGIN CERTIFICATE-----||-----END CERTIFICATE-----|",
+  "crt_client_key": "-----BEGIN PRIVATE KEY-----||-----END PRIVATE KEY-----|",
+  "crt_client": "-----BEGIN CERTIFICATE-----||-----END CERTIFICATE-----|",
+  "crt_client_ta": "-----BEGIN OpenVPN Static key V1-----||-----END OpenVPN Static key V1-----|",
+  "openvpn_add": ["client","dev tun","comp-lzo"],
+  "openvpn_rm": ["tun-ipv6","pull","nobind","comp-lzo adaptive", "remote-cert-tls server", "ns-cert-type server", "route-ipv6 2000::/3","redirect-gateway def1 bypass-dhcp","tls-client"]
+}

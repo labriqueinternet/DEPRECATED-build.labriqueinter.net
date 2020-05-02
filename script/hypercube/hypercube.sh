@@ -197,12 +197,9 @@ function find_hypercubefile() {
   sleep 10
 
   info "Install some dependencies..."
-  rm -rf /var/lib/apt/lists/*
-  apt-get clean &>> $log_file
   apt-get update &>> $log_file
-
   apt-get install -o Dpkg::Options::='--force-confold' -y --force-yes file udisks2 udiskie ntfs-3g jq traceroute  &>> $log_file || true
-  
+
   info "Detecting USB sticks..."
   udiskie-mount -a || true
   sleep 10
@@ -291,8 +288,8 @@ function detect_wifidevice() {
       echo -e "\nSELECTED: ${ynh_wifi_device}" >> $log_file
 
       systemctl stop ynh-hotspot &>> $log_file
-      yunohost app setting hotspot wifi_device -v "${ynh_wifi_device}" --debug &>> $log_file
-      yunohost app setting hotspot service_enabled -v 1 --debug &>> $log_file
+      yunohost app setting hotspot wifi_device -v "${ynh_wifi_device}" &>> $log_file
+      yunohost app setting hotspot service_enabled -v 1 &>> $log_file
       systemctl start ynh-hotspot &>> $log_file
     else
       info "No wifi device detected :("
@@ -352,14 +349,7 @@ function deb_setlocales_and_tz() {
 function ynh_postinstall() {
   logfile ${FUNCNAME[0]}
 
-  yunohost tools postinstall -d "${settings[yunohost,domain]}" -p "${settings[yunohost,password]}" --debug |& logfilter
-}
-
-function ynh_addappslist() {
-  logfile ${FUNCNAME[0]}
-
-  yunohost app fetchlist -n community -u https://app.yunohost.org/community.json --debug &>> $log_file
-  yunohost app fetchlist --debug &>> $log_file
+  yunohost tools postinstall -d "${settings[yunohost,domain]}" -p "${settings[yunohost,password]}" &>> $log_file
 }
 
 function check_dyndns_list() {
@@ -403,48 +393,53 @@ function ynh_createuser() {
 
   yunohost user create "${settings[yunohost,user]}" -f "${settings[yunohost,user_firstname]}"\
     -l "${settings[yunohost,user_lastname]}" -m "${settings[yunohost,user]}@${settings[yunohost,domain]}"\
-    -q 0 -p "${settings[yunohost,user_password]}" --admin-password "${settings[yunohost,password]}" --debug |& logfilter
+    -q 0 -p "${settings[yunohost,user_password]}" &>> $log_file
 }
 
 function install_vpnclient() {
   logfile ${FUNCNAME[0]}
 
-  yunohost app install vpnclient --force --debug\
+  yunohost app install vpnclient --force \
     --args "domain=$(urlencode "${settings[yunohost,domain]}")&path=/vpnadmin" &>> $log_file
 }
 
 function install_hotspot() {
   logfile ${FUNCNAME[0]}
 
-  yunohost app install hotspot --force --debug\
-    --args "domain=$(urlencode "${settings[yunohost,domain]}")&path=/wifiadmin&wifi_ssid=$(urlencode "${settings[hotspot,wifi_ssid]}")&wifi_passphrase=$(urlencode "${settings[hotspot,wifi_passphrase]}")&firmware_nonfree=$(urlencode "${settings[hotspot,firmware_nonfree]}")" |& logfilter
+  if [[ ${settings[hotspot,enabled]} == false ]]; then
+    touch "${log_filepath}/hotspot_disabled"
+    echo "The hotspot app won't be installed as set in the hypercube file" >> $log_file
+  else
+    yunohost app install hotspot --force \
+      --args "domain=$(urlencode "${settings[yunohost,domain]}")&path=/wifiadmin&wifi_ssid=$(urlencode "${settings[hotspot,wifi_ssid]}")&wifi_passphrase=$(urlencode "${settings[hotspot,wifi_passphrase]}")&firmware_nonfree=$(urlencode "${settings[hotspot,firmware_nonfree]}")" &>> $log_file
+fi
 }
 
 function configure_hotspot() {
   logfile ${FUNCNAME[0]}
   local ynh_wifi_device=
 
-  yunohost app addaccess hotspot -u "${settings[yunohost,user]}" --debug &>> $log_file
+  yunohost app addaccess hotspot -u "${settings[yunohost,user]}" &>> $log_file
 
-  yunohost app setting hotspot ip6_dns0 -v "${settings[hotspot,ip6_dns0]}" --debug &>> $log_file
-  yunohost app setting hotspot ip6_dns1 -v "${settings[hotspot,ip6_dns1]}" --debug &>> $log_file
-  yunohost app setting hotspot ip4_dns0 -v "${settings[hotspot,ip4_dns0]}" --debug &>> $log_file
-  yunohost app setting hotspot ip4_dns1 -v "${settings[hotspot,ip4_dns1]}" --debug &>> $log_file
-  yunohost app setting hotspot ip4_nat_prefix -v "${settings[hotspot,ip4_nat_prefix]}" --debug &>> $log_file
+  yunohost app setting hotspot ip6_dns0 -v "${settings[hotspot,ip6_dns0]}" &>> $log_file
+  yunohost app setting hotspot ip6_dns1 -v "${settings[hotspot,ip6_dns1]}" &>> $log_file
+  yunohost app setting hotspot ip4_dns0 -v "${settings[hotspot,ip4_dns0]}" &>> $log_file
+  yunohost app setting hotspot ip4_dns1 -v "${settings[hotspot,ip4_dns1]}" &>> $log_file
+  yunohost app setting hotspot ip4_nat_prefix -v "${settings[hotspot,ip4_nat_prefix]}" &>> $log_file
 
   ynh_wifi_device=$(yunohost app setting hotspot wifi_device 2> /dev/null)
 
   if [ "${ynh_wifi_device}" == none ]; then
-    yunohost app setting hotspot service_enabled -v 1 --debug &>> $log_file
+    yunohost app setting hotspot service_enabled -v 1 &>> $log_file
   fi
 }
 
 function configure_vpnclient() {
   logfile ${FUNCNAME[0]}
 
-  yunohost app addaccess vpnclient -u "${settings[yunohost,user]}" --debug &>> $log_file
+  yunohost app addaccess vpnclient -u "${settings[yunohost,user]}" &>> $log_file
 
-  yunohost app setting vpnclient service_enabled -v 1 --debug &>> $log_file
+  yunohost app setting vpnclient service_enabled -v 1 &>> $log_file
   ynh-vpnclient-loadcubefile.sh -u "${settings[yunohost,user]}" -p "${settings[yunohost,user_password]}" -c "${tmp_dir}/config.cube" &>> $log_file || true
 }
 
@@ -502,10 +497,12 @@ function monitoring_ip() {
     echo TRACEROUTE 91.198.174.192 >> $tmplog
     echo ================= >> $tmplog
     traceroute -n 91.198.174.192 &>> $tmplog
-    echo -e "\n\n" >> $tmplog
-    echo IW DEV >> $tmplog
-    echo ================= >> $tmplog
-    iw dev &>> $tmplog
+    if [ ! -f "${log_filepath}/hotspot_disabled" ]; then
+      echo -e "\n\n" >> $tmplog
+      echo IW DEV >> $tmplog
+      echo ================= >> $tmplog
+      iw dev &>> $tmplog
+    fi
 
     mv $tmplog $log_file
     sleep 300
@@ -550,10 +547,12 @@ function monitoring_processes() {
     echo YNH-VPNCLIENT STATUS >> $tmplog
     echo ================= >> $tmplog
     ynh-vpnclient status &>> $tmplog
-    echo -e "\n\n" >> $tmplog
-    echo YNH-HOTSPOT STATUS >> $tmplog
-    echo ================= >> $tmplog
-    ynh-hotspot status &>> $tmplog
+    if [ ! -f "${log_filepath}/hotspot_disabled" ]; then
+      echo -e "\n\n" >> $tmplog
+      echo YNH-HOTSPOT STATUS >> $tmplog
+      echo ================= >> $tmplog
+      ynh-hotspot status &>> $tmplog
+    fi
     echo -e "\n\n" >> $tmplog
     echo 'PS AUX | GREP OPENVPN' >> $tmplog
     echo ================= >> $tmplog
@@ -562,10 +561,12 @@ function monitoring_processes() {
     echo 'PS AUX | GREP DNSMASQ' >> $tmplog
     echo ================= >> $tmplog
     ps aux | grep dnsmasq &>> $tmplog
-    echo -e "\n\n" >> $tmplog
-    echo 'PS AUX | GREP HOSTAPD' >> $tmplog
-    echo ================= >> $tmplog
-    ps aux | grep hostapd &>> $tmplog
+    if [ ! -f "${log_filepath}/hotspot_disabled" ]; then
+      echo -e "\n\n" >> $tmplog
+      echo 'PS AUX | GREP HOSTAPD' >> $tmplog
+      echo ================= >> $tmplog
+      ps aux | grep hostapd &>> $tmplog
+    fi
     echo -e "\n\n" >> $tmplog
     echo 'NETSTAT -pnat' >> $tmplog
     echo ================= >> $tmplog
@@ -585,7 +586,7 @@ function monitoring_yunohost() {
 
     date >> $tmplog
     echo -e "\n" >> $tmplog
-    yunohost tools diagnosis --debug &>> $tmplog
+    yunohost tools diagnosis &>> $tmplog
 
     mv $tmplog $log_file
     sleep 300
@@ -595,7 +596,9 @@ function monitoring_yunohost() {
 function end_installation() {
   log_fileindex=90
 
-  detect_wifidevice
+  if [ ! -f "${log_filepath}/hotspot_disabled" ]; then
+    detect_wifidevice
+  fi
 
   monitoring_ip
   monitoring_firewalls
@@ -716,8 +719,8 @@ else
   info "Setting locales"
   deb_setlocales_and_tz
 
-  info "Upgrading Debian/YunoHost..."
-  deb_upgrade
+  #info "Upgrading Debian/YunoHost..."
+  #deb_upgrade
 
   info "Check online DynDNS domains list"
   check_dyndns_list
@@ -741,9 +744,6 @@ else
     ynh_removedyndns
   fi
 
-  info "Fetching YunoHost apps list for labriqueinternet"
-  ynh_addappslist
-
   info "Creating first user"
   ynh_createuser
 
@@ -756,8 +756,10 @@ else
   info "Configuring VPN Client..."
   configure_vpnclient
   
-  info "Configuring Wifi Hotspot..."
-  configure_hotspot
+  if [ ! -f "${log_filepath}/hotspot_disabled" ]; then
+    info "Configuring Wifi Hotspot..."
+    configure_hotspot
+  fi
  
   if [ -f "$custom_script" ]; then
     info "Execute custom script..."
