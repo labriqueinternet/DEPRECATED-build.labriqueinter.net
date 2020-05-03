@@ -719,8 +719,8 @@ else
   info "Setting locales"
   deb_setlocales_and_tz
 
-  #info "Upgrading Debian/YunoHost..."
-  #deb_upgrade
+  info "Upgrading Debian/YunoHost..."
+  deb_upgrade
 
   info "Check online DynDNS domains list"
   check_dyndns_list
