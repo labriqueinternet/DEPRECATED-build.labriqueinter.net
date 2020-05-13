@@ -658,23 +658,6 @@ info "===== Start HyperCube Service ====="
 set_logpermissions
 start_logwebserver
 
-# firstrun/secondrun not finished
-# should never happen
-if [ ! -f /etc/yunohost/cube_installed ]; then
-  info "Waiting for the end of the FS resizing..."
-
-  keep_debugging=false
-  exit 0
-fi
-
-# ARMbian not finished resizing
-if [ -f /var/run/resize2fs-reboot ]; then
-  info "Waiting for the end of the FS resizing..."
-
-  keep_debugging=false
-  exit 0
-fi
-
 # Second boot
 if [ -f "${log_filepath}/enabled" ]; then
   info "Starting second step"

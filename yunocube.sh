@@ -1,52 +1,27 @@
 #!/bin/bash
-
-
 set -e
 set -x
 
-TARGET_DIR=./tmp
-REP=$(dirname $0)
-APT='DEBIAN_FRONTEND=noninteractive apt-get install -y --force-yes'
-IMAGE=$(echo $1 | sed 's/yunohost/internetcube/')
+OVERLAY_PATH=/tmp/overlay/internetcube
 
-cp $1 $IMAGE
-mkdir -p $TARGET_DIR
-umount $TARGET_DIR || true
-mount -o loop,offset=4194304 $IMAGE $TARGET_DIR
+InstallInternetCubeServices(){
 
+  # Install InternetCube dependencies usb detection, hotspot, vpnclient, roundcube
+  apt-get install -o Dpkg::Options::='--force-confold' -y \
+    file udisks2 udiskie ntfs-3g jq \
+    php7.0-fpm sipcalc hostapd iptables iw dnsmasq firmware-linux-free \
+    sipcalc dnsutils openvpn curl fake-hwclock \
+    php-cli php-common php-intl php-json php-mcrypt php-pear php-auth-sasl php-mail-mime php-patchwork-utf8 php-net-smtp php-net-socket php-net-ldap2 php-net-ldap3 php-zip php-gd php-mbstring php-curl
 
-echo '. /etc/bash_completion' >> $TARGET_DIR/root/.bashrc
+  # Install hypercube service
+  mkdir -p /var/log/hypercube
+  install -m 755 -o root -g root ${OVERLAY_PATH}/hypercube.sh /usr/local/bin/
+  install -m 444 -o root -g root ${OVERLAY_PATH}/hypercube.service /etc/systemd/system/
+  install -m 444 -o root -g root ${OVERLAY_PATH}/install.html /var/log/hypercube/
 
-# Use dhcp on boot
-cat <<EOT > $TARGET_DIR/etc/network/interfaces
-source /etc/network/interfaces.d/*
+  # Enable hypercube service
+  # TODO use systemctl for doing this
+  ln -f -s '/etc/systemd/system/hypercube.service' /etc/systemd/system/multi-user.target.wants/hypercube.service
 
-auto lo
-iface lo inet loopback
+}
 
-auto usb0
-allow-hotplug usb0
-iface usb0 inet dhcp
-EOT
-
-# Debootstrap optimisations from igorpecovnik
-# change default I/O scheduler, noop for flash media, deadline for SSD, cfq for mechanical drive
-cat <<EOT >> $TARGET_DIR/etc/sysfs.conf
-block/mmcblk0/queue/scheduler = noop
-#block/sda/queue/scheduler = cfq
-EOT
-
-# Add firstrun and secondrun init script
-install -m 755 -o root -g root ${REP}/script/resize2fs-reboot $TARGET_DIR/usr/local/bin/
-install -m 755 -o root -g root ${REP}/script/hypercube/hypercube.sh $TARGET_DIR/usr/local/bin/
-install -m 444 -o root -g root ${REP}/script/resize2fs-reboot.service $TARGET_DIR/etc/systemd/system/
-install -m 444 -o root -g root ${REP}/script/hypercube/hypercube.service $TARGET_DIR/etc/systemd/system/
-ln -f -s '/etc/systemd/system/resize2fs-reboot.service' $TARGET_DIR/etc/systemd/system/multi-user.target.wants/resize2fs-reboot.service
-ln -f -s '/etc/systemd/system/hypercube.service' $TARGET_DIR/etc/systemd/system/multi-user.target.wants/hypercube.service
-
-# Add hypercube scripts
-mkdir -p $TARGET_DIR/var/log/hypercube
-install -m 444 -o root -g root ${REP}/script/hypercube/install.html $TARGET_DIR/var/log/hypercube/
-umount $TARGET_DIR || true
-
-exit 0
