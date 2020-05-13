@@ -658,15 +658,6 @@ info "===== Start HyperCube Service ====="
 set_logpermissions
 start_logwebserver
 
-# ARMbian not finished resizing
-# TODO use systemd service deps on armbian-resize-filesystem.service
-if [ -f /var/run/resize2fs-reboot ]; then
-  info "Waiting for the end of the FS resizing..."
-
-  keep_debugging=false
-  exit 0
-fi
-
 # Second boot
 if [ -f "${log_filepath}/enabled" ]; then
   info "Starting second step"
